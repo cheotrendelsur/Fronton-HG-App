@@ -1,0 +1,10 @@
+{
+  "rewrites": [{ "source": "/(.*)", "destination": "/" }]
+}
+```
+
+Crea `.gitignore` (si no existe) y asegúrate que incluya:
+```
+.env.local
+node_modules
+dist
