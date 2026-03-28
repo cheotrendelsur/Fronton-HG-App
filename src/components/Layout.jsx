@@ -1,0 +1,242 @@
+import { NavLink, useLocation } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext'
+
+const icons = {
+  home: (active) => (
+    <svg viewBox="0 0 24 24" fill="none" className="w-6 h-6"
+      stroke="currentColor" strokeWidth={active ? 2.2 : 1.8}
+      strokeLinecap="round" strokeLinejoin="round">
+      <path d="M3 12L5 10M5 10L12 3L19 10M5 10V20C5 20.55 5.45 21 6 21H9M19 10L21 12M19 10V20C19 20.55 18.55 21 18 21H15M9 21V15C9 14.45 9.45 14 10 14H14C14.55 14 15 14.45 15 15V21M9 21H15"/>
+    </svg>
+  ),
+  trophy: (active) => (
+    <svg viewBox="0 0 24 24" fill="none" className="w-6 h-6"
+      stroke="currentColor" strokeWidth={active ? 2.2 : 1.8}
+      strokeLinecap="round" strokeLinejoin="round">
+      <path d="M8 21H16M12 17V21M6 3H18V10C18 13.31 15.31 16 12 16C8.69 16 6 13.31 6 10V3Z"/>
+      <path d="M6 5H3V8C3 9.66 4.34 11 6 11"/>
+      <path d="M18 5H21V8C21 9.66 19.66 11 18 11"/>
+    </svg>
+  ),
+  chart: (active) => (
+    <svg viewBox="0 0 24 24" fill="none" className="w-6 h-6"
+      stroke="currentColor" strokeWidth={active ? 2.2 : 1.8}
+      strokeLinecap="round" strokeLinejoin="round">
+      <path d="M3 20H21M5 20V14M9 20V8M13 20V11M17 20V4"/>
+    </svg>
+  ),
+  user: (active) => (
+    <svg viewBox="0 0 24 24" fill="none" className="w-6 h-6"
+      stroke="currentColor" strokeWidth={active ? 2.2 : 1.8}
+      strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="8" r="4"/>
+      <path d="M4 20C4 16.69 7.58 14 12 14C16.42 14 20 16.69 20 20"/>
+    </svg>
+  ),
+  plus: (active) => (
+    <svg viewBox="0 0 24 24" fill="none" className="w-6 h-6"
+      stroke="currentColor" strokeWidth={active ? 2.2 : 1.8}
+      strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="9"/>
+      <path d="M12 8v8M8 12h8"/>
+    </svg>
+  ),
+  hub: (active) => (
+    <svg viewBox="0 0 24 24" fill="none" className="w-6 h-6"
+      stroke="currentColor" strokeWidth={active ? 2.2 : 1.8}
+      strokeLinecap="round" strokeLinejoin="round">
+      <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/>
+      <rect x="9" y="3" width="6" height="4" rx="1"/>
+      <path d="M9 12h6M9 16h4"/>
+    </svg>
+  ),
+  results: (active) => (
+    <svg viewBox="0 0 24 24" fill="none" className="w-6 h-6"
+      stroke="currentColor" strokeWidth={active ? 2.2 : 1.8}
+      strokeLinecap="round" strokeLinejoin="round">
+      <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/>
+      <rect x="9" y="3" width="6" height="4" rx="1"/>
+      <path d="M9 12l2 2 4-4"/>
+    </svg>
+  ),
+  shield: (active) => (
+    <svg viewBox="0 0 24 24" fill="none" className="w-6 h-6"
+      stroke="currentColor" strokeWidth={active ? 2.2 : 1.8}
+      strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 3L4 7v5c0 4.42 3.37 8.57 8 9.93C16.63 20.57 20 16.42 20 12V7l-8-4z"/>
+      <path d="M9 12l2 2 4-4"/>
+    </svg>
+  ),
+}
+
+const playerNavItems = [
+  { to: '/dashboard',   label: 'Inicio',        icon: 'home'   },
+  { to: '/tournaments', label: 'Torneos',        icon: 'trophy' },
+  { to: '/standings',   label: 'Clasificación',  icon: 'chart'  },
+  { to: '/profile',     label: 'Perfil',         icon: 'user'   },
+]
+
+const organizerNavItems = [
+  { to: '/dashboard',          label: 'Inicio',     icon: 'home'    },
+  { to: '/organizer/hub',      label: 'Torneos',    icon: 'hub'     },
+  { to: '/tournaments/create', label: 'Crear',      icon: 'plus'    },
+  { to: '/results/input',      label: 'Marcadores', icon: 'results' },
+  { to: '/profile',            label: 'Perfil',     icon: 'user'    },
+]
+
+const adminNavItems = [
+  { to: '/dashboard', label: 'Inicio',  icon: 'home'   },
+  { to: '/admin',     label: 'Admin',   icon: 'shield' },
+  { to: '/profile',   label: 'Perfil',  icon: 'user'   },
+]
+
+function SyncOverlay() {
+  return (
+    <div className="flex-1 flex flex-col items-center justify-center gap-4 py-24">
+      <div className="relative w-12 h-12">
+        <svg
+          className="absolute inset-0 animate-spin"
+          style={{ animationDuration: '1.1s' }}
+          viewBox="0 0 48 48"
+          fill="none"
+        >
+          <circle cx="24" cy="24" r="21" stroke="#212424" strokeWidth="2.5"/>
+          <path
+            d="M24 3 A21 21 0 0 1 45 24"
+            stroke="#b8f533"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+          />
+        </svg>
+        <div className="absolute inset-0 flex items-center justify-center">
+          <svg viewBox="0 0 24 24" fill="none" className="w-5 h-5">
+            <circle cx="12" cy="12" r="9" stroke="#2a2e2e" strokeWidth="1.5"/>
+            <path d="M5 12 Q12 5 19 12 Q12 19 5 12Z" fill="#b8f533" opacity="0.8"/>
+          </svg>
+        </div>
+      </div>
+      <p className="text-ink-muted text-[10px] uppercase tracking-widest animate-pulse">
+        Verificando sesión
+      </p>
+    </div>
+  )
+}
+
+export default function Layout({ children }) {
+  const location               = useLocation()
+  const { profile, isSyncing } = useAuth()
+  const role                   = profile?.role
+
+  const navItems =
+    role === 'admin'     ? adminNavItems     :
+    role === 'organizer' ? organizerNavItems :
+    playerNavItems
+
+  return (
+    <div className="min-h-[100dvh] bg-base-950">
+      <main className="pb-24">
+        {isSyncing ? <SyncOverlay /> : children}
+      </main>
+
+      <nav
+        className="fixed bottom-0 left-0 w-full z-50"
+        style={{
+          background:           'rgba(21, 23, 23, 0.96)',
+          backdropFilter:       'blur(16px)',
+          WebkitBackdropFilter: 'blur(16px)',
+          borderTop:            '1px solid #1e2222',
+          paddingBottom:        'env(safe-area-inset-bottom, 0px)',
+        }}
+      >
+        <div className="flex items-center justify-around h-16 max-w-lg mx-auto px-1">
+          {navItems.map(({ to, label, icon }) => {
+            const isCreate = to === '/tournaments/create'
+            const isAdmin  = to === '/admin'
+
+            const isActive = isCreate || isAdmin
+              ? location.pathname === to
+              : location.pathname === to ||
+                (to !== '/dashboard' &&
+                 to !== '/tournaments' &&
+                 location.pathname.startsWith(to))
+
+            if (isCreate) {
+              return (
+                <NavLink
+                  key={to}
+                  to={to}
+                  className="relative flex flex-col items-center justify-center flex-1 h-full gap-0.5 active:opacity-70 transition-opacity duration-150"
+                >
+                  <span
+                    className="w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-200"
+                    style={{
+                      background: location.pathname === to ? '#b8f533' : 'rgba(184,245,51,0.12)',
+                      color:      location.pathname === to ? '#0f1010' : '#b8f533',
+                      border:     '1px solid rgba(184,245,51,0.25)',
+                    }}
+                  >
+                    {icons[icon](location.pathname === to)}
+                  </span>
+                  <span className="text-[10px] font-medium tracking-wide" style={{ color: '#b8f533' }}>
+                    {label}
+                  </span>
+                </NavLink>
+              )
+            }
+
+            if (isAdmin) {
+              return (
+                <NavLink
+                  key={to}
+                  to={to}
+                  className="relative flex flex-col items-center justify-center flex-1 h-full gap-0.5 active:opacity-70 transition-opacity duration-150"
+                >
+                  <span
+                    className="w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-200"
+                    style={{
+                      background: location.pathname === to ? 'rgba(245,158,11,0.2)' : 'rgba(245,158,11,0.08)',
+                      color:      '#f59e0b',
+                      border:     '1px solid rgba(245,158,11,0.25)',
+                    }}
+                  >
+                    {icons[icon](location.pathname === to)}
+                  </span>
+                  <span className="text-[10px] font-medium tracking-wide" style={{ color: '#f59e0b' }}>
+                    {label}
+                  </span>
+                </NavLink>
+              )
+            }
+
+            return (
+              <NavLink
+                key={to}
+                to={to}
+                className="relative flex flex-col items-center justify-center flex-1 h-full gap-0.5 active:opacity-70 transition-opacity duration-150"
+              >
+                {isActive && (
+                  <span
+                    className="absolute top-2 w-1 h-1 rounded-full bg-neon-300"
+                    style={{ boxShadow: '0 0 6px rgba(184,245,51,0.6)' }}
+                  />
+                )}
+                <span
+                  className="transition-colors duration-200"
+                  style={{ color: isActive ? '#b8f533' : '#5c665c' }}
+                >
+                  {icons[icon](isActive)}
+                </span>
+                <span
+                  className="text-[10px] font-medium tracking-wide transition-colors duration-200"
+                  style={{ color: isActive ? '#b8f533' : '#5c665c' }}
+                >
+                  {label}
+                </span>
+              </NavLink>
+            )
+          })}
+        </div>
+      </nav>
+    </div>
+  )
+}

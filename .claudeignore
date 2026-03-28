@@ -1,0 +1,94 @@
+# Dependencies (Claude no necesita leer estos)
+node_modules/
+venv/
+env/
+.venv/
+__pycache__/
+*.egg-info/
+.gradle/
+vendor/
+.bundle/
+
+# Build & Distribution
+dist/
+build/
+.next/
+out/
+.nuxt/
+coverage/
+.output/
+.vercel/
+
+# Environment & Secrets (CRÍTICO - NUNCA analizar)
+.env
+.env.local
+.env.*.local
+.env.production.local
+.env.development.local
+*.pem
+*.key
+.aws/
+.ssh/
+
+# Development Tools
+.vscode/extensions/
+.idea/
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+.tmp/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Testing
+.coverage/
+.nyc_output/
+.mocha/
+.pytest_cache/
+
+# IDE & Editor
+.vscode/
+!.vscode/settings.json
+!.vscode/extensions.json
+.idea/
+*.sublime-workspace
+*.sublime-project
+.vim/
+
+# OS Files
+.DS_Store
+.AppleDouble
+.LSOverride
+Thumbs.db
+Desktop.ini
+
+# Temp Files
+tmp/
+temp/
+*.tmp
+*.bak
+*.backup
+
+# Documentation (opcional - descomenta si no lo quieres)
+# docs/
+# README.md
+
+# Large Files
+*.mp4
+*.mov
+*.avi
+*.wav
+*.mp3
+*.zip
+*.tar.gz
+*.rar
+EOF
