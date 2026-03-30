@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import ProtectedRoute       from './components/ProtectedRoute'
@@ -10,6 +11,7 @@ import ResultsInputPage     from './pages/ResultsInputPage'
 import AdminPanelPage       from './pages/AdminPanelPage'
 import TournamentsPage      from './pages/TournamentsPage'
 import Layout               from './components/Layout'
+import SplashPage, { SPLASH_KEY } from './pages/SplashPage'
 
 function AppLoader() {
   return (
@@ -22,17 +24,17 @@ function AppLoader() {
           fill="none"
         >
           <circle cx="28" cy="28" r="25" stroke="#212424" strokeWidth="2.5"/>
-          <path d="M28 3 A25 25 0 0 1 53 28" stroke="#b8f533" strokeWidth="2.5" strokeLinecap="round"/>
+          <path d="M28 3 A25 25 0 0 1 53 28" stroke="#6BB3D9" strokeWidth="2.5" strokeLinecap="round"/>
         </svg>
         <div className="absolute inset-0 flex items-center justify-center">
           <svg viewBox="0 0 24 24" fill="none" className="w-6 h-6">
             <circle cx="12" cy="12" r="9" stroke="#2a2e2e" strokeWidth="1.5"/>
-            <path d="M5 12 Q12 5 19 12 Q12 19 5 12Z" fill="#b8f533" opacity="0.8"/>
+            <path d="M5 12 Q12 5 19 12 Q12 19 5 12Z" fill="#6BB3D9" opacity="0.8"/>
           </svg>
         </div>
       </div>
       <div className="text-center space-y-1">
-        <p className="text-ink-primary text-sm font-medium tracking-wide">RacketTourneys</p>
+        <p className="text-ink-primary text-sm font-medium tracking-wide">Frontón HGV</p>
         <p className="text-ink-muted text-xs tracking-widest uppercase animate-pulse">Verificando sesión</p>
       </div>
     </div>
@@ -132,9 +134,15 @@ function AppRoutes() {
 
 function AppShell() {
   const { initializing } = useAuth()
+  const [splashDone, setSplashDone] = useState(
+    () => sessionStorage.getItem(SPLASH_KEY) === '1'
+  )
+
   if (initializing) return <AppLoader />
+
   return (
     <BrowserRouter>
+      {!splashDone && <SplashPage onDone={() => setSplashDone(true)} />}
       <AppRoutes />
     </BrowserRouter>
   )

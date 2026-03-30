@@ -3,7 +3,13 @@
     "allow": [
       "Bash(ls:*)",
       "Bash(npm install:*)",
-      "Bash(npm run:*)"
+      "Bash(npm run:*)",
+      "Bash(\"C:\\\\Users\\\\chech\\\\Desktop\\\\Aplicaciones\\\\Torneo\\\\racket-tourneys\\\\PROYECTO-STATE.md\":*)",
+      "Bash(convert --version)",
+      "Bash(npx --yes sharp-cli --version)",
+      "Bash(node -e \":*)",
+      "Bash(npx --yes jimp-cli --version)",
+      "Bash(python:*)"
     ]
   }
 }

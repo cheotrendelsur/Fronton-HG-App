@@ -3,9 +3,6 @@ import SetsScoringForm   from './SetsScoringForm'
 import PointsScoringForm from './PointsScoringForm'
 import ScoringPreview    from './ScoringPreview'
 
-const ACTIVE   = 'bg-neon-900/40 border-neon-700 text-neon-300 shadow-neon-sm'
-const INACTIVE = 'bg-surface-800 border-border-default text-ink-secondary hover:border-border-strong'
-
 export default function ScoringSystemSelector({ value, onChange }) {
   const [modalidad, setModalidad] = useState(value?.modalidad ?? 'sets')
 
@@ -27,11 +24,11 @@ export default function ScoringSystemSelector({ value, onChange }) {
             key={opt.id}
             type="button"
             onClick={() => switchModalidad(opt.id)}
-            className={`
-              py-3 rounded-xl text-sm font-medium border
-              transition-all duration-200
-              ${modalidad === opt.id ? ACTIVE : INACTIVE}
-            `}
+            className="py-3 rounded-xl text-sm font-medium border transition-all duration-200"
+            style={modalidad === opt.id
+              ? { background: '#E8F4FA', borderColor: '#6BB3D9', color: '#3A8BB5' }
+              : { background: '#FFFFFF', borderColor: '#E0E2E6', color: '#6B7280' }
+            }
           >
             {opt.label}
           </button>

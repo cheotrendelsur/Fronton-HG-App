@@ -39,7 +39,8 @@ async function fetchSportsWithRetry(attempt = 0) {
 
 function FieldLabel({ children }) {
   return (
-    <label className="block text-[10px] font-semibold uppercase tracking-widest text-ink-muted mb-1.5">
+    <label className="block text-[10px] font-semibold uppercase tracking-widest mb-1.5"
+           style={{ color: '#6B7280' }}>
       {children}
     </label>
   )
@@ -49,12 +50,8 @@ function Input({ className = '', ...props }) {
   return (
     <input
       {...props}
-      className={`
-        w-full bg-surface-800 border border-border-default rounded-xl
-        px-4 py-3 text-sm text-ink-primary placeholder-ink-muted
-        focus:outline-none focus:border-neon-600 focus:ring-1 focus:ring-neon-600/30
-        transition-all duration-200 ${className}
-      `}
+      className={`w-full rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-1 transition-all duration-200 ${className}`}
+      style={{ background: '#FFFFFF', border: '1px solid #E0E2E6', color: '#1F2937' }}
     />
   )
 }
@@ -64,12 +61,8 @@ function TextArea({ className = '', ...props }) {
     <textarea
       {...props}
       rows={3}
-      className={`
-        w-full bg-surface-800 border border-border-default rounded-xl
-        px-4 py-3 text-sm text-ink-primary placeholder-ink-muted
-        focus:outline-none focus:border-neon-600 focus:ring-1 focus:ring-neon-600/30
-        transition-all duration-200 resize-none ${className}
-      `}
+      className={`w-full rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-1 transition-all duration-200 resize-none ${className}`}
+      style={{ background: '#FFFFFF', border: '1px solid #E0E2E6', color: '#1F2937' }}
     />
   )
 }
@@ -78,12 +71,8 @@ function Select({ children, className = '', ...props }) {
   return (
     <select
       {...props}
-      className={`
-        w-full bg-surface-800 border border-border-default rounded-xl
-        px-4 py-3 text-sm text-ink-primary
-        focus:outline-none focus:border-neon-600 focus:ring-1 focus:ring-neon-600/30
-        transition-all duration-200 appearance-none ${className}
-      `}
+      className={`w-full rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-1 transition-all duration-200 appearance-none ${className}`}
+      style={{ background: '#FFFFFF', border: '1px solid #E0E2E6', color: '#1F2937' }}
     >
       {children}
     </select>
@@ -92,9 +81,10 @@ function Select({ children, className = '', ...props }) {
 
 function SectionCard({ title, children }) {
   return (
-    <div className="bg-surface-900 border border-border-default rounded-2xl overflow-hidden">
-      <div className="px-4 py-3 border-b border-border-subtle">
-        <h2 className="text-ink-secondary text-xs font-semibold uppercase tracking-widest">
+    <div className="rounded-2xl overflow-hidden"
+         style={{ background: '#FFFFFF', border: '1px solid #E0E2E6' }}>
+      <div className="px-4 py-3" style={{ borderBottom: '1px solid #E8EAEE' }}>
+        <h2 className="text-xs font-semibold uppercase tracking-widest" style={{ color: '#6B7280' }}>
           {title}
         </h2>
       </div>
@@ -108,10 +98,8 @@ function Toggle({ checked, onChange }) {
     <button
       type="button"
       onClick={() => onChange(!checked)}
-      className={`
-        relative w-11 h-6 rounded-full transition-colors duration-200 flex-shrink-0
-        ${checked ? 'bg-neon-300' : 'bg-surface-600'}
-      `}
+      className="relative w-11 h-6 rounded-full transition-colors duration-200 flex-shrink-0"
+      style={{ background: checked ? '#6BB3D9' : '#E5E7EB' }}
     >
       <span className={`
         absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-200
@@ -127,16 +115,18 @@ function CategoryCard({ category, index, onChange, onRemove, canRemove }) {
   }
 
   return (
-    <div className="bg-surface-800 border border-border-default rounded-xl p-4 space-y-4">
+    <div className="rounded-xl p-4 space-y-4"
+         style={{ background: '#F9FAFB', border: '1px solid #E0E2E6' }}>
       <div className="flex items-center justify-between">
-        <span className="text-ink-secondary text-xs font-semibold uppercase tracking-widest">
+        <span className="text-xs font-semibold uppercase tracking-widest" style={{ color: '#6B7280' }}>
           Categoría {index + 1}
         </span>
         {canRemove && (
           <button
             type="button"
             onClick={() => onRemove(index)}
-            className="w-7 h-7 rounded-lg bg-surface-700 flex items-center justify-center text-ink-muted hover:text-red-400 hover:bg-red-950/40 transition-all duration-200"
+            className="w-7 h-7 rounded-lg flex items-center justify-center hover:text-red-500 transition-all duration-200"
+            style={{ background: '#F3F4F6', color: '#6B7280' }}
           >
             <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={1.8}
               className="w-3.5 h-3.5" strokeLinecap="round" strokeLinejoin="round">
@@ -178,16 +168,18 @@ function CourtCard({ court, index, onChange, onRemove, canRemove }) {
   }
 
   return (
-    <div className="bg-surface-800 border border-border-default rounded-xl p-4 space-y-4">
+    <div className="rounded-xl p-4 space-y-4"
+         style={{ background: '#F9FAFB', border: '1px solid #E0E2E6' }}>
       <div className="flex items-center justify-between">
-        <span className="text-ink-secondary text-xs font-semibold uppercase tracking-widest">
+        <span className="text-xs font-semibold uppercase tracking-widest" style={{ color: '#6B7280' }}>
           Cancha {index + 1}
         </span>
         {canRemove && (
           <button
             type="button"
             onClick={() => onRemove(index)}
-            className="w-7 h-7 rounded-lg bg-surface-700 flex items-center justify-center text-ink-muted hover:text-red-400 hover:bg-red-950/40 transition-all duration-200"
+            className="w-7 h-7 rounded-lg flex items-center justify-center hover:text-red-500 transition-all duration-200"
+            style={{ background: '#F3F4F6', color: '#6B7280' }}
           >
             <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={1.8}
               className="w-3.5 h-3.5" strokeLinecap="round" strokeLinejoin="round">
@@ -223,14 +215,14 @@ function CourtCard({ court, index, onChange, onRemove, canRemove }) {
 
       <div className="flex items-center justify-between py-1">
         <div>
-          <p className="text-ink-primary text-sm font-medium">Hay descanso</p>
-          <p className="text-ink-muted text-xs mt-0.5">Bloque de tiempo sin partidos</p>
+          <p className="text-sm font-medium" style={{ color: '#1F2937' }}>Hay descanso</p>
+          <p className="text-xs mt-0.5" style={{ color: '#6B7280' }}>Bloque de tiempo sin partidos</p>
         </div>
         <Toggle checked={court.has_break} onChange={v => update('has_break', v)} />
       </div>
 
       {court.has_break && (
-        <div className="grid grid-cols-2 gap-3 pt-1 border-t border-border-subtle">
+        <div className="grid grid-cols-2 gap-3 pt-1" style={{ borderTop: '1px solid #E8EAEE' }}>
           <div>
             <FieldLabel>Inicio descanso</FieldLabel>
             <Input type="time" value={court.break_start}
@@ -381,7 +373,8 @@ export default function CreateTournamentPage() {
           <button
             type="button"
             onClick={() => navigate(-1)}
-            className="w-9 h-9 rounded-xl bg-surface-800 border border-border-default flex items-center justify-center text-ink-secondary hover:text-ink-primary hover:border-border-strong transition-all duration-200"
+            className="w-9 h-9 rounded-xl flex items-center justify-center transition-all duration-200"
+            style={{ background: '#FFFFFF', border: '1px solid #E0E2E6', color: '#6B7280' }}
           >
             <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={2}
               className="w-4 h-4" strokeLinecap="round" strokeLinejoin="round">
@@ -389,8 +382,8 @@ export default function CreateTournamentPage() {
             </svg>
           </button>
           <div className="flex-1">
-            <h1 className="text-ink-primary text-xl font-semibold tracking-tight">Nuevo torneo</h1>
-            <p className="text-ink-muted text-xs mt-0.5">Configura todos los detalles</p>
+            <h1 className="text-xl font-semibold tracking-tight" style={{ color: '#1F2937' }}>Nuevo torneo</h1>
+            <p className="text-xs mt-0.5" style={{ color: '#6B7280' }}>Configura todos los detalles</p>
           </div>
           <button
             type="button"
@@ -406,10 +399,11 @@ export default function CreateTournamentPage() {
               setCourts([{ ...DEFAULT_COURT }])
               setError('')
             }}
-            className="flex items-center gap-2 px-3 py-2 rounded-xl bg-surface-800 border border-border-default text-ink-muted text-xs font-medium hover:text-ink-secondary hover:border-border-strong active:scale-[0.95] active:opacity-80 transition-all duration-150"
+            className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium active:scale-[0.95] active:opacity-80 transition-all duration-150"
+            style={{ background: '#FFFFFF', border: '1px solid #E0E2E6', color: '#6B7280' }}
           >
-            <svg viewBox="0 0 24 24" fill="none" stroke="#b8f533" strokeWidth={2}
-              className="w-5 h-5 flex-shrink-0" strokeLinecap="round" strokeLinejoin="round">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}
+              className="w-5 h-5 flex-shrink-0" style={{ color: '#6BB3D9' }} strokeLinecap="round" strokeLinejoin="round">
               <path d="M21 12a9 9 0 1 1-2.1-5.8"/>
               <path d="M21 3v5h-5"/>
             </svg>
@@ -467,12 +461,13 @@ export default function CreateTournamentPage() {
             <div>
               <FieldLabel>Deporte</FieldLabel>
               {loadingSports ? (
-                <div className="h-12 bg-surface-800 border border-border-default rounded-xl animate-pulse" />
+                <div className="h-12 rounded-xl animate-pulse" style={{ background: '#F3F4F6', border: '1px solid #E0E2E6' }} />
               ) : sportsError ? (
                 <button
                   type="button"
                   onClick={loadSports}
-                  className="w-full h-12 bg-red-950/40 border border-red-900/50 rounded-xl text-red-400 text-xs px-4 text-left hover:bg-red-950/60 transition-colors"
+                  className="w-full h-12 rounded-xl text-red-500 text-xs px-4 text-left transition-colors"
+                  style={{ background: '#FEF2F2', border: '1px solid #FECACA' }}
                 >
                   {sportsError}
                 </button>
@@ -484,7 +479,8 @@ export default function CreateTournamentPage() {
                     ))}
                   </Select>
                   <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={1.8}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-ink-muted pointer-events-none"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none"
+                    style={{ color: '#9CA3AF' }}
                     strokeLinecap="round" strokeLinejoin="round">
                     <path d="M4 6l4 4 4-4"/>
                   </svg>
@@ -527,12 +523,9 @@ export default function CreateTournamentPage() {
             <button
               type="button"
               onClick={addCategory}
-              className="
-                w-full py-3 rounded-xl border border-dashed border-border-strong
-                text-ink-muted text-sm font-medium
-                hover:border-neon-800 hover:text-neon-400 hover:bg-neon-900/10
-                transition-all duration-200 flex items-center justify-center gap-2
-              "
+              className="w-full py-3 rounded-xl border border-dashed text-sm font-medium
+                transition-all duration-200 flex items-center justify-center gap-2"
+              style={{ borderColor: '#E0E2E6', color: '#6B7280' }}
             >
               <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={2}
                 className="w-4 h-4" strokeLinecap="round">
@@ -560,12 +553,9 @@ export default function CreateTournamentPage() {
             <button
               type="button"
               onClick={addCourt}
-              className="
-                w-full py-3 rounded-xl border border-dashed border-border-strong
-                text-ink-muted text-sm font-medium
-                hover:border-neon-800 hover:text-neon-400 hover:bg-neon-900/10
-                transition-all duration-200 flex items-center justify-center gap-2
-              "
+              className="w-full py-3 rounded-xl border border-dashed text-sm font-medium
+                transition-all duration-200 flex items-center justify-center gap-2"
+              style={{ borderColor: '#E0E2E6', color: '#6B7280' }}
             >
               <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={2}
                 className="w-4 h-4" strokeLinecap="round">
@@ -577,14 +567,16 @@ export default function CreateTournamentPage() {
           </SectionCard>
 
           {startDate && endDate && startDate > endDate && (
-            <div className="bg-red-950/60 border border-red-900/50 rounded-xl px-4 py-3">
-              <p className="text-red-400 text-xs leading-relaxed">La fecha de inicio debe ser anterior a la fecha de fin.</p>
+            <div className="rounded-xl px-4 py-3"
+                 style={{ background: '#FEF2F2', border: '1px solid #FECACA' }}>
+              <p className="text-red-500 text-xs leading-relaxed">La fecha de inicio debe ser anterior a la fecha de fin.</p>
             </div>
           )}
 
           {error && (
-            <div className="bg-red-950/60 border border-red-900/50 rounded-xl px-4 py-3">
-              <p className="text-red-400 text-xs leading-relaxed">{error}</p>
+            <div className="rounded-xl px-4 py-3"
+                 style={{ background: '#FEF2F2', border: '1px solid #FECACA' }}>
+              <p className="text-red-500 text-xs leading-relaxed">{error}</p>
             </div>
           )}
 
@@ -603,13 +595,10 @@ export default function CreateTournamentPage() {
               || categories.some(c => !c.name.trim())
               || courts.some(c => !c.name.trim())
             }
-            className="
-              w-full bg-neon-300 hover:bg-neon-200 active:bg-neon-400
-              disabled:opacity-40 disabled:cursor-not-allowed
-              text-ink-inverse font-semibold py-4 rounded-xl
+            className="w-full text-white font-semibold py-4 rounded-xl
               transition-all duration-200 text-sm tracking-wide
-              shadow-neon-sm hover:shadow-neon-md
-            "
+              disabled:opacity-40 disabled:cursor-not-allowed"
+            style={{ background: '#6BB3D9', boxShadow: '0 0 12px rgba(107,179,217,0.15)' }}
           >
             {submitting ? 'Creando torneo...' : 'Crear torneo'}
           </button>

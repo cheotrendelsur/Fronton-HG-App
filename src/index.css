@@ -11,8 +11,8 @@
 
   html, body, #root {
     height: 100%;
-    background-color: #080909;
-    color: #f0f2f0;
+    background-color: #1E2024;
+    color: #E5E7EB;
     overscroll-behavior: none;
   }
 
@@ -25,8 +25,13 @@
 
   /* Glassmorphism sutil para overlays */
   .glass {
-    background: rgba(26, 28, 28, 0.85);
+    background: rgba(42, 45, 51, 0.85);
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
   }
+}
+
+/* Oculta nav inferior cuando hay modal abierto */
+.modal-open nav {
+  display: none;
 }

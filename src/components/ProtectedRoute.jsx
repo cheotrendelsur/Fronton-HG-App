@@ -4,17 +4,18 @@ import { useAuth } from '../context/AuthContext'
 
 function StatusScreen({ icon, title, message, action }) {
   return (
-    <div className="min-h-screen bg-base-950 flex flex-col items-center justify-center px-6">
+    <div className="min-h-screen flex flex-col items-center justify-center px-6"
+         style={{ background: '#F2F3F5' }}>
       <div className="w-full max-w-sm text-center space-y-6">
         <div
           className="w-16 h-16 rounded-2xl mx-auto flex items-center justify-center"
-          style={{ background: '#1a1c1c', border: '1px solid #2a2e2e' }}
+          style={{ background: '#FFFFFF', border: '1px solid #E0E2E6' }}
         >
           {icon}
         </div>
         <div className="space-y-2">
-          <h1 className="text-ink-primary text-xl font-semibold tracking-tight">{title}</h1>
-          <p className="text-ink-muted text-sm leading-relaxed">{message}</p>
+          <h1 className="text-xl font-semibold tracking-tight" style={{ color: '#1F2937' }}>{title}</h1>
+          <p className="text-sm leading-relaxed" style={{ color: '#6B7280' }}>{message}</p>
         </div>
         {action}
       </div>
@@ -49,13 +50,9 @@ function RejectedScreen() {
         <button
           onClick={handleExit}
           disabled={busy}
-          className="
-            w-full py-3.5 rounded-xl text-sm font-semibold
-            bg-surface-800 border border-border-strong
-            text-ink-secondary hover:text-ink-primary
-            disabled:opacity-40 disabled:cursor-not-allowed
-            transition-all duration-200
-          "
+          className="w-full py-3.5 rounded-xl text-sm font-semibold
+            disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-200"
+          style={{ background: '#FFFFFF', border: '1px solid #E0E2E6', color: '#4B5563' }}
         >
           {busy ? 'Cerrando sesión...' : 'Aceptar y Salir'}
         </button>

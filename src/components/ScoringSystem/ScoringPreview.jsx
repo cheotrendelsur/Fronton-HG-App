@@ -1,16 +1,17 @@
 function Row({ label, value }) {
   return (
     <div className="flex items-center justify-between gap-2">
-      <span className="text-ink-muted text-xs">{label}</span>
-      <span className="text-ink-primary text-xs font-medium tabular-nums">{value}</span>
+      <span className="text-xs" style={{ color: '#6B7280' }}>{label}</span>
+      <span className="text-xs font-medium tabular-nums" style={{ color: '#6BB3D9' }}>{value}</span>
     </div>
   )
 }
 
 function PreviewBadge({ children }) {
   return (
-    <span className="inline-flex items-center gap-1 text-neon-300 text-[10px] font-semibold uppercase tracking-widest">
-      <span className="w-1.5 h-1.5 rounded-full bg-neon-300 inline-block" />
+    <span className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-widest"
+          style={{ color: '#6BB3D9' }}>
+      <span className="w-1.5 h-1.5 rounded-full inline-block" style={{ background: '#6BB3D9' }} />
       {children}
     </span>
   )
@@ -22,7 +23,8 @@ export default function ScoringPreview({ config }) {
   const { modalidad } = config
 
   return (
-    <div className="bg-surface-800 border border-border-default rounded-xl p-4 space-y-2.5">
+    <div className="rounded-xl p-4 space-y-2.5"
+         style={{ background: '#FFFFFF', border: '1px solid #E0E2E6' }}>
       <PreviewBadge>Vista previa</PreviewBadge>
 
       {modalidad === 'sets' && config.subModalidad === 'normal' && (
@@ -30,7 +32,8 @@ export default function ScoringPreview({ config }) {
           <Row label="Modalidad"  value="Sets — Normal" />
           <Row label="Sets"       value={config.setsTotal} />
           <Row label="Games/set"  value={config.gamesPerSet} />
-          <p className="text-ink-muted text-[10px] pt-1 border-t border-border-subtle leading-relaxed">
+          <p className="text-[10px] pt-1 leading-relaxed"
+             style={{ color: '#9CA3AF', borderTop: '1px solid #E8EAEE' }}>
             Mejor de {config.setsTotal} · Gana el set quien alcanza {config.gamesPerSet} games primero
           </p>
         </>
@@ -41,7 +44,8 @@ export default function ScoringPreview({ config }) {
           <Row label="Modalidad"        value="Sets — Suma" />
           <Row label="Sets totales"     value={config.setsTotalSum} />
           <Row label="Games/set totales" value={config.gamesTotalPerSetSum} />
-          <p className="text-ink-muted text-[10px] pt-1 border-t border-border-subtle leading-relaxed">
+          <p className="text-[10px] pt-1 leading-relaxed"
+             style={{ color: '#9CA3AF', borderTop: '1px solid #E8EAEE' }}>
             Se suman los sets y games de ambos jugadores
           </p>
         </>
@@ -56,7 +60,8 @@ export default function ScoringPreview({ config }) {
             label="Regla cierre"
             value={config.closingRule === 'diferencia' ? 'Diferencia de 2' : 'Muerte Súbita'}
           />
-          <p className="text-ink-muted text-[10px] pt-1 border-t border-border-subtle leading-relaxed">
+          <p className="text-[10px] pt-1 leading-relaxed"
+             style={{ color: '#9CA3AF', borderTop: '1px solid #E8EAEE' }}>
             {config.closingRule === 'diferencia'
               ? `En empate ${config.pointsToWinMatch - 1}-${config.pointsToWinMatch - 1}: se juega hasta +2`
               : `En empate ${config.pointsToWinMatch - 1}-${config.pointsToWinMatch - 1}: un punto decide`

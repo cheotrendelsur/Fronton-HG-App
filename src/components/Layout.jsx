@@ -1,5 +1,17 @@
 import { NavLink, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import lobo from '../assets/lobo.png'
+
+const PAGE_TITLES = {
+  '/dashboard':          'Inicio',
+  '/tournaments':        'Torneos',
+  '/tournaments/create': 'Crear torneo',
+  '/standings':          'Clasificación',
+  '/profile':            'Perfil',
+  '/organizer/hub':      'Hub',
+  '/results/input':      'Marcadores',
+  '/admin':              'Administración',
+}
 
 const icons = {
   home: (active) => (
@@ -78,7 +90,7 @@ const playerNavItems = [
 
 const organizerNavItems = [
   { to: '/dashboard',          label: 'Inicio',     icon: 'home'    },
-  { to: '/organizer/hub',      label: 'Torneos',    icon: 'hub'     },
+  { to: '/tournaments',        label: 'Torneos',    icon: 'trophy'  },
   { to: '/tournaments/create', label: 'Crear',      icon: 'plus'    },
   { to: '/results/input',      label: 'Marcadores', icon: 'results' },
   { to: '/profile',            label: 'Perfil',     icon: 'user'    },
@@ -100,18 +112,18 @@ function SyncOverlay() {
           viewBox="0 0 48 48"
           fill="none"
         >
-          <circle cx="24" cy="24" r="21" stroke="#212424" strokeWidth="2.5"/>
+          <circle cx="24" cy="24" r="21" stroke="#E0E2E6" strokeWidth="2.5"/>
           <path
             d="M24 3 A21 21 0 0 1 45 24"
-            stroke="#b8f533"
+            stroke="#6BB3D9"
             strokeWidth="2.5"
             strokeLinecap="round"
           />
         </svg>
         <div className="absolute inset-0 flex items-center justify-center">
           <svg viewBox="0 0 24 24" fill="none" className="w-5 h-5">
-            <circle cx="12" cy="12" r="9" stroke="#2a2e2e" strokeWidth="1.5"/>
-            <path d="M5 12 Q12 5 19 12 Q12 19 5 12Z" fill="#b8f533" opacity="0.8"/>
+            <circle cx="12" cy="12" r="9" stroke="#E0E2E6" strokeWidth="1.5"/>
+            <path d="M5 12 Q12 5 19 12 Q12 19 5 12Z" fill="#6BB3D9" opacity="0.8"/>
           </svg>
         </div>
       </div>
@@ -132,20 +144,72 @@ export default function Layout({ children }) {
     role === 'organizer' ? organizerNavItems :
     playerNavItems
 
+  const pageTitle = PAGE_TITLES[location.pathname] ?? 'Frontón HGV'
+
   return (
-    <div className="min-h-[100dvh] bg-base-950">
-      <main className="pb-24">
+    <div className="min-h-[100dvh]" style={{ background: '#F2F3F5' }}>
+
+      {/* Header superior */}
+      <header
+        className="fixed top-0 left-0 w-full z-40"
+        style={{
+          background:  '#F2F3F5',
+          borderBottom: '1px solid #E0E2E6',
+        }}
+      >
+        <div className="flex items-center justify-between h-14 max-w-lg mx-auto px-4">
+          {/* Título de página */}
+          <span
+            style={{
+              color:      '#1F2937',
+              fontSize:   '16px',
+              fontWeight: 600,
+              letterSpacing: '-0.01em',
+            }}
+          >
+            {pageTitle}
+          </span>
+
+          {/* Identidad derecha: texto → escudo → (avatar futuro) */}
+          <div className="flex items-center gap-2">
+            <span
+              style={{
+                color:    '#6B7280',
+                fontSize: '11px',
+                fontWeight: 500,
+                letterSpacing: '0.01em',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              Comisión de Frontón
+            </span>
+            <img
+              src={lobo}
+              alt="HGV"
+              style={{
+                width:        '28px',
+                height:       '28px',
+                borderRadius: '6px',
+                objectFit:    'cover',
+                display:      'block',
+              }}
+            />
+          </div>
+        </div>
+      </header>
+
+      {/* Contenido principal — offset por header (56px) y nav (96px) */}
+      <main className="pt-14 pb-24">
         {isSyncing ? <SyncOverlay /> : children}
       </main>
 
+      {/* Nav inferior */}
       <nav
         className="fixed bottom-0 left-0 w-full z-50"
         style={{
-          background:           'rgba(21, 23, 23, 0.96)',
-          backdropFilter:       'blur(16px)',
-          WebkitBackdropFilter: 'blur(16px)',
-          borderTop:            '1px solid #1e2222',
-          paddingBottom:        'env(safe-area-inset-bottom, 0px)',
+          background:    '#E8F4FA',
+          borderTop:     '1px solid #D0E5F0',
+          paddingBottom: 'env(safe-area-inset-bottom, 0px)',
         }}
       >
         <div className="flex items-center justify-around h-16 max-w-lg mx-auto px-1">
@@ -170,14 +234,19 @@ export default function Layout({ children }) {
                   <span
                     className="w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-200"
                     style={{
-                      background: location.pathname === to ? '#b8f533' : 'rgba(184,245,51,0.12)',
-                      color:      location.pathname === to ? '#0f1010' : '#b8f533',
-                      border:     '1px solid rgba(184,245,51,0.25)',
+                      background: location.pathname === to
+                        ? '#6BB3D9'
+                        : 'rgba(107,179,217,0.12)',
+                      color: location.pathname === to ? '#FFFFFF' : '#6BB3D9',
+                      border: '1px solid rgba(107,179,217,0.30)',
                     }}
                   >
                     {icons[icon](location.pathname === to)}
                   </span>
-                  <span className="text-[10px] font-medium tracking-wide" style={{ color: '#b8f533' }}>
+                  <span
+                    className="text-[10px] font-medium tracking-wide"
+                    style={{ color: '#6BB3D9' }}
+                  >
                     {label}
                   </span>
                 </NavLink>
@@ -194,14 +263,19 @@ export default function Layout({ children }) {
                   <span
                     className="w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-200"
                     style={{
-                      background: location.pathname === to ? 'rgba(245,158,11,0.2)' : 'rgba(245,158,11,0.08)',
-                      color:      '#f59e0b',
-                      border:     '1px solid rgba(245,158,11,0.25)',
+                      background: location.pathname === to
+                        ? 'rgba(107,179,217,0.20)'
+                        : 'rgba(107,179,217,0.08)',
+                      color:  '#6BB3D9',
+                      border: '1px solid rgba(107,179,217,0.25)',
                     }}
                   >
                     {icons[icon](location.pathname === to)}
                   </span>
-                  <span className="text-[10px] font-medium tracking-wide" style={{ color: '#f59e0b' }}>
+                  <span
+                    className="text-[10px] font-medium tracking-wide"
+                    style={{ color: '#6BB3D9' }}
+                  >
                     {label}
                   </span>
                 </NavLink>
@@ -216,19 +290,25 @@ export default function Layout({ children }) {
               >
                 {isActive && (
                   <span
-                    className="absolute top-2 w-1 h-1 rounded-full bg-neon-300"
-                    style={{ boxShadow: '0 0 6px rgba(184,245,51,0.6)' }}
+                    className="absolute top-2 w-1 h-1 rounded-full"
+                    style={{
+                      background: '#6BB3D9',
+                      boxShadow:  '0 0 6px rgba(107,179,217,0.6)',
+                    }}
                   />
                 )}
                 <span
                   className="transition-colors duration-200"
-                  style={{ color: isActive ? '#b8f533' : '#5c665c' }}
+                  style={{ color: isActive ? '#1F2937' : '#9CA3AF' }}
                 >
                   {icons[icon](isActive)}
                 </span>
                 <span
-                  className="text-[10px] font-medium tracking-wide transition-colors duration-200"
-                  style={{ color: isActive ? '#b8f533' : '#5c665c' }}
+                  className="text-[10px] tracking-wide transition-colors duration-200"
+                  style={{
+                    color:      isActive ? '#1F2937' : '#9CA3AF',
+                    fontWeight: isActive ? 500 : 400,
+                  }}
                 >
                   {label}
                 </span>

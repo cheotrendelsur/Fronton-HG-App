@@ -97,7 +97,7 @@ export default function OnboardingPage() {
                 ¿Cuál es tu rol?
               </h2>
               <p className="text-ink-muted text-sm mt-2">
-                Hola, <span className="text-neon-400">{session?.user?.email}</span>.
+                Hola, <span className="text-galician-blue">{session?.user?.email}</span>.
                 Cuéntanos cómo usarás la app.
               </p>
             </div>
@@ -113,7 +113,7 @@ export default function OnboardingPage() {
                       w-full text-left p-4 rounded-2xl border transition-all duration-200
                       flex items-start gap-4
                       ${active
-                        ? 'bg-neon-900/30 border-neon-700 shadow-neon-sm'
+                        ? 'bg-neon-900/30 border-neon-300 shadow-neon-sm'
                         : 'bg-surface-900 border-border-default hover:border-border-strong'
                       }
                     `}
@@ -141,7 +141,7 @@ export default function OnboardingPage() {
                     `}>
                       {active && (
                         <svg viewBox="0 0 12 12" fill="none" className="w-3 h-3">
-                          <path d="M2 6l3 3 5-5" stroke="#0f1010" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                          <path d="M2 6l3 3 5-5" stroke="#1F2937" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                         </svg>
                       )}
                     </div>
@@ -234,14 +234,14 @@ export default function OnboardingPage() {
                   className="
                     w-full bg-surface-800 border border-border-default rounded-xl
                     pl-8 pr-4 py-3 text-sm text-ink-primary placeholder-ink-muted
-                    focus:outline-none focus:border-neon-600 focus:ring-1 focus:ring-neon-600/30
+                    focus:outline-none focus:border-neon-300 focus:ring-1 focus:ring-neon-300/30
                     transition-all duration-200
                   "
                 />
                 {username.length >= 3 && (
                   <div className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full bg-neon-300 flex items-center justify-center">
                     <svg viewBox="0 0 12 12" fill="none" className="w-3 h-3">
-                      <path d="M2 6l3 3 5-5" stroke="#0f1010" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      <path d="M2 6l3 3 5-5" stroke="#1F2937" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                     </svg>
                   </div>
                 )}

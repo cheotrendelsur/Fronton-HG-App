@@ -25,12 +25,23 @@
     "text_mode": false,
     "research_before_questions": false,
     "discuss_mode": "discuss",
-    "skip_discuss": false
+    "skip_discuss": false,
+    "_auto_chain_active": true
   },
   "hooks": {
     "context_warnings": true
   },
-  "agent_skills": {},
+  "agent_skills": {
+    "gsd-planner": [
+      "C:/Users/chech/.claude/plugins/marketplaces/ui-ux-pro-max-skill"
+    ],
+    "gsd-executor": [
+      "C:/Users/chech/.claude/plugins/marketplaces/ui-ux-pro-max-skill"
+    ],
+    "gsd-verifier": [
+      "C:/Users/chech/.claude/plugins/marketplaces/ui-ux-pro-max-skill"
+    ]
+  },
   "mode": "yolo",
   "granularity": "standard"
 }

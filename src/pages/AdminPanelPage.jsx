@@ -93,8 +93,6 @@ export default function AdminPanelPage() {
   setError('')
 
   try {
-    // 1. Escribir en el historial PRIMERO, antes de borrar.
-    //    Si este paso falla, abortamos sin tocar auth.users.
     const { error: histErr } = await supabase
       .from('organizer_requests_history')
       .insert({
@@ -107,9 +105,6 @@ export default function AdminPanelPage() {
 
     if (histErr) throw new Error(`Historial: ${histErr.message}`)
 
-    // 2. Invocar la Edge Function para borrar de auth.users.
-    //    La escritura en el historial ya garantiza que el usuario
-    //    verá la pantalla de rechazo aunque su cuenta no exista.
     const { data, error: fnErr } = await supabase.functions.invoke('delete-user', {
       body: { userId: req.id },
     })
@@ -130,22 +125,24 @@ export default function AdminPanelPage() {
 
   return (
     <Layout>
-      <div className="max-w-lg mx-auto px-4 pt-6 pb-8 space-y-8 animate-fade-up">
+      <div className="max-w-lg mx-auto px-4 pt-6 pb-8 space-y-8 animate-fade-up"
+           style={{ background: '#F2F3F5' }}>
 
         {/* ── Cabecera ── */}
         <header className="flex items-center justify-between">
           <div>
-            <h1 className="text-ink-primary text-xl font-semibold tracking-tight">
+            <h1 className="text-xl font-semibold tracking-tight" style={{ color: '#1F2937' }}>
               Panel de Administración
             </h1>
-            <p className="text-ink-muted text-xs mt-1">
+            <p className="text-xs mt-1" style={{ color: '#6B7280' }}>
               Gestión de solicitudes de organizador
             </p>
           </div>
           <button
             onClick={() => { loadRequests(); loadHistory() }}
             disabled={loading}
-            className="w-9 h-9 rounded-xl bg-surface-800 border border-border-default flex items-center justify-center text-ink-secondary hover:text-ink-primary hover:border-border-strong transition-all duration-200 disabled:opacity-40"
+            className="w-9 h-9 rounded-xl flex items-center justify-center transition-all duration-200 disabled:opacity-40"
+            style={{ background: '#FFFFFF', border: '1px solid #E0E2E6', color: '#6B7280' }}
           >
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8}
               className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`}
@@ -158,32 +155,27 @@ export default function AdminPanelPage() {
 
         {/* ── Error global ── */}
         {error && (
-          <div className="bg-red-950/60 border border-red-900/50 rounded-xl px-4 py-3 space-y-1">
-            <p className="text-red-400 text-xs font-semibold">Error</p>
-            <p className="text-red-400/70 text-xs leading-relaxed">{error}</p>
+          <div className="rounded-xl px-4 py-3 space-y-1"
+               style={{ background: '#FEF2F2', border: '1px solid #FECACA' }}>
+            <p className="text-red-500 text-xs font-semibold">Error</p>
+            <p className="text-red-400 text-xs leading-relaxed">{error}</p>
             <button onClick={() => setError('')}
-              className="text-red-400 text-xs underline underline-offset-2">
+              className="text-red-500 text-xs underline underline-offset-2">
               Cerrar
             </button>
           </div>
         )}
 
-        {/* ══════════════════════════════════════════
-            SECCIÓN 1 — Solicitudes pendientes
-        ══════════════════════════════════════════ */}
+        {/* SECCIÓN 1 — Solicitudes pendientes */}
         <section className="space-y-3">
           <div className="flex items-center gap-2">
-            <h2 className="text-ink-secondary text-xs font-semibold uppercase tracking-widest">
+            <h2 className="text-xs font-semibold uppercase tracking-widest" style={{ color: '#6B7280' }}>
               Pendientes
             </h2>
             {!loading && requests.length > 0 && (
               <span
                 className="px-2 py-0.5 rounded-full text-[10px] font-bold"
-                style={{
-                  background: 'rgba(245,158,11,0.15)',
-                  border:     '1px solid rgba(245,158,11,0.3)',
-                  color:      '#f59e0b',
-                }}
+                style={{ background: '#FFF5D6', border: '1px solid #F5E6A3', color: '#92750F' }}
               >
                 {requests.length}
               </span>
@@ -194,20 +186,23 @@ export default function AdminPanelPage() {
             <div className="space-y-3">
               {[1, 2].map(i => (
                 <div key={i}
-                  className="h-28 bg-surface-900 border border-border-default rounded-2xl animate-pulse" />
+                  className="h-28 rounded-2xl animate-pulse"
+                  style={{ background: '#FFFFFF', border: '1px solid #E0E2E6' }} />
               ))}
             </div>
           ) : requests.length === 0 ? (
-            <div className="bg-surface-900 border border-border-default rounded-2xl px-4 py-10 text-center">
-              <div className="w-9 h-9 rounded-xl bg-surface-800 border border-border-default flex items-center justify-center mx-auto mb-3">
-                <svg viewBox="0 0 24 24" fill="none" stroke="#5c665c" strokeWidth={1.8}
+            <div className="rounded-2xl px-4 py-10 text-center"
+                 style={{ background: '#FFFFFF', border: '1px solid #E0E2E6' }}>
+              <div className="w-9 h-9 rounded-xl flex items-center justify-center mx-auto mb-3"
+                   style={{ background: '#F0FDF4', border: '1px solid #BBF7D0' }}>
+                <svg viewBox="0 0 24 24" fill="none" stroke="#16A34A" strokeWidth={1.8}
                   className="w-4 h-4" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M9 12l2 2 4-4"/>
                   <circle cx="12" cy="12" r="9"/>
                 </svg>
               </div>
-              <p className="text-ink-secondary text-sm font-medium">Sin solicitudes pendientes</p>
-              <p className="text-ink-muted text-xs mt-1 opacity-60">
+              <p className="text-sm font-medium" style={{ color: '#1F2937' }}>Sin solicitudes pendientes</p>
+              <p className="text-xs mt-1 opacity-60" style={{ color: '#6B7280' }}>
                 Todas las cuentas han sido revisadas
               </p>
             </div>
@@ -217,35 +212,28 @@ export default function AdminPanelPage() {
                 const busy = Boolean(actionMap[req.id])
                 return (
                   <div key={req.id}
-                    className="bg-surface-900 border border-border-default rounded-2xl p-4 space-y-4">
+                    className="rounded-2xl p-4 space-y-4"
+                    style={{ background: '#FFFFFF', border: '1px solid #E0E2E6' }}>
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex items-center gap-3">
                         <div
                           className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 font-bold text-sm"
-                          style={{
-                            background: 'rgba(184,245,51,0.1)',
-                            border:     '1px solid rgba(184,245,51,0.2)',
-                            color:      '#b8f533',
-                          }}
+                          style={{ background: '#E8F4FA', border: '1px solid #D0E5F0', color: '#3A8BB5' }}
                         >
                           {req.username?.[0]?.toUpperCase() ?? '?'}
                         </div>
                         <div className="min-w-0">
-                          <p className="text-ink-primary text-sm font-semibold truncate">
+                          <p className="text-sm font-semibold truncate" style={{ color: '#1F2937' }}>
                             @{req.username ?? '—'}
                           </p>
-                          <p className="text-ink-muted text-xs mt-0.5 truncate">
+                          <p className="text-xs mt-0.5 truncate" style={{ color: '#6B7280' }}>
                             {req.email ?? '—'}
                           </p>
                         </div>
                       </div>
                       <span
                         className="flex-shrink-0 px-2.5 py-0.5 rounded-full text-[10px] font-semibold"
-                        style={{
-                          background: 'rgba(245,158,11,0.12)',
-                          border:     '1px solid rgba(245,158,11,0.25)',
-                          color:      '#f59e0b',
-                        }}
+                        style={{ background: '#FFF5D6', border: '1px solid #F5E6A3', color: '#92750F' }}
                       >
                         Pendiente
                       </span>
@@ -255,26 +243,18 @@ export default function AdminPanelPage() {
                       <button
                         disabled={busy}
                         onClick={() => handleReject(req)}
-                        className="
-                          py-2.5 rounded-xl text-xs font-semibold border transition-all duration-200
-                          bg-surface-800 border-border-default text-ink-secondary
-                          hover:border-red-800/70 hover:text-red-400 hover:bg-red-950/30
-                          disabled:opacity-40 disabled:cursor-not-allowed
-                        "
+                        className="py-2.5 rounded-xl text-xs font-semibold transition-all duration-200
+                          text-white disabled:opacity-40 disabled:cursor-not-allowed"
+                        style={{ background: '#EF4444' }}
                       >
                         {actionMap[req.id] === 'rejected' ? 'Eliminando...' : 'Rechazar'}
                       </button>
                       <button
                         disabled={busy}
                         onClick={() => handleApprove(req)}
-                        className="
-                          py-2.5 rounded-xl text-xs font-semibold transition-all duration-200
-                          text-ink-inverse disabled:opacity-40 disabled:cursor-not-allowed
-                        "
-                        style={{
-                          background: busy ? '#659606' : '#b8f533',
-                          boxShadow:  busy ? 'none' : '0 0 12px rgba(184,245,51,0.2)',
-                        }}
+                        className="py-2.5 rounded-xl text-xs font-semibold transition-all duration-200
+                          text-white disabled:opacity-40 disabled:cursor-not-allowed"
+                        style={{ background: '#6BB3D9' }}
                       >
                         {actionMap[req.id] === 'active' ? 'Aprobando...' : 'Aceptar'}
                       </button>
@@ -286,16 +266,14 @@ export default function AdminPanelPage() {
           )}
         </section>
 
-        {/* ══════════════════════════════════════════
-            SECCIÓN 2 — Historial de solicitudes
-        ══════════════════════════════════════════ */}
+        {/* SECCIÓN 2 — Historial de solicitudes */}
         <section className="space-y-3">
           <div className="flex items-center gap-2">
-            <h2 className="text-ink-secondary text-xs font-semibold uppercase tracking-widest">
+            <h2 className="text-xs font-semibold uppercase tracking-widest" style={{ color: '#6B7280' }}>
               Historial
             </h2>
             {!histLoading && history.length > 0 && (
-              <span className="text-ink-muted text-[10px]">
+              <span className="text-[10px]" style={{ color: '#9CA3AF' }}>
                 ({history.length})
               </span>
             )}
@@ -305,12 +283,14 @@ export default function AdminPanelPage() {
             <div className="space-y-2">
               {[1, 2, 3].map(i => (
                 <div key={i}
-                  className="h-16 bg-surface-900 border border-border-default rounded-xl animate-pulse" />
+                  className="h-16 rounded-xl animate-pulse"
+                  style={{ background: '#FFFFFF', border: '1px solid #E0E2E6' }} />
               ))}
             </div>
           ) : history.length === 0 ? (
-            <div className="bg-surface-900 border border-border-default rounded-xl px-4 py-8 text-center">
-              <p className="text-ink-muted text-xs opacity-60">Aún no hay acciones registradas</p>
+            <div className="rounded-xl px-4 py-8 text-center"
+                 style={{ background: '#FFFFFF', border: '1px solid #E0E2E6' }}>
+              <p className="text-xs opacity-60" style={{ color: '#9CA3AF' }}>Aún no hay acciones registradas</p>
             </div>
           ) : (
             <div className="space-y-2">
@@ -327,38 +307,30 @@ export default function AdminPanelPage() {
                 return (
                   <div
                     key={item.id}
-                    className="
-                      group relative flex items-center gap-3 px-4 py-3
-                      bg-surface-900 border rounded-xl
-                      cursor-pointer select-none
-                      transition-all duration-200
-                      hover:bg-surface-800 active:scale-[0.985]
-                    "
+                    className="group relative flex items-center gap-3 px-4 py-3 rounded-xl
+                      cursor-pointer select-none transition-all duration-200 active:scale-[0.985]"
                     style={{
-                      borderColor: accepted
-                        ? 'rgba(184,245,51,0.15)'
-                        : 'rgba(248,113,113,0.15)',
+                      background: '#FFFFFF',
+                      border: accepted
+                        ? '1px solid #D0E5F0'
+                        : '1px solid #FECACA',
                     }}
                   >
                     {/* Indicador de acción */}
                     <div
                       className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 transition-transform duration-200 group-hover:scale-105"
                       style={{
-                        background: accepted
-                          ? 'rgba(184,245,51,0.1)'
-                          : 'rgba(248,113,113,0.1)',
-                        border: accepted
-                          ? '1px solid rgba(184,245,51,0.2)'
-                          : '1px solid rgba(248,113,113,0.2)',
+                        background: accepted ? '#E8F4FA' : '#FEF2F2',
+                        border: accepted ? '1px solid #D0E5F0' : '1px solid #FECACA',
                       }}
                     >
                       {accepted ? (
-                        <svg viewBox="0 0 16 16" fill="none" stroke="#b8f533" strokeWidth={2}
+                        <svg viewBox="0 0 16 16" fill="none" stroke="#6BB3D9" strokeWidth={2}
                           className="w-3.5 h-3.5" strokeLinecap="round" strokeLinejoin="round">
                           <path d="M2.5 8l3.5 3.5 7-7"/>
                         </svg>
                       ) : (
-                        <svg viewBox="0 0 16 16" fill="none" stroke="#f87171" strokeWidth={2}
+                        <svg viewBox="0 0 16 16" fill="none" stroke="#EF4444" strokeWidth={2}
                           className="w-3.5 h-3.5" strokeLinecap="round" strokeLinejoin="round">
                           <path d="M4 4l8 8M12 4l-8 8"/>
                         </svg>
@@ -367,10 +339,10 @@ export default function AdminPanelPage() {
 
                     {/* Datos del usuario */}
                     <div className="flex-1 min-w-0">
-                      <p className="text-ink-primary text-xs font-semibold truncate">
+                      <p className="text-xs font-semibold truncate" style={{ color: '#1F2937' }}>
                         @{item.username}
                       </p>
-                      <p className="text-ink-muted text-[10px] truncate mt-0.5">
+                      <p className="text-[10px] truncate mt-0.5" style={{ color: '#9CA3AF' }}>
                         {item.email}
                       </p>
                     </div>
@@ -380,22 +352,21 @@ export default function AdminPanelPage() {
                       <span
                         className="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wide"
                         style={{
-                          background: accepted
-                            ? 'rgba(184,245,51,0.12)'
-                            : 'rgba(248,113,113,0.12)',
-                          color: accepted ? '#b8f533' : '#f87171',
+                          background: accepted ? '#E8F4FA' : '#FEF2F2',
+                          color: accepted ? '#3A8BB5' : '#EF4444',
                         }}
                       >
                         {accepted ? 'Aceptado' : 'Rechazado'}
                       </span>
-                      <p className="text-ink-muted text-[9px]">
+                      <p className="text-[9px]" style={{ color: '#9CA3AF' }}>
                         {dateStr} · {timeStr}
                       </p>
                     </div>
 
-                    {/* Flecha indicadora de "clickeable" */}
-                    <svg viewBox="0 0 16 16" fill="none" stroke="#3a3e3e" strokeWidth={1.5}
+                    {/* Flecha */}
+                    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={1.5}
                       className="w-3.5 h-3.5 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                      style={{ color: '#D1D5DB' }}
                       strokeLinecap="round" strokeLinejoin="round">
                       <path d="M6 4l4 4-4 4"/>
                     </svg>

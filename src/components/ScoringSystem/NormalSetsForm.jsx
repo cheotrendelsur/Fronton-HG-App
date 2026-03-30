@@ -1,7 +1,5 @@
 import { useState, useEffect } from 'react'
 
-const LABEL = 'block text-[10px] font-semibold uppercase tracking-widest text-ink-muted mb-1.5'
-
 function NumField({ label, value, onChange, min, max, hint, touched }) {
   const n = Number(value)
   const invalid = value === '' || n < min || n > max || !Number.isInteger(n)
@@ -9,29 +7,27 @@ function NumField({ label, value, onChange, min, max, hint, touched }) {
 
   return (
     <div>
-      <label className={LABEL}>{label}</label>
+      <label className="block text-[10px] font-semibold uppercase tracking-widest mb-1.5"
+             style={{ color: '#6B7280' }}>{label}</label>
       <input
         type="number"
         value={value}
         onChange={e => onChange(e.target.value)}
         min={min}
         max={max}
-        className={`
-          w-full bg-surface-800 border rounded-xl
-          px-4 py-3 text-sm text-ink-primary placeholder-ink-muted
-          focus:outline-none focus:ring-1 transition-all duration-200
-          ${showError
-            ? 'border-red-700 focus:border-red-600 focus:ring-red-600/20'
-            : 'border-border-default focus:border-neon-600 focus:ring-neon-600/30'
-          }
-        `}
+        className="w-full rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-1 transition-all duration-200"
+        style={{
+          background: '#FFFFFF',
+          color: '#1F2937',
+          border: showError ? '1px solid #EF4444' : '1px solid #E0E2E6',
+        }}
       />
       {showError ? (
-        <p className="text-red-400 text-[11px] mt-1 leading-tight">
+        <p className="text-red-500 text-[11px] mt-1 leading-tight">
           Debe ser un entero entre {min} y {max}
         </p>
       ) : (
-        <p className="text-ink-muted text-[10px] mt-1">{hint}</p>
+        <p className="text-[10px] mt-1" style={{ color: '#9CA3AF' }}>{hint}</p>
       )}
     </div>
   )
