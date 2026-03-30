@@ -32,7 +32,10 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. `tailwind.config.js` contiene los nuevos valores hex para toda la paleta celeste, azul marino, dorado y los tokens pearl-* para la zona interior
   4. `index.css` no contiene hex hardcodeados de verde neón (#b8f533, #080A0F); `.glass` usa tinte celeste
   5. `index.html` tiene `<meta name="theme-color" content="#F2F3F5">` y `vite.config.js` tiene `theme_color: "#F2F3F5"` con `name: "Frontón HGV"`
-**Plans**: TBD
+**Plans**: 2 plans
+Plans:
+- [ ] 01-01-PLAN.md — Core token migration (tailwind.config.js + index.css)
+- [ ] 01-02-PLAN.md — PWA metadata update (index.html + vite.config.js)
 **UAT Pre-Phase Checklist**:
   - [ ] Ejecutar `grep -rn "#b8f533\|#080A0F\|neon-green" src/` para inventariar hardcoded antes de empezar
   - [ ] Confirmar que neon-900/700/800 están presentes en tailwind.config.js actual
@@ -53,7 +56,10 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. Tras ~3 segundos, la splash ejecuta zoom-out + fade-out y redirige automáticamente a `/auth`
   4. Si el usuario refresca la página dentro de la misma sesión del navegador, la splash NO vuelve a aparecer (sessionStorage flag)
   5. `App.jsx` no contiene el color hex #b8f533 (verde neón residual eliminado del AppLoader SVG)
-**Plans**: TBD
+**Plans**: 2 plans
+Plans:
+- [ ] 01-01-PLAN.md — Core token migration (tailwind.config.js + index.css)
+- [ ] 01-02-PLAN.md — PWA metadata update (index.html + vite.config.js)
 **UI hint**: yes
 **UAT Pre-Phase Checklist**:
   - [ ] `lobo.png` disponible para copiar a `src/assets/`
@@ -75,7 +81,10 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. El botón principal tiene fondo #6BB3D9 con texto blanco; los links son celeste; no hay nada de color verde neón visible
   4. OnboardingPage tiene el mismo fondo oscuro; las opciones de rol inactivas usan #2A2D33/#3A3D44 y la activa usa borde #6BB3D9 con sombra celeste
   5. El flujo completo funciona: login, registro, selección de rol, envío, estado pendiente — sin regresiones funcionales
-**Plans**: TBD
+**Plans**: 2 plans
+Plans:
+- [ ] 01-01-PLAN.md — Core token migration (tailwind.config.js + index.css)
+- [ ] 01-02-PLAN.md — PWA metadata update (index.html + vite.config.js)
 **UI hint**: yes
 **UAT Pre-Phase Checklist**:
   - [ ] Ejecutar `grep -n "style=" src/pages/AuthPage.jsx src/pages/OnboardingPage.jsx` para inventariar inline styles
@@ -98,7 +107,10 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. El ícono activo en el nav es #1F2937 con label en #1F2937 font-weight 500 (sin rastro de dorado #F5D547)
   4. Los tres roles (player, organizer, admin) renderizan su conjunto de tabs correctamente en el nav
   5. El wrapper de página interior usa fondo claro (pearl/light-zone), no el fondo oscuro #080909 anterior
-**Plans**: TBD
+**Plans**: 2 plans
+Plans:
+- [ ] 01-01-PLAN.md — Core token migration (tailwind.config.js + index.css)
+- [ ] 01-02-PLAN.md — PWA metadata update (index.html + vite.config.js)
 **UI hint**: yes
 **UAT Pre-Phase Checklist**:
   - [ ] Ejecutar `grep -n "style=" src/components/Layout.jsx` y listar todos los props inline (mínimo 7 esperados)
@@ -121,7 +133,10 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. Los badges de estado son semánticos: "Activo" #E8F4FA/#3A8BB5, "Borrador" #F3F4F6/#6B7280, "Finalizado" #F0FDF4/#16A34A, "Destacado" #FFF5D6/#92750F (dorado)
   4. El botón "Inscribirse" y los filtros/tabs activos usan #6BB3D9; ningún badge usa verde neón
   5. Las páginas placeholder OrganizerHubPage y ResultsInputPage tienen fondo claro #F2F3F5 (coherencia visual con el shell)
-**Plans**: TBD
+**Plans**: 2 plans
+Plans:
+- [ ] 01-01-PLAN.md — Core token migration (tailwind.config.js + index.css)
+- [ ] 01-02-PLAN.md — PWA metadata update (index.html + vite.config.js)
 **UI hint**: yes
 **UAT Pre-Phase Checklist**:
   - [ ] Verificar que `.glass` utility no se usa en cards de estas páginas (riesgo: glass oscuro sobre fondo claro)
@@ -146,7 +161,10 @@ Decimal phases appear between their surrounding integers in numeric order.
   4. Las tarjetas de solicitud (RegistrationRequestCard) muestran badges: pendiente=dorado, aprobado=verde, rechazado=rojo
   5. Los widgets de torneos históricos (HistoryTournaments) tienen opacidad reducida y acento lateral gris #D1D5DB (no celeste)
   6. Los botones siguen jerarquía: primario celeste, secundario #F3F4F6/#4B5563, peligroso #EF4444; "Iniciar torneo" tiene sombra celeste
-**Plans**: TBD
+**Plans**: 2 plans
+Plans:
+- [ ] 01-01-PLAN.md — Core token migration (tailwind.config.js + index.css)
+- [ ] 01-02-PLAN.md — PWA metadata update (index.html + vite.config.js)
 **UI hint**: yes
 **UAT Pre-Phase Checklist**:
   - [ ] Ejecutar grep de hex en todos los 12 archivos del directorio TournamentsDashboard (incluyendo Tabs/)
@@ -172,7 +190,10 @@ Decimal phases appear between their surrounding integers in numeric order.
   4. Al instalar la PWA en Android/Chrome, el ícono que aparece es el escudo lobo.png (no el ícono verde anterior)
   5. Un audit de Lighthouse PWA pasa el check de maskable icon (dos entradas separadas: `purpose: 'any'` y `purpose: 'maskable'`)
   6. `theme_color` tiene el valor #F2F3F5 en `vite.config.js`, `index.html` y `index.css` — los tres en el mismo commit; ningún valor verde neón (#b8f533 o variantes) aparece en toda la app
-**Plans**: TBD
+**Plans**: 2 plans
+Plans:
+- [ ] 01-01-PLAN.md — Core token migration (tailwind.config.js + index.css)
+- [ ] 01-02-PLAN.md — PWA metadata update (index.html + vite.config.js)
 **UI hint**: yes
 **UAT Pre-Phase Checklist**:
   - [ ] Verificar visualmente que el estado ACTIVE de ScoringSystemSelector funciona (fondo neon-900/40 visible) — si está roto, arreglar alias en Phase 1 antes de continuar
