@@ -125,10 +125,9 @@ export async function processGroupPhaseCompletion(supabaseClient, tournamentId, 
         .insert(bpRecords)
     }
 
-    // Update bracket first round with team assignments + update existing matches
+    // Update bracket first round with team assignments
     const firstRoundSlots = filledBracket.filter(s => s.round_number === 1)
     for (const slot of firstRoundSlots) {
-      // Update bracket slot with teams
       await supabaseClient
         .from('tournament_bracket')
         .update({
@@ -139,18 +138,28 @@ export async function processGroupPhaseCompletion(supabaseClient, tournamentId, 
           status: (slot.team1_id && slot.team2_id) ? 'scheduled' : 'pending',
         })
         .eq('id', slot.id)
+    }
 
-      // Update the linked match (already exists from initial persistence) with team assignments
-      if (slot.match_id && slot.team1_id && slot.team2_id) {
-        await supabaseClient
-          .from('tournament_matches')
-          .update({
-            team1_id: slot.team1_id,
-            team2_id: slot.team2_id,
-            status: 'scheduled',
-          })
-          .eq('id', slot.match_id)
-      }
+    // Sync tournament_matches from bracket — fresh query to get actual DB state
+    const { data: syncSlots } = await supabaseClient
+      .from('tournament_bracket')
+      .select('match_id, team1_id, team2_id')
+      .eq('tournament_id', tournamentId)
+      .eq('category_id', categoryId)
+      .eq('round_number', 1)
+      .not('team1_id', 'is', null)
+      .not('team2_id', 'is', null)
+      .not('match_id', 'is', null)
+
+    for (const slot of (syncSlots ?? [])) {
+      await supabaseClient
+        .from('tournament_matches')
+        .update({
+          team1_id: slot.team1_id,
+          team2_id: slot.team2_id,
+          status: 'scheduled',
+        })
+        .eq('id', slot.match_id)
     }
 
     // i) Mark groups as completed
@@ -224,29 +233,34 @@ export async function advanceBracketWinner(supabaseClient, tournamentId, matchId
       .update({ [updateField]: winnerId })
       .eq('id', nextSlot.id)
 
-    // Re-fetch to check if both teams are now defined
-    const { data: updatedNextSlot } = await supabaseClient
+    // Re-fetch the next slot from DB to get the actual state after the update
+    const { data: refreshedSlot } = await supabaseClient
       .from('tournament_bracket')
       .select('id, team1_id, team2_id, match_id, status')
       .eq('id', nextSlot.id)
       .single()
 
-    if (updatedNextSlot?.team1_id && updatedNextSlot?.team2_id && updatedNextSlot.match_id) {
-      // Both teams ready — UPDATE the existing match (already has court/date/time from initial persistence)
+    if (!refreshedSlot) {
+      return { success: true, nextMatchReady: false }
+    }
+
+    const bothTeamsReady = refreshedSlot.team1_id && refreshedSlot.team2_id
+
+    if (bothTeamsReady && refreshedSlot.match_id) {
+      // Both teams ready — UPDATE the existing match with team assignments
       await supabaseClient
         .from('tournament_matches')
         .update({
-          team1_id: updatedNextSlot.team1_id,
-          team2_id: updatedNextSlot.team2_id,
+          team1_id: refreshedSlot.team1_id,
+          team2_id: refreshedSlot.team2_id,
           status: 'scheduled',
         })
-        .eq('id', updatedNextSlot.match_id)
+        .eq('id', refreshedSlot.match_id)
 
-      // Update bracket slot status
       await supabaseClient
         .from('tournament_bracket')
         .update({ status: 'scheduled' })
-        .eq('id', updatedNextSlot.id)
+        .eq('id', refreshedSlot.id)
 
       return { success: true, nextMatchReady: true }
     }

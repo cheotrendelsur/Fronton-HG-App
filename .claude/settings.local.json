@@ -9,7 +9,20 @@
       "Bash(npx --yes sharp-cli --version)",
       "Bash(node -e \":*)",
       "Bash(npx --yes jimp-cli --version)",
-      "Bash(python:*)"
+      "Bash(python:*)",
+      "Bash(node __test_phase2.mjs)",
+      "Bash(node __test_phase3.mjs)",
+      "Bash(node __test_phase7.mjs)",
+      "Bash(node test-phase1.mjs)",
+      "Bash(node test-phase2.mjs)",
+      "Bash(node test-phase6.mjs)",
+      "Bash(node test-duration.mjs)",
+      "Bash(node test-phase1-t4.mjs)",
+      "Bash(node test-phase6-t4.mjs)",
+      "Bash(node test-fixes.mjs)",
+      "Bash(cd:*)",
+      "Bash(node test-comprehensive.mjs)",
+      "Bash(node test-elim-schedule.mjs)"
     ]
   }
 }
