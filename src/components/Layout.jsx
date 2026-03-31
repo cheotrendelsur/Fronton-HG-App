@@ -1,5 +1,6 @@
 import { NavLink, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import BrandLoader from './BrandLoader'
 import lobo from '../assets/lobo.png'
 
 const PAGE_TITLES = {
@@ -105,29 +106,8 @@ const adminNavItems = [
 function SyncOverlay() {
   return (
     <div className="flex-1 flex flex-col items-center justify-center gap-4 py-24">
-      <div className="relative w-12 h-12">
-        <svg
-          className="absolute inset-0 animate-spin"
-          style={{ animationDuration: '1.1s' }}
-          viewBox="0 0 48 48"
-          fill="none"
-        >
-          <circle cx="24" cy="24" r="21" stroke="#E0E2E6" strokeWidth="2.5"/>
-          <path
-            d="M24 3 A21 21 0 0 1 45 24"
-            stroke="#6BB3D9"
-            strokeWidth="2.5"
-            strokeLinecap="round"
-          />
-        </svg>
-        <div className="absolute inset-0 flex items-center justify-center">
-          <svg viewBox="0 0 24 24" fill="none" className="w-5 h-5">
-            <circle cx="12" cy="12" r="9" stroke="#E0E2E6" strokeWidth="1.5"/>
-            <path d="M5 12 Q12 5 19 12 Q12 19 5 12Z" fill="#6BB3D9" opacity="0.8"/>
-          </svg>
-        </div>
-      </div>
-      <p className="text-ink-muted text-[10px] uppercase tracking-widest animate-pulse">
+      <BrandLoader size={40} />
+      <p className="text-[10px] uppercase tracking-widest" style={{ color: '#9CA3AF', animation: 'pulse 2s ease-in-out infinite' }}>
         Verificando sesión
       </p>
     </div>
@@ -187,11 +167,10 @@ export default function Layout({ children }) {
               src={lobo}
               alt="HGV"
               style={{
-                width:        '28px',
-                height:       '28px',
-                borderRadius: '6px',
-                objectFit:    'cover',
-                display:      'block',
+                width:     'auto',
+                height:    '32px',
+                objectFit: 'contain',
+                display:   'block',
               }}
             />
           </div>

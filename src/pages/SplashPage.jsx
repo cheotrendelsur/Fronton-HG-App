@@ -118,7 +118,7 @@ export default function SplashPage({ onDone }) {
             margin: 0,
           }}
         >
-          Por nuestro frontón y raíces
+          "Por nuestro frontón y raíces"
         </p>
 
         {/* Footer text */}

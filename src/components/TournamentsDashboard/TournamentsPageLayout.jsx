@@ -4,7 +4,6 @@ import HistoryTournaments from './HistoryTournaments'
 export default function TournamentsPageLayout({
   activeTournaments,
   historyTournaments,
-  onSelectTournament,
   loading,
   organizerUsername,
 }) {
@@ -23,7 +22,6 @@ export default function TournamentsPageLayout({
       <div className="flex flex-col gap-6 px-4 py-6 flex-1">
         <ActiveTournaments
           tournaments={activeTournaments}
-          onSelect={onSelectTournament}
           loading={loading}
           organizerUsername={organizerUsername}
         />
@@ -32,7 +30,6 @@ export default function TournamentsPageLayout({
 
         <HistoryTournaments
           tournaments={historyTournaments}
-          onSelect={onSelectTournament}
           loading={loading}
           organizerUsername={organizerUsername}
         />

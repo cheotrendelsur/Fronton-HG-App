@@ -4,7 +4,7 @@ import { supabase } from '../../../lib/supabaseClient'
 import RequestsSection from './RequestsSection'
 import ApprovedSection from './ApprovedSection'
 
-const SELECT_FIELDS = 'id, team_name, category_id, status, requested_at, inscription_fee, categories(name)'
+const SELECT_FIELDS = 'id, team_name, category_id, status, requested_at, inscription_fee, player1_id, player2_id, categories(name)'
 
 export default function SolicitudesTab({ tournament }) {
   const { profile } = useAuth()
@@ -38,8 +38,25 @@ export default function SolicitudesTab({ tournament }) {
       ])
       if (pendingRes.error) throw pendingRes.error
       if (decidedRes.error) throw decidedRes.error
-      setPending(pendingRes.data ?? [])
-      setDecided(decidedRes.data ?? [])
+
+      // Resolve player names from profiles
+      const allRegs = [...(pendingRes.data ?? []), ...(decidedRes.data ?? [])]
+      const playerIds = [...new Set(allRegs.flatMap(r => [r.player1_id, r.player2_id]).filter(Boolean))]
+      const profileMap = {}
+      if (playerIds.length > 0) {
+        const { data: profiles } = await supabase
+          .from('profiles')
+          .select('id, username, email')
+          .in('id', playerIds)
+        for (const p of (profiles ?? [])) profileMap[p.id] = p
+      }
+      const enrich = (r) => ({
+        ...r,
+        player1: profileMap[r.player1_id] ?? null,
+        player2: profileMap[r.player2_id] ?? null,
+      })
+      setPending((pendingRes.data ?? []).map(enrich))
+      setDecided((decidedRes.data ?? []).map(enrich))
 
       // Load which categories are full
       const { data: progData } = await supabase

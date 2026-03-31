@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import Layout from '../components/Layout'
-import TournamentsPageLayout    from '../components/TournamentsDashboard/TournamentsPageLayout'
-import TournamentDetailModal    from '../components/TournamentsDashboard/TournamentDetailModal'
+import TournamentsPageLayout from '../components/TournamentsDashboard/TournamentsPageLayout'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabaseClient'
 
@@ -9,10 +8,8 @@ const ACTIVE_STATUSES  = ['inscription', 'active']
 const HISTORY_STATUSES = ['finished']
 
 function OrganizerDashboard({ profile }) {
-  const [tournamentsList,    setTournamentsList]    = useState([])
-  const [loading,            setLoading]            = useState(true)
-  const [selectedTournament, setSelectedTournament] = useState(null)
-  const [currentTab,         setCurrentTab]         = useState('info')
+  const [tournamentsList, setTournamentsList] = useState([])
+  const [loading,         setLoading]         = useState(true)
 
   const loadTournaments = useCallback(async () => {
     if (!profile?.id) return
@@ -33,40 +30,13 @@ function OrganizerDashboard({ profile }) {
   const activeTournaments  = tournamentsList.filter(t => ACTIVE_STATUSES.includes(t.status))
   const historyTournaments = tournamentsList.filter(t => HISTORY_STATUSES.includes(t.status))
 
-  function handleSelectTournament(tournament) {
-    setSelectedTournament(tournament)
-    setCurrentTab('info')
-  }
-
-  function handleCloseModal() {
-    setSelectedTournament(null)
-  }
-
-  function handleTournamentUpdate(updated) {
-    setTournamentsList(prev => prev.map(t => t.id === updated.id ? { ...t, ...updated } : t))
-    setSelectedTournament(prev => prev ? { ...prev, ...updated } : prev)
-  }
-
   return (
-    <>
-      <TournamentsPageLayout
-        activeTournaments={activeTournaments}
-        historyTournaments={historyTournaments}
-        onSelectTournament={handleSelectTournament}
-        loading={loading}
-        organizerUsername={profile?.username}
-      />
-
-      {selectedTournament && (
-        <TournamentDetailModal
-          tournament={selectedTournament}
-          currentTab={currentTab}
-          onTabChange={setCurrentTab}
-          onClose={handleCloseModal}
-          onUpdate={handleTournamentUpdate}
-        />
-      )}
-    </>
+    <TournamentsPageLayout
+      activeTournaments={activeTournaments}
+      historyTournaments={historyTournaments}
+      loading={loading}
+      organizerUsername={profile?.username}
+    />
   )
 }
 

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 
 const MONTHS = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic']
 
@@ -80,93 +80,27 @@ function StatusBadge({ status }) {
   )
 }
 
-function StartConfirmModal({ tournamentName, onConfirm, onCancel }) {
-  return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center px-4">
-      {/* Backdrop */}
-      <div
-        className="absolute inset-0 backdrop-blur-sm" style={{ background: 'rgba(0,0,0,0.5)' }}
-        onClick={onCancel}
-      />
+export default function TournamentWidget({ tournament, organizerUsername, readonly = false }) {
+  const navigate = useNavigate()
 
-      {/* Panel */}
-      <div className="relative w-full max-w-sm rounded-2xl p-6 shadow-card animate-fade-up"
-           style={{ background: '#FFFFFF', border: '1px solid #E0E2E6' }}>
-
-        {/* Icon */}
-        <div className="w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-4"
-             style={{ background: '#E8F4FA', border: '1px solid #D0E5F0' }}>
-          <svg viewBox="0 0 24 24" fill="none" className="w-6 h-6"
-            style={{ color: '#6BB3D9' }}
-            stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
-            <polygon points="5,3 19,12 5,21" fill="currentColor" stroke="none" />
-          </svg>
-        </div>
-
-        <h3 className="text-base font-semibold text-center leading-snug mb-2" style={{ color: '#1F2937' }}>
-          ¿Iniciar torneo?
-        </h3>
-        <p className="text-xs text-center leading-relaxed mb-1" style={{ color: '#6B7280' }}>
-          <span className="font-medium" style={{ color: '#4B5563' }}>"{tournamentName}"</span>
-        </p>
-        <p className="text-xs text-center leading-relaxed mb-6" style={{ color: '#6B7280' }}>
-          Esta acción iniciará el torneo y no se podrá volver atrás.
-        </p>
-
-        <div className="flex gap-3">
-          <button
-            type="button"
-            onClick={onCancel}
-            className="flex-1 py-3 rounded-xl text-sm font-medium
-                       transition-all duration-200"
-            style={{ background: '#F3F4F6', color: '#4B5563' }}
-          >
-            Cancelar
-          </button>
-          <button
-            type="button"
-            onClick={onConfirm}
-            className="flex-1 py-3 rounded-xl text-sm font-semibold
-                       text-white
-                       transition-all duration-200"
-            style={{ background: '#6BB3D9', boxShadow: '0 0 12px rgba(107,179,217,0.15)' }}
-          >
-            Sí, iniciar
-          </button>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-export default function TournamentWidget({ tournament, organizerUsername, onClick, readonly = false }) {
-  const [confirmOpen, setConfirmOpen] = useState(false)
-
+  const isActive      = tournament?.status === 'active'
   const dateRange     = formatDateRange(tournament?.start_date, tournament?.end_date)
   const sportName     = tournament?.sports?.name
   const categories    = tournament?.categories ?? []
   const categoryNames = categories.map(c => c.name).join(', ')
   const fee           = tournament?.inscription_fee
 
-  function handleStartClick(e) {
-    e.stopPropagation()
-    setConfirmOpen(true)
-  }
-
-  function handleConfirm() {
-    setConfirmOpen(false)
-    // TASK-004: implementar inicio real del torneo
-    console.log('Iniciando TASK-004...')
-  }
-
-  function handleCancel() {
-    setConfirmOpen(false)
+  function handleWidgetClick() {
+    if (isActive) {
+      navigate(`/tournament/${tournament.id}/active`)
+    } else {
+      navigate(`/tournament/${tournament.id}/manage`)
+    }
   }
 
   return (
-    <>
       <div
-        onClick={!readonly ? onClick : undefined}
+        onClick={!readonly ? handleWidgetClick : undefined}
         className={`w-full text-left rounded-2xl p-4
                    transition-all duration-200
                    ${readonly
@@ -226,28 +160,15 @@ export default function TournamentWidget({ tournament, organizerUsername, onClic
           )}
         </div>
 
-        {/* Start button — only for active (non-readonly) widgets */}
-        {!readonly && (
-          <button
-            type="button"
-            onClick={handleStartClick}
-            className="mt-4 w-full py-3 rounded-xl text-sm font-semibold
-                       text-white
-                       transition-all duration-200"
-            style={{ background: '#6BB3D9', boxShadow: '0 0 12px rgba(107,179,217,0.15)' }}
-          >
-            Listo para iniciar
-          </button>
+        {/* Active indicator */}
+        {!readonly && isActive && (
+          <div className="mt-3 flex items-center justify-center gap-1.5">
+            <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: '#6BB3D9' }}/>
+            <span className="text-[11px] font-medium" style={{ color: '#6BB3D9' }}>
+              Activo — Fase de Grupos
+            </span>
+          </div>
         )}
       </div>
-
-      {confirmOpen && (
-        <StartConfirmModal
-          tournamentName={tournament?.name ?? ''}
-          onConfirm={handleConfirm}
-          onCancel={handleCancel}
-        />
-      )}
-    </>
   )
 }

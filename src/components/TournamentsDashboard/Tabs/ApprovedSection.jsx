@@ -7,6 +7,8 @@ const FILTERS = [
 function DecidedRow({ registration }) {
   const isApproved   = registration.status === 'approved'
   const categoryName = registration.categories?.name ?? '—'
+  const p1 = registration.player1?.username ?? registration.player1?.email ?? '?'
+  const p2 = registration.player2?.username ?? registration.player2?.email ?? '?'
 
   return (
     <div className="flex items-center justify-between gap-3 py-3 last:border-0"
@@ -20,7 +22,7 @@ function DecidedRow({ registration }) {
           {isApproved ? '✓' : '✗'}
         </span>
         <div className="min-w-0">
-          <p className="text-xs font-medium truncate" style={{ color: '#1F2937' }}>{registration.team_name}</p>
+          <p className="text-xs font-medium truncate" style={{ color: '#1F2937' }}>{p1} / {p2}</p>
           <p className="text-[11px] truncate" style={{ color: '#9CA3AF' }}>Cat: {categoryName}</p>
         </div>
       </div>

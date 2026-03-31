@@ -32,7 +32,7 @@ function EmptyState() {
   )
 }
 
-export default function ActiveTournaments({ tournaments = [], onSelect, loading, organizerUsername }) {
+export default function ActiveTournaments({ tournaments = [], loading, organizerUsername }) {
   return (
     <section className="space-y-3">
       <div className="flex items-center gap-2">
@@ -59,7 +59,6 @@ export default function ActiveTournaments({ tournaments = [], onSelect, loading,
               key={t.id}
               tournament={t}
               organizerUsername={organizerUsername}
-              onClick={() => onSelect(t)}
             />
           ))}
         </div>

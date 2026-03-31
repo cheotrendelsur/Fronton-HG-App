@@ -21,9 +21,10 @@ function LoadingSkeleton() {
 }
 
 export default function ProgresoTab({ tournament }) {
-  const [progressMap, setProgressMap] = useState({})
-  const [loading,     setLoading]     = useState(true)
-  const [loadError,   setLoadError]   = useState(false)
+  const [progressMap, setProgressMap]   = useState({})
+  const [teamsByCat, setTeamsByCat]     = useState({})
+  const [loading,     setLoading]       = useState(true)
+  const [loadError,   setLoadError]     = useState(false)
 
   const categories = tournament.categories ?? []
 
@@ -31,14 +32,44 @@ export default function ProgresoTab({ tournament }) {
     setLoading(true)
     setLoadError(false)
     try {
-      const { data, error } = await supabase
-        .from('tournament_progress')
-        .select('category_id, teams_approved, max_teams_allowed, status')
-        .eq('tournament_id', tournament.id)
-      if (error) throw error
+      const [progRes, regsRes] = await Promise.all([
+        supabase
+          .from('tournament_progress')
+          .select('category_id, teams_approved, max_teams_allowed, status')
+          .eq('tournament_id', tournament.id),
+        supabase
+          .from('tournament_registrations')
+          .select('id, team_name, category_id, status, player1_id, player2_id')
+          .eq('tournament_id', tournament.id)
+          .eq('status', 'approved'),
+      ])
+      if (progRes.error) throw progRes.error
       const map = {}
-      for (const row of (data ?? [])) map[row.category_id] = row
+      for (const row of (progRes.data ?? [])) map[row.category_id] = row
       setProgressMap(map)
+
+      // Resolve player names
+      const regs = regsRes.data ?? []
+      const playerIds = [...new Set(regs.flatMap(r => [r.player1_id, r.player2_id]).filter(Boolean))]
+      const profileMap = {}
+      if (playerIds.length > 0) {
+        const { data: profiles } = await supabase
+          .from('profiles')
+          .select('id, username, email')
+          .in('id', playerIds)
+        for (const p of (profiles ?? [])) profileMap[p.id] = p
+      }
+
+      const byCat = {}
+      for (const reg of regs) {
+        if (!byCat[reg.category_id]) byCat[reg.category_id] = []
+        byCat[reg.category_id].push({
+          ...reg,
+          player1: profileMap[reg.player1_id] ?? null,
+          player2: profileMap[reg.player2_id] ?? null,
+        })
+      }
+      setTeamsByCat(byCat)
     } catch {
       setLoadError(true)
     } finally {
@@ -83,6 +114,7 @@ export default function ProgresoTab({ tournament }) {
                 categoryName={cat.name}
                 approved={approved}
                 max={max}
+                teams={teamsByCat[cat.id] ?? []}
               />
             )
           })}

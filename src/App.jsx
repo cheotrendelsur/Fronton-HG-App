@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import ProtectedRoute       from './components/ProtectedRoute'
+import BrandLoader          from './components/BrandLoader'
 import AuthPage             from './pages/AuthPage'
 import OnboardingPage       from './pages/OnboardingPage'
 import DashboardPage        from './pages/DashboardPage'
@@ -9,33 +10,20 @@ import CreateTournamentPage from './pages/CreateTournamentPage'
 import OrganizerHubPage     from './pages/OrganizerHubPage'
 import ResultsInputPage     from './pages/ResultsInputPage'
 import AdminPanelPage       from './pages/AdminPanelPage'
-import TournamentsPage      from './pages/TournamentsPage'
+import TournamentsPage          from './pages/TournamentsPage'
+import ActiveTournamentPage     from './pages/ActiveTournamentPage'
+import TournamentManagePage     from './pages/TournamentManagePage'
 import Layout               from './components/Layout'
 import SplashPage, { SPLASH_KEY } from './pages/SplashPage'
 
 function AppLoader() {
   return (
-    <div className="min-h-screen bg-base-950 flex flex-col items-center justify-center gap-5">
-      <div className="relative w-14 h-14">
-        <svg
-          className="absolute inset-0 animate-spin"
-          style={{ animationDuration: '1.2s' }}
-          viewBox="0 0 56 56"
-          fill="none"
-        >
-          <circle cx="28" cy="28" r="25" stroke="#212424" strokeWidth="2.5"/>
-          <path d="M28 3 A25 25 0 0 1 53 28" stroke="#6BB3D9" strokeWidth="2.5" strokeLinecap="round"/>
-        </svg>
-        <div className="absolute inset-0 flex items-center justify-center">
-          <svg viewBox="0 0 24 24" fill="none" className="w-6 h-6">
-            <circle cx="12" cy="12" r="9" stroke="#2a2e2e" strokeWidth="1.5"/>
-            <path d="M5 12 Q12 5 19 12 Q12 19 5 12Z" fill="#6BB3D9" opacity="0.8"/>
-          </svg>
-        </div>
-      </div>
+    <div className="min-h-screen flex flex-col items-center justify-center gap-5"
+         style={{ background: '#1E2024' }}>
+      <BrandLoader size={48} />
       <div className="text-center space-y-1">
-        <p className="text-ink-primary text-sm font-medium tracking-wide">Frontón HGV</p>
-        <p className="text-ink-muted text-xs tracking-widest uppercase animate-pulse">Verificando sesión</p>
+        <p className="text-sm font-medium tracking-wide" style={{ color: '#E5E7EB' }}>Frontón HGV</p>
+        <p className="text-xs tracking-widest uppercase" style={{ color: '#6B7280', animation: 'pulse 2s ease-in-out infinite' }}>Verificando sesión</p>
       </div>
     </div>
   )
@@ -100,6 +88,14 @@ function AppRoutes() {
         <ProtectedRoute><PlaceholderPage title="Perfil" /></ProtectedRoute>
       }/>
 
+      <Route path="/tournament/:id/active" element={
+        <OrganizerRoute><ActiveTournamentPage /></OrganizerRoute>
+      }/>
+
+      <Route path="/tournament/:id/manage" element={
+        <OrganizerRoute><TournamentManagePage /></OrganizerRoute>
+      }/>
+
       <Route path="/tournaments/create" element={
         <OrganizerRoute><CreateTournamentPage /></OrganizerRoute>
       }/>
@@ -133,7 +129,7 @@ function AppRoutes() {
 }
 
 function AppShell() {
-  const { initializing } = useAuth()
+  const { initializing, showPostLoginSplash, setShowPostLoginSplash } = useAuth()
   const [splashDone, setSplashDone] = useState(
     () => sessionStorage.getItem(SPLASH_KEY) === '1'
   )
@@ -143,6 +139,7 @@ function AppShell() {
   return (
     <BrowserRouter>
       {!splashDone && <SplashPage onDone={() => setSplashDone(true)} />}
+      {showPostLoginSplash && <SplashPage onDone={() => setShowPostLoginSplash(false)} />}
       <AppRoutes />
     </BrowserRouter>
   )

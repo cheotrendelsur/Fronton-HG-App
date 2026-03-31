@@ -13,10 +13,12 @@ export function AuthProvider({ children }) {
   const [isSyncing,      setIsSyncing]      = useState(false)
   // null = no verificado aún | false = no rechazado | true = rechazado
   const [wasRejected,    setWasRejected]    = useState(null)
+  const [showPostLoginSplash, setShowPostLoginSplash] = useState(false)
 
-  const mountedRef  = useRef(true)
-  const busyRef     = useRef(false)
-  const syncingRef  = useRef(false)
+  const mountedRef       = useRef(true)
+  const busyRef          = useRef(false)
+  const syncingRef       = useRef(false)
+  const justSignedInRef  = useRef(false)
 
   const fetchProfile = useCallback(async (userId) => {
     const { data } = await supabase
@@ -73,6 +75,12 @@ export function AuthProvider({ children }) {
     setSession(rawSession)
     setProfile(prof)
     setWasRejected(false)
+
+    // Splash post-login solo para login fresco de usuario con onboarding completo
+    if (justSignedInRef.current && prof?.username && prof?.role) {
+      setShowPostLoginSplash(true)
+    }
+    justSignedInRef.current = false
   }, [fetchProfile, checkRejectionHistory])
 
   // Limpia únicamente la sesión local (IndexedDB/localStorage).
@@ -177,8 +185,12 @@ export function AuthProvider({ children }) {
   }
 
   async function signIn(email, password) {
+    justSignedInRef.current = true
     const { error } = await supabase.auth.signInWithPassword({ email, password })
-    if (error) throw error
+    if (error) {
+      justSignedInRef.current = false
+      throw error
+    }
   }
 
   async function signOut() {
@@ -213,6 +225,8 @@ export function AuthProvider({ children }) {
       wasRejected,
       clearLocalSession,
       isOnboardingComplete,
+      showPostLoginSplash,
+      setShowPostLoginSplash,
       signUp,
       signIn,
       signOut,

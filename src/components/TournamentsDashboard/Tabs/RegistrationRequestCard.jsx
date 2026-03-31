@@ -8,6 +8,8 @@ function formatDate(iso) {
 
 export default function RegistrationRequestCard({ registration, onApprove, onReject, acting, isCategoryFull }) {
   const categoryName = registration.categories?.name ?? '—'
+  const p1 = registration.player1?.username ?? registration.player1?.email ?? '?'
+  const p2 = registration.player2?.username ?? registration.player2?.email ?? '?'
 
   return (
     <div className="rounded-2xl p-4 space-y-3"
@@ -16,7 +18,7 @@ export default function RegistrationRequestCard({ registration, onApprove, onRej
       <div className="space-y-1">
         <div className="flex items-center justify-between gap-2">
           <p className="text-sm font-semibold leading-snug" style={{ color: '#1F2937' }}>
-            {registration.team_name}
+            {p1} / {p2}
           </p>
           <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium"
                 style={{ background: '#FFF5D6', color: '#92750F', border: '1px solid #F5E6A3' }}>
