@@ -140,8 +140,53 @@ export async function processGroupPhaseCompletion(supabaseClient, tournamentId, 
         .eq('id', slot.id)
     }
 
-    // Sync tournament_matches from bracket — fresh query to get actual DB state
-    const { data: syncSlots } = await supabaseClient
+    // h) Sync first-round elimination matches — UPDATE existing matches with team_ids
+    // Use in-memory filledBracket which has match_id from original DB load + team_ids from assignToBracket
+    const firstRoundReady = filledBracket.filter(s => s.round_number === 1 && s.team1_id && s.team2_id)
+
+    for (const slot of firstRoundReady) {
+      const team1 = slot.team1_id
+      const team2 = slot.team2_id
+
+      if (slot.match_id) {
+        // Primary path: match_id exists, UPDATE directly
+        await supabaseClient
+          .from('tournament_matches')
+          .update({ team1_id: team1, team2_id: team2, status: 'scheduled' })
+          .eq('id', slot.match_id)
+      } else {
+        // Fallback: match_id missing — find the pending elimination match by phase + category
+        const phaseName = slot.phase ?? firstRoundSlots[0]?.phase ?? eliminationPhase
+        const { data: pendingMatches } = await supabaseClient
+          .from('tournament_matches')
+          .select('id')
+          .eq('tournament_id', tournamentId)
+          .eq('category_id', categoryId)
+          .eq('phase', phaseName)
+          .is('team1_id', null)
+          .eq('status', 'pending')
+          .order('scheduled_date')
+          .order('scheduled_time')
+          .limit(1)
+
+        if (pendingMatches?.[0]) {
+          await supabaseClient
+            .from('tournament_matches')
+            .update({ team1_id: team1, team2_id: team2, status: 'scheduled' })
+            .eq('id', pendingMatches[0].id)
+
+          // Also link the bracket slot to this match for future use
+          await supabaseClient
+            .from('tournament_bracket')
+            .update({ match_id: pendingMatches[0].id })
+            .eq('id', slot.id)
+        }
+      }
+    }
+
+    // Also do a fresh DB query as a safety net — catches any slots whose bracket
+    // was updated but the in-memory path missed (e.g. timing issues)
+    const { data: freshBracketR1 } = await supabaseClient
       .from('tournament_bracket')
       .select('match_id, team1_id, team2_id')
       .eq('tournament_id', tournamentId)
@@ -151,14 +196,10 @@ export async function processGroupPhaseCompletion(supabaseClient, tournamentId, 
       .not('team2_id', 'is', null)
       .not('match_id', 'is', null)
 
-    for (const slot of (syncSlots ?? [])) {
+    for (const slot of (freshBracketR1 ?? [])) {
       await supabaseClient
         .from('tournament_matches')
-        .update({
-          team1_id: slot.team1_id,
-          team2_id: slot.team2_id,
-          status: 'scheduled',
-        })
+        .update({ team1_id: slot.team1_id, team2_id: slot.team2_id, status: 'scheduled' })
         .eq('id', slot.match_id)
     }
 
@@ -246,23 +287,51 @@ export async function advanceBracketWinner(supabaseClient, tournamentId, matchId
 
     const bothTeamsReady = refreshedSlot.team1_id && refreshedSlot.team2_id
 
-    if (bothTeamsReady && refreshedSlot.match_id) {
-      // Both teams ready — UPDATE the existing match with team assignments
-      await supabaseClient
-        .from('tournament_matches')
-        .update({
-          team1_id: refreshedSlot.team1_id,
-          team2_id: refreshedSlot.team2_id,
-          status: 'scheduled',
-        })
-        .eq('id', refreshedSlot.match_id)
+    if (bothTeamsReady) {
+      let targetMatchId = refreshedSlot.match_id
 
-      await supabaseClient
-        .from('tournament_bracket')
-        .update({ status: 'scheduled' })
-        .eq('id', refreshedSlot.id)
+      // Fallback: if match_id is missing, find the pending match by phase + category
+      if (!targetMatchId) {
+        const { data: pendingMatches } = await supabaseClient
+          .from('tournament_matches')
+          .select('id')
+          .eq('tournament_id', tournamentId)
+          .eq('category_id', currentSlot.category_id)
+          .neq('phase', 'group_phase')
+          .is('team1_id', null)
+          .eq('status', 'pending')
+          .order('scheduled_date')
+          .order('scheduled_time')
+          .limit(1)
 
-      return { success: true, nextMatchReady: true }
+        if (pendingMatches?.[0]) {
+          targetMatchId = pendingMatches[0].id
+          // Link bracket to match for future use
+          await supabaseClient
+            .from('tournament_bracket')
+            .update({ match_id: targetMatchId })
+            .eq('id', refreshedSlot.id)
+        }
+      }
+
+      if (targetMatchId) {
+        // Both teams ready — UPDATE the existing match with team assignments
+        await supabaseClient
+          .from('tournament_matches')
+          .update({
+            team1_id: refreshedSlot.team1_id,
+            team2_id: refreshedSlot.team2_id,
+            status: 'scheduled',
+          })
+          .eq('id', targetMatchId)
+
+        await supabaseClient
+          .from('tournament_bracket')
+          .update({ status: 'scheduled' })
+          .eq('id', refreshedSlot.id)
+
+        return { success: true, nextMatchReady: true }
+      }
     }
 
     return { success: true, nextMatchReady: false }
