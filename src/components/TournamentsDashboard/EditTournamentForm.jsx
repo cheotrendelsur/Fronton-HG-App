@@ -219,6 +219,21 @@ function CourtEditRow({ court, index, onChange, onRemove, canRemove }) {
 
 // ─── Main form ─────────────────────────────────────────────────────────────
 
+function normalizeScoringConfig(config) {
+  if (!config) return null
+  if (config.type) return config
+  if (config.modalidad === 'sets' && config.subModalidad === 'normal') {
+    return { type: 'sets_normal', sets_to_win: Math.ceil(config.setsTotal / 2), games_per_set: config.gamesPerSet }
+  }
+  if (config.modalidad === 'sets' && config.subModalidad === 'suma') {
+    return { type: 'sets_suma', total_sets: config.setsTotalSum, games_per_set: config.gamesTotalPerSetSum }
+  }
+  if (config.modalidad === 'puntos') {
+    return { type: 'points', points_to_win: config.pointsToWinMatch, win_by: config.closingRule === 'diferencia' ? 2 : 1 }
+  }
+  return config
+}
+
 const DEFAULT_COURT = {
   name: '',
   available_from: '08:00',
@@ -262,7 +277,8 @@ export default function EditTournamentForm({ tournament, onUpdate }) {
   useEffect(() => { isDirtyRef.current = isDirty }, [isDirty])
 
   const handleScoringChange = useCallback((v) => {
-    setScoringConfig(v)
+    // Only update if not null (prevent clearing on modalidad switch)
+    if (v !== null) setScoringConfig(v)
     setIsDirty(true)
     setSaveStatus('idle')
   }, [])
@@ -341,7 +357,17 @@ export default function EditTournamentForm({ tournament, onUpdate }) {
     setSaveStatus('saving')
     setSaveError('')
     try {
-      // 1. Check removed categories don't have active registrations
+      const isActive = tournament.status === 'active'
+
+      // 1a. Block category/court deletion if tournament is active
+      if (isActive && removedCategoryIds.length > 0) {
+        throw new Error('No se pueden eliminar categorías de un torneo activo.')
+      }
+      if (isActive && removedCourtIds.length > 0) {
+        throw new Error('No se pueden eliminar canchas de un torneo activo.')
+      }
+
+      // 1b. Check removed categories don't have active registrations
       if (removedCategoryIds.length > 0) {
         const { data: regCheck } = await supabase
           .from('tournament_registrations')
@@ -353,18 +379,34 @@ export default function EditTournamentForm({ tournament, onUpdate }) {
         }
       }
 
-      // 2. Update tournament core + scoring
+      // 1c. Check removed courts don't have scheduled matches
+      if (removedCourtIds.length > 0) {
+        const { data: matchCheck } = await supabase
+          .from('tournament_matches')
+          .select('id')
+          .in('court_id', removedCourtIds)
+          .limit(1)
+        if (matchCheck?.length > 0) {
+          throw new Error('No se puede eliminar una cancha con partidos programados.')
+        }
+      }
+
+      // 2. Update tournament core fields
+      const updatePayload = {
+        name:            name.trim(),
+        description:     description.trim() || null,
+        location:        location.trim(),
+        start_date:      startDate || null,
+        end_date:        endDate   || null,
+        inscription_fee: inscriptionFee !== '' ? Number(inscriptionFee) : null,
+      }
+      // scoring_config is only editable during inscription phase
+      if (tournament.status === 'inscription' || tournament.status === 'draft') {
+        updatePayload.scoring_config = normalizeScoringConfig(scoringConfig)
+      }
       const { error: tErr } = await supabase
         .from('tournaments')
-        .update({
-          name:            name.trim(),
-          description:     description.trim() || null,
-          location:        location.trim(),
-          start_date:      startDate || null,
-          end_date:        endDate   || null,
-          inscription_fee: inscriptionFee !== '' ? Number(inscriptionFee) : null,
-          scoring_config:  scoringConfig,
-        })
+        .update(updatePayload)
         .eq('id', tournament.id)
       if (tErr) throw tErr
 
@@ -466,7 +508,7 @@ export default function EditTournamentForm({ tournament, onUpdate }) {
         start_date:      startDate || null,
         end_date:        endDate   || null,
         inscription_fee: inscriptionFee !== '' ? Number(inscriptionFee) : null,
-        scoring_config:  scoringConfig,
+        scoring_config:  normalizeScoringConfig(scoringConfig),
         categories:      freshCats ?? categories,
       })
 
@@ -548,10 +590,27 @@ export default function EditTournamentForm({ tournament, onUpdate }) {
       </SectionCard>
 
       <SectionCard title="Formato de puntuación">
-        <ScoringSystemSelector
-          value={scoringConfig}
-          onChange={handleScoringChange}
-        />
+        {tournament.status === 'inscription' || tournament.status === 'draft' ? (
+          <ScoringSystemSelector
+            value={scoringConfig}
+            onChange={handleScoringChange}
+          />
+        ) : (
+          <div className="rounded-lg px-3 py-2.5" style={{ background: '#F9FAFB', border: '1px solid #E0E2E6' }}>
+            <p className="text-xs font-medium" style={{ color: '#4B5563' }}>
+              {scoringConfig?.subModalidad === 'normal' || scoringConfig?.type === 'sets_normal'
+                ? `Mejor de ${scoringConfig.setsTotal ?? ((scoringConfig.sets_to_win ?? 2) * 2 - 1)} sets de ${scoringConfig.gamesPerSet ?? scoringConfig.games_per_set ?? 6} games`
+                : scoringConfig?.subModalidad === 'suma' || scoringConfig?.type === 'sets_suma'
+                ? `${scoringConfig.setsTotalSum ?? scoringConfig.total_sets ?? 3} sets de ${scoringConfig.gamesTotalPerSetSum ?? scoringConfig.games_per_set ?? 4} games (suma)`
+                : scoringConfig?.modalidad === 'puntos' || scoringConfig?.type === 'points'
+                ? `Partido a ${scoringConfig.pointsToWinMatch ?? scoringConfig.points_to_win ?? 21} puntos`
+                : 'No configurado'}
+            </p>
+            <p className="text-[10px] mt-1" style={{ color: '#9CA3AF' }}>
+              No se puede modificar después de iniciar el torneo.
+            </p>
+          </div>
+        )}
       </SectionCard>
 
       <SectionCard title="Categorías y Cupos">
@@ -563,11 +622,13 @@ export default function EditTournamentForm({ tournament, onUpdate }) {
               index={i}
               onChange={updateCategory}
               onRemove={removeCategory}
-              canRemove={categories.length > 1}
+              canRemove={categories.length > 1 && tournament.status !== 'active'}
             />
           ))}
         </div>
-        <AddButton onClick={addCategory} label="Agregar categoría" />
+        {tournament.status !== 'active' && (
+          <AddButton onClick={addCategory} label="Agregar categoría" />
+        )}
       </SectionCard>
 
       <SectionCard title="Canchas y horarios">
@@ -595,11 +656,13 @@ export default function EditTournamentForm({ tournament, onUpdate }) {
                   index={i}
                   onChange={updateCourt}
                   onRemove={removeCourt}
-                  canRemove={courts.length > 1}
+                  canRemove={courts.length > 1 && tournament.status !== 'active'}
                 />
               ))}
             </div>
-            <AddButton onClick={addCourt} label="Agregar cancha" />
+            {tournament.status !== 'active' && (
+              <AddButton onClick={addCourt} label="Agregar cancha" />
+            )}
           </>
         )}
       </SectionCard>

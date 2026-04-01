@@ -4,12 +4,14 @@ import PointsScoringForm from './PointsScoringForm'
 import ScoringPreview    from './ScoringPreview'
 
 export default function ScoringSystemSelector({ value, onChange }) {
-  const [modalidad, setModalidad] = useState(value?.modalidad ?? 'sets')
+  const [modalidad, setModalidad] = useState(
+    value?.modalidad ?? (value?.type === 'points' ? 'puntos' : 'sets')
+  )
 
   function switchModalidad(next) {
     if (next === modalidad) return
     setModalidad(next)
-    onChange(null)
+    // Don't call onChange(null) — let the sub-form emit its default on mount
   }
 
   return (
@@ -35,8 +37,8 @@ export default function ScoringSystemSelector({ value, onChange }) {
         ))}
       </div>
 
-      {modalidad === 'sets'   && <SetsScoringForm   onChange={onChange} />}
-      {modalidad === 'puntos' && <PointsScoringForm  onChange={onChange} />}
+      {modalidad === 'sets'   && <SetsScoringForm   value={value} onChange={onChange} />}
+      {modalidad === 'puntos' && <PointsScoringForm  value={value} onChange={onChange} />}
 
       <ScoringPreview config={value} />
     </div>

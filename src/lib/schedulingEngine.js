@@ -391,11 +391,13 @@ export function distributeFullTournament(groupMatches, elimMatches, slots, optio
     options,
   )
 
-  // Step 2: mark occupied slots
+  // Step 2: mark occupied slots + find last group match date (for R_ORDER)
   const occupied = new Set()
+  let lastGroupDate = ''
   for (const a of groupResult.assignments) {
     const key = `${a.court_id}|${a.scheduled_date}|${a.scheduled_time}`
     occupied.add(key)
+    if (a.scheduled_date > lastGroupDate) lastGroupDate = a.scheduled_date
   }
 
   // Step 3: sort elimination matches by round_number then position/match_number
@@ -422,6 +424,9 @@ export function distributeFullTournament(groupMatches, elimMatches, slots, optio
       const slotKey = `${slot.court_id}|${slot.date}|${slot.start_time}`
 
       if (occupied.has(slotKey)) continue
+
+      // R_ORDER: elimination cannot be on a date before the last group match
+      if (lastGroupDate && slot.date < lastGroupDate) continue
 
       // Ensure this round starts after previous round's last match
       if (prevRoundLast) {
@@ -593,7 +598,7 @@ export function validateDistribution(assignments, matches) {
     }
   }
 
-  // R6: Only group_phase matches should be assigned
+  // R6: Only group_phase matches should be assigned (for group-only validation)
   const matchMap = new Map();
   for (const m of matches) matchMap.set(m.id || m.match_number, m);
   for (const a of assignments) {
@@ -604,6 +609,27 @@ export function validateDistribution(assignments, matches) {
         description: `Non-group match ${a.match_number} (phase: ${original.phase}) was assigned a slot`,
         details: { match_number: a.match_number, phase: original.phase },
       });
+    }
+  }
+
+  // R_ORDER: All group_phase assignments must be on dates <= all elimination assignments
+  let lastGroupDate = ''
+  for (const a of assignments) {
+    const phase = a.phase || matchMap.get(a.match_id)?.phase || matchMap.get(a.match_number)?.phase || 'group_phase'
+    if (phase === 'group_phase' && a.scheduled_date > lastGroupDate) {
+      lastGroupDate = a.scheduled_date
+    }
+  }
+  if (lastGroupDate) {
+    for (const a of assignments) {
+      const phase = a.phase || matchMap.get(a.match_id)?.phase || matchMap.get(a.match_number)?.phase || 'group_phase'
+      if (phase !== 'group_phase' && a.scheduled_date < lastGroupDate) {
+        violations.push({
+          rule: 'R_ORDER',
+          description: `Elimination match ${a.match_number} on ${a.scheduled_date} is before last group date ${lastGroupDate}`,
+          details: { match_number: a.match_number, phase, elimDate: a.scheduled_date, lastGroupDate },
+        })
+      }
     }
   }
 

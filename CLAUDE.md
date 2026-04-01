@@ -277,17 +277,6 @@ racket-tourneys/
 | `created_at` | timestamp | NOT NULL, default: `now()` |
 | `updated_at` | timestamp | NOT NULL, default: `now()` |
 
-### Tabla: `tournament_edits_history`
-| Columna | Tipo | Restricciones |
-|---------|------|--------------|
-| `id` | uuid | PK, NOT NULL, default: `gen_random_uuid()` |
-| `tournament_id` | uuid | FK → tournaments.id, NOT NULL |
-| `edited_by` | uuid | FK → profiles.id, NOT NULL |
-| `field_name` | varchar | NOT NULL |
-| `old_value` | text | nullable |
-| `new_value` | text | nullable |
-| `edited_at` | timestamp | NOT NULL, default: `now()` |
-
 ### Tabla: `organizer_requests_history`
 | Columna | Tipo | Restricciones |
 |---------|------|--------------|
@@ -416,8 +405,6 @@ racket-tourneys/
 - `tournament_registrations.decided_by` → `profiles.id`
 - `tournament_progress.tournament_id` → `tournaments.id`
 - `tournament_progress.category_id` → `categories.id`
-- `tournament_edits_history.tournament_id` → `tournaments.id`
-- `tournament_edits_history.edited_by` → `profiles.id`
 - `tournament_config.tournament_id` → `tournaments.id`
 - `tournament_groups.tournament_id` → `tournaments.id`
 - `tournament_groups.category_id` → `categories.id`
@@ -444,7 +431,7 @@ Las 6 tablas de estructura de torneo tienen RLS habilitado:
 - `delete-user` — elimina un usuario de `auth.users` al rechazarlo. Llamada desde `AdminPanelPage`.
 
 ### RPC Functions
-- `persist_tournament_structure(p_payload jsonb)` — Inserta atómicamente toda la estructura de un torneo (config, grupos, miembros, partidos con cronograma, bracket) y actualiza `tournaments.status` a `'active'`. Los partidos de fase de grupos incluyen `court_id`, `scheduled_date`, `scheduled_time`, `estimated_duration_minutes` asignados; los de eliminatoria quedan en NULL. Si falla cualquier paso, hace rollback automático. Definida en `supabase/migrations/create_rpc_persist_tournament.sql`.
+- `persist_tournament_structure(p_payload jsonb)` — Inserta atómicamente toda la estructura de un torneo (config, grupos, miembros, partidos con cronograma, bracket) y actualiza `tournaments.status` a `'active'`. TODOS los partidos (grupo Y eliminatoria) incluyen `court_id`, `scheduled_date`, `scheduled_time`, `estimated_duration_minutes`. Los de grupo tienen `team1_id`/`team2_id` asignados y `status='scheduled'`; los de eliminatoria tienen `team1_id=NULL`/`team2_id=NULL` y `status='pending'` (se llenan automáticamente al completar fase de grupos). Cada partido de eliminatoria se vincula a `tournament_bracket` vía `match_id`. Si falla cualquier paso, hace rollback automático. Definida en `supabase/migrations/create_rpc_persist_tournament.sql`.
 - `save_match_result(p_match_id, p_winner_id, p_score_team1, p_score_team2, p_team1_member_id, p_team2_member_id, p_team1_stats, p_team2_stats)` — Actualiza atómicamente el resultado de un partido (`tournament_matches.score_team1/score_team2/winner_id/status='completed'`) y suma los deltas de estadísticas a `tournament_group_members` (matches_played, matches_won/lost, sets, games, points). Definida en `supabase/migrations/create_rpc_save_match_result.sql`.
 
 ---
@@ -540,12 +527,13 @@ npm run lint
 
 - **Fase 1 (completada)**: Auth, onboarding, roles, admin panel funcional con Supabase.
 - **Fase 2 (completada)**: Dashboard de torneos del organizador — creación de torneos con sistema de puntuación configurable (`CreateTournamentPage`, `ScoringSystem/`).
-- **Fase 3 (completada)**: Modal de detalle de torneo con tab Info editable (`TournamentDetailModal`, `EditTournamentForm`, `InfoTab`). CRUD completo de categorías y pistas. Historial de ediciones en `tournament_edits_history`.
+- **Fase 3 (completada)**: Modal de detalle de torneo con tab Info editable (`TournamentDetailModal`, `EditTournamentForm`, `InfoTab`). CRUD completo de categorías y pistas.
 - **Fase 4 (completada)**: Gestión de solicitudes de inscripción (`SolicitudesTab`, `RegistrationRequestCard`, `RequestsSection`, `ApprovedSection`). Aprobación/rechazo de parejas.
 - **Fase 5 (completada)**: Visualización de progreso por categoría (`ProgresoTab`, `CategoryProgressCard`). Validación de capacidad máxima de categorías. Widgets de torneos históricos en modo solo lectura. Botón de inicio de torneo con modal de confirmación.
 - **Fase 6 (completada)**: Motor completo de generación de torneos — grupos aleatorios (Fisher-Yates), partidos round-robin (`n*(n-1)/2`), clasificación con desempate escalonado, mejores N-ésimos genéricos, brackets eliminatorios. Modal de configuración con vista previa y regeneración de sorteo. Persistencia atómica vía RPC PostgreSQL (`persist_tournament_structure`). Página completa de torneo activo (`/tournament/:id/active`) con vista de Inscritos (acordeones por categoría) y Clasificación (swipe horizontal por grupos con scroll-snap, dots de navegación, acordeones de participantes y partidos, MatchCards con badges de status).
 - **TASK-3 (completada)**: Distribución de partidos en cronograma por canchas y horarios. Motor de time slots (`schedulingEngine.js`) con generación, distribución con 7 restricciones (R1-R6 + R-A/R-B), y validación. UI de configuración con duración inteligente basada en scoring_config (`matchDurationCalculator.js`), slider con recomendación, selección de canchas, validación de capacidad total (grupos + eliminatoria estimada). Preview del cronograma con regenerar. Persistencia de cronograma integrada en RPC. MatchCards en vista de Clasificación muestran fecha + hora + cancha. Página de gestión de torneo (`TournamentManagePage`).
-- **TASK-4 (completada)**: Sistema completo de marcadores y resultados. Página de marcadores con swipe por días del torneo (`DaySwiper` + `DayView`), acordeones por categoría con cards de partidos pendientes/completados. Modal de ingreso de resultados (`ScoreInputModal` como portal centrado) adaptable a 3 modalidades de scoring: sets_normal (filas dinámicas), sets_suma (filas fijas), points (win_by=1/2 con max_points). Validación estricta en tiempo real (games mínimos, empates, tiebreaks). Persistencia atómica vía RPC `save_match_result` (score + estadísticas de grupo). Clasificación automática post fase de grupos (`postGroupPhase.js`): rankea grupos, selecciona clasificados, llena bracket, crea y programa partidos de eliminatoria en slots disponibles. Soporte para registrar resultados de eliminatoria (UPDATE directo sin stats de grupo).
+- **TASK-4 (completada)**: Sistema completo de marcadores y resultados. Página de marcadores con swipe por días del torneo (`DaySwiper` + `DayView`), acordeones por categoría con cards de partidos pendientes/completados. Modal de ingreso de resultados (`ScoreInputModal` como portal centrado) adaptable a 3 modalidades de scoring: sets_normal (filas dinámicas), sets_suma (filas fijas), points (win_by=1/2 con max_points). Validación estricta en tiempo real (games mínimos, empates, tiebreaks). Persistencia atómica vía RPC `save_match_result` (score + estadísticas de grupo). Clasificación automática post fase de grupos (`postGroupPhase.js`): rankea grupos, selecciona clasificados, llena bracket, actualiza partidos de eliminatoria con team_ids. Soporte para registrar resultados de eliminatoria (UPDATE directo sin stats de grupo) con progresión automática del bracket (advanceBracketWinner).
+- **TASK-INTERMEDIATE (completada)**: Estabilización de bugs del flujo completo del torneo. 6 fases: (1) Fix scoring_config se perdía al editar, (2) Auditoría flujo de edición — protección de categorías/canchas activas, (3) Estabilización cronograma con eliminatoria pre-programada, (4) Clasificación automática con sync bracket→matches, (5) Progresión bracket cuartos→semis→final, (6) Test end-to-end 9/9 pasos verificados. Normalización de scoring_config (form format → DB format) en CreateTournamentPage y EditTournamentForm.
 
 ### Módulos de lógica pura (sin React/Supabase)
 
@@ -554,7 +542,8 @@ npm run lint
 - `generateGroups(approvedTeams, numGroups)` — Distribución equitativa (13 en 3 → 5,4,4), letras A,B,C
 - `generateRoundRobinMatches(groupMembers, startingMatchNumber)` — n*(n-1)/2 partidos sin duplicados
 - `calculateClassification(numGroups, eliminationPhase)` — Calcula directos por grupo + mejores N-ésimos automáticos
-- `generateBracketStructure(eliminationPhase)` — Estructura vacía del bracket con conexiones entre rondas
+- `generateBracketStructure(eliminationPhase)` — Estructura vacía del bracket con conexiones entre rondas. Genera TODAS las rondas (ej: cuartos=4+2+1=7 slots, octavos=8+4+2+1=15 slots)
+- `getRoundPhaseName(eliminationPhase, roundNumber)` — Mapea round_number a nombre de fase (quarterfinals, semifinals, final)
 - `getEliminationOptions(numApproved)` — Opciones válidas de fase eliminatoria
 
 **`src/lib/classificationEngine.js`** — Motor de clasificación:
@@ -570,8 +559,9 @@ npm run lint
 - `generateTimeSlots(court, date, matchDurationMinutes)` — Genera slots para una cancha en un día respetando horarios y breaks. Incluye tight slot antes del break y reset post-break.
 - `generateAllSlots(courts, startDate, endDate, matchDurationMinutes)` — Genera todos los slots de todas las canchas en todo el rango de fechas, ordenados por fecha → hora → cancha.
 - `validateSlotCapacity(totalSlots, totalMatches)` — Verifica si hay suficientes slots.
-- `distributeMatches(matches, slots, options?)` — Distribuye partidos en slots respetando restricciones: R1 cancha libre, R2 sin dupla simultánea, R3 max 2 consecutivos, R-A max 2 partidos/dupla/día, R-B proximidad de 3 slots si 2 en un día. Intercala grupos para distribución equitativa. Options: `{ maxConsecutive: 2, maxPerDay: 2, maxProximitySlots: 3 }`.
-- `validateDistribution(assignments, matches)` — Valida R1, R2, R3, R-A, R-B, R6 sobre asignaciones generadas.
+- `distributeMatches(matches, slots, options?)` — Distribuye partidos de fase de grupos en slots respetando restricciones: R1 cancha libre, R2 sin dupla simultánea, R3 max 2 consecutivos, R-A max 2 partidos/dupla/día, R-B proximidad de 3 slots si 2 en un día. Intercala grupos para distribución equitativa. Options: `{ maxConsecutive: 2, maxPerDay: 2, maxProximitySlots: 3 }`.
+- `distributeFullTournament(groupMatches, elimMatches, slots, options?)` — Distribuye primero grupo (full constraints) y luego eliminatoria (solo cancha libre + orden de rondas + R_ORDER: eliminatoria nunca en fecha anterior al último partido de grupo). Retorna `{ assignments, unassigned, groupCount, elimCount }`.
+- `validateDistribution(assignments, matches)` — Valida R1, R2, R3, R-A, R-B, R6, R_ORDER sobre asignaciones generadas.
 - `getScheduleSummary(assignments)` — Resumen agrupado por día → cancha → partidos para la UI.
 
 **`src/lib/matchDurationCalculator.js`** — Cálculo de duración:
@@ -589,32 +579,35 @@ npm run lint
 - `saveMatchResult(supabase, matchId, matchResult, winnerId, team1MemberId, team2MemberId, scoringConfig)` — Calcula deltas de stats y llama RPC `save_match_result`.
 - `checkGroupPhaseComplete(supabase, tournamentId, categoryId)` — Verifica si todos los partidos de grupo de una categoría están completados.
 
-**`src/lib/postGroupPhase.js`** — Post fase de grupos:
-- `processGroupPhaseCompletion(supabase, tournamentId, categoryId, scoringConfig)` — Se ejecuta cuando checkGroupPhaseComplete=true. Rankea grupos con classificationEngine, selecciona clasificados directos + mejores N-ésimos, llena bracket, crea partidos de eliminatoria, los programa en slots disponibles (respetando ocupados). Marca grupos como completados.
+**`src/lib/postGroupPhase.js`** — Post fase de grupos y progresión de bracket:
+- `processGroupPhaseCompletion(supabase, tournamentId, categoryId, scoringConfig)` — Se ejecuta cuando checkGroupPhaseComplete=true. Rankea grupos con classificationEngine, selecciona clasificados directos + mejores N-ésimos, llena bracket (primera ronda), actualiza `tournament_bracket` con team_ids, sincroniza `tournament_matches` de primera ronda con team_ids y status='scheduled' (via fresh DB query). Inserta registros en `tournament_best_positioned`. Marca grupos como completados.
+- `advanceBracketWinner(supabase, tournamentId, matchId, winnerId)` — Se ejecuta tras completar un partido de eliminatoria. Actualiza winner_id en bracket, avanza ganador a siguiente ronda (nextRound=R+1, nextPosition=ceil(P/2), posición impar→team1, par→team2). Si ambos teams del siguiente slot listos, actualiza tournament_matches con team_ids sin tocar court/date/time. Si es la final (!nextSlot), llama checkAllCategoriesComplete.
 - `checkAllCategoriesComplete(supabase, tournamentId)` — Si todos los partidos del torneo están completados, marca `tournaments.status = 'finished'`.
 
 ### Flujo de inicio de torneo
 1. Organizador presiona "Iniciar Torneo" en widget → `ConfigurationModal` (confirmación)
 2. Configura grupos y fase eliminatoria por categoría → cálculos en tiempo real
-3. "Generar Vista Previa" → `GenerationPreview` muestra grupos, parejas, partidos
+3. "Generar Vista Previa" → `GenerationPreview` muestra grupos, parejas, partidos + genera estructura de bracket con `generateBracketStructure` y `getRoundPhaseName`
 4. "Regenerar sorteo" produce nueva distribución aleatoria (ilimitado)
 5. "Siguiente: Cronograma →" → `ScheduleConfigStep` muestra duración inteligente (slider basado en scoring_config), canchas con checkbox, validación de capacidad (grupos + eliminatoria estimada)
-6. "Generar Cronograma →" → `SchedulePreview` muestra distribución por día/cancha, puede regenerar
+6. "Generar Cronograma →" → `SchedulePreview` usa `distributeFullTournament` para distribuir TODOS los partidos (grupo + eliminatoria) con R_ORDER
 7. "Confirmar e Iniciar Torneo ✓" → `persistTournamentStructure` con scheduleAssignments → RPC atómica → `tournaments.status = 'active'`
 8. Widget muestra "Activo — Fase de Grupos" → clic navega a `/tournament/:id/active`
 9. Página con tabs Inscritos (acordeones) y Clasificación (swipe de grupos, MatchCards con fecha + hora + cancha)
 
 ### Flujo de marcadores (ingreso de resultados)
 1. Organizador abre "Marcadores" en nav inferior → `ResultsInputPage` carga torneo activo
-2. `ScoreboardPage` muestra DaySwiper con todos los días del torneo (swipe horizontal + dots)
+2. `ScoreboardPage` muestra DaySwiper con todos los días del torneo start_date→end_date (swipe horizontal + dots)
 3. Cada día muestra acordeones por categoría con badge "Xp / Yr" (pendientes / registrados)
-4. Al expandir: PendingMatchCards arriba (borde celeste, duplas verticales, botón "Registrar →") + CompletedMatchCards abajo (borde verde, resultado + ★ ganador)
+4. Al expandir: PendingMatchCards arriba (borde celeste, duplas verticales, botón "Registrar →") + CompletedMatchCards abajo (borde verde, resultado + ★ ganador). Partidos sin team_ids muestran "Por definir" con borde gris y sin botón
 5. "Registrar →" abre `ScoreInputModal` (portal en body, centrado, z-9999, body scroll bloqueado)
-6. Modal adapta formulario según scoring_config: SetsScoreForm (filas dinámicas) o PointsScoreForm (inputs grandes)
+6. Modal adapta formulario según scoring_config.type: SetsScoreForm (filas dinámicas) o PointsScoreForm (inputs grandes)
 7. Validación en tiempo real (errores inline rojo), ganador calculado automáticamente (card verde)
-8. "Guardar resultado" → fase de grupo: RPC `save_match_result` (match + stats atómico) | eliminatoria: UPDATE directo
-9. Después de guardar: refetch, partido se mueve a Completados
-10. Si fase de grupos completa para una categoría → automáticamente: `processGroupPhaseCompletion` (rankea, clasifica, llena bracket, crea y programa partidos de eliminatoria)
+8. "Guardar resultado" → fase de grupo: RPC `save_match_result` (match + stats atómico) | eliminatoria: UPDATE directo + `advanceBracketWinner`
+9. Después de guardar: refetch via `loadData()`, partido se mueve a Completados
+10. Si fase de grupos completa para una categoría → automáticamente: `processGroupPhaseCompletion` (rankea, clasifica, llena bracket, actualiza partidos de eliminatoria con team_ids)
+11. Si partido de eliminatoria completado → `advanceBracketWinner` avanza ganador a siguiente ronda → si ambos teams listos, actualiza match siguiente
+12. Si final completada → `checkAllCategoriesComplete` → si 0 pendientes → `tournaments.status = 'finished'`
 
 ### Modalidades de scoring soportadas
 - **sets_normal**: `{ type: "sets_normal", sets_to_win: 2, games_per_set: 6 }` — Mejor de N sets, filas dinámicas, max games_per_set+1 por set, al menos un equipo debe alcanzar games_per_set.
@@ -623,13 +616,78 @@ npm run lint
 
 ### Restricciones de distribución de cronograma
 - **R1**: Sin conflicto de cancha (un slot = un partido)
-- **R2**: Sin dupla simultánea en 2 canchas
-- **R3**: Máximo 2 partidos consecutivos por dupla sin descanso
-- **R-A**: Máximo 2 partidos por dupla por día
-- **R-B**: Si 2 partidos en un día, deben estar dentro de 3 slots de distancia
+- **R2**: Sin dupla simultánea en 2 canchas (solo aplica si team_ids != NULL)
+- **R3**: Máximo 2 partidos consecutivos por dupla sin descanso (solo aplica si team_ids != NULL)
+- **R-A**: Máximo 2 partidos por dupla por día (solo aplica si team_ids != NULL)
+- **R-B**: Si 2 partidos en un día, deben estar dentro de 3 slots de distancia (solo aplica si team_ids != NULL)
 - **R4**: Respetar horarios y breaks de canchas
 - **R5**: Solo dentro del rango start_date—end_date
-- **R6**: Fase de grupos primero; eliminatoria se programa post-clasificación
+- **R6**: Partidos de grupo primero cronológicamente
+- **R_ORDER**: TODOS los partidos de grupo de TODAS las categorías deben estar en fechas ≤ que CUALQUIER partido de eliminatoria. Mismo día permitido, pero eliminatoria en fecha anterior a último grupo es inválido
+
+### Normalización de scoring_config (form → DB)
+
+Los componentes de `ScoringSystem/` emiten formato de formulario (`modalidad`, `subModalidad`, `setsTotal`, etc.). La función `normalizeScoringConfig()` en `CreateTournamentPage` y `EditTournamentForm` transforma al formato DB antes de guardar:
+
+| Form format | DB format (lo que consumen scoreManager, matchDurationCalculator, etc.) |
+|-------------|-------------------------------------------------------------------------|
+| `{ modalidad: 'sets', subModalidad: 'normal', setsTotal: 3, gamesPerSet: 6 }` | `{ type: 'sets_normal', sets_to_win: 2, games_per_set: 6 }` |
+| `{ modalidad: 'sets', subModalidad: 'suma', setsTotalSum: 6, gamesTotalPerSetSum: 12 }` | `{ type: 'sets_suma', total_sets: 6, games_per_set: 12 }` |
+| `{ modalidad: 'puntos', pointsToWinMatch: 21, closingRule: 'diferencia' }` | `{ type: 'points', points_to_win: 21, win_by: 2 }` |
+| `{ modalidad: 'puntos', pointsToWinMatch: 21, closingRule: 'muerte-subita' }` | `{ type: 'points', points_to_win: 21, win_by: 1 }` |
+
+Los sub-forms (`NormalSetsForm`, `SumaSetsForm`, `PointsScoringForm`) pueden leer AMBOS formatos al inicializarse (ej: `value?.setsTotal ?? value?.sets_to_win ? ...`).
+
+### Flujo completo del torneo (end-to-end)
+
+```
+1. Crear torneo (CreateTournamentPage)
+   → INSERT tournaments con scoring_config normalizado + categories + courts
+   → status = 'inscription'
+
+2. Editar torneo (EditTournamentForm)
+   → UPDATE solo campos editados (name, description, location, dates, fee)
+   → scoring_config editable solo en status 'inscription'/'draft', normalizado antes de guardar
+   → CRUD categorías/canchas independiente (bloqueado si torneo activo)
+
+3. Inscribir duplas (SolicitudesTab)
+   → Organizador aprueba/rechaza solicitudes
+   → tournament_progress trackea conteo por categoría
+
+4. Iniciar torneo (ConfigurationModal → 5 pasos)
+   → Configurar grupos + fase eliminatoria por categoría
+   → Generar sorteo (grupos aleatorios + round-robin)
+   → Configurar cronograma (duración inteligente + canchas)
+   → Generar cronograma (distributeFullTournament: grupo primero, eliminatoria después)
+   → Confirmar → persistTournamentStructure (RPC atómica)
+   → tournaments.status = 'active'
+
+5. Registrar resultados de grupo (ScoreboardPage)
+   → ScoreInputModal adapta formulario según scoring_config.type
+   → save_match_result RPC (match score + group_member stats atómico)
+   → checkGroupPhaseComplete → si completa:
+
+6. Clasificación automática (processGroupPhaseCompletion)
+   → rankGroupMembers por categoría
+   → selectDirectQualifiers + selectBestPositioned
+   → assignToBracket (anti-same-group en primera ronda)
+   → UPDATE tournament_bracket con team_ids
+   → Sync tournament_matches primera ronda con team_ids + status='scheduled'
+
+7. Registrar resultados de eliminatoria (ScoreboardPage)
+   → UPDATE directo tournament_matches (sin stats de grupo)
+   → advanceBracketWinner:
+     - winner_id en bracket actual
+     - Ganador avanza a siguiente ronda (ceil(P/2), impar→team1, par→team2)
+     - Si ambos teams listos → UPDATE match siguiente ronda
+   → Repite: cuartos → semis → final
+
+8. Finalización
+   → checkAllCategoriesComplete: si 0 matches pendientes → tournaments.status = 'finished'
+```
+
+### ID del organizador de prueba
+- `6b313573-06cb-4a55-9e76-ce9ca1d68ffd`
 
 - **Pendiente**: Las páginas `/standings` y `/profile` muestran placeholder.
 

@@ -33,9 +33,9 @@ function NumField({ label, value, onChange, min, max, hint, touched }) {
   )
 }
 
-export default function SumaSetsForm({ onChange }) {
-  const [setsTotalSum,       setSetsTotalSum]       = useState(6)
-  const [gamesTotalPerSetSum, setGamesTotalPerSetSum] = useState(12)
+export default function SumaSetsForm({ value, onChange }) {
+  const [setsTotalSum,       setSetsTotalSum]       = useState(value?.setsTotalSum ?? value?.total_sets ?? 6)
+  const [gamesTotalPerSetSum, setGamesTotalPerSetSum] = useState(value?.gamesTotalPerSetSum ?? value?.games_per_set ?? 12)
   const [touched, setTouched] = useState({ sets: false, games: false })
 
   useEffect(() => {

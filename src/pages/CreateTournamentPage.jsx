@@ -19,6 +19,21 @@ const DEFAULT_CATEGORY = {
   max_couples: 16,
 }
 
+function normalizeScoringConfig(config) {
+  if (!config) return null
+  if (config.type) return config
+  if (config.modalidad === 'sets' && config.subModalidad === 'normal') {
+    return { type: 'sets_normal', sets_to_win: Math.ceil(config.setsTotal / 2), games_per_set: config.gamesPerSet }
+  }
+  if (config.modalidad === 'sets' && config.subModalidad === 'suma') {
+    return { type: 'sets_suma', total_sets: config.setsTotalSum, games_per_set: config.gamesTotalPerSetSum }
+  }
+  if (config.modalidad === 'puntos') {
+    return { type: 'points', points_to_win: config.pointsToWinMatch, win_by: config.closingRule === 'diferencia' ? 2 : 1 }
+  }
+  return config
+}
+
 const MAX_RETRIES = 3
 const RETRY_DELAY = 1500
 
@@ -323,7 +338,7 @@ export default function CreateTournamentPage() {
         sport_id:        sportId,
         start_date:      startDate || null,
         end_date:        endDate   || null,
-        scoring_config:  scoringConfig,
+        scoring_config:  normalizeScoringConfig(scoringConfig),
         status: 'inscription',
       }
 

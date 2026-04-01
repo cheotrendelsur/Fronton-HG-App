@@ -34,10 +34,10 @@ function NumField({ label, value, onChange, min, max, hint, touched }) {
   )
 }
 
-export default function PointsScoringForm({ onChange }) {
-  const [matchesTotalSum,  setMatchesTotalSum]  = useState(3)
-  const [pointsToWinMatch, setPointsToWinMatch] = useState(21)
-  const [closingRule,      setClosingRule]      = useState('diferencia')
+export default function PointsScoringForm({ value, onChange }) {
+  const [matchesTotalSum,  setMatchesTotalSum]  = useState(value?.matchesTotalSum ?? 3)
+  const [pointsToWinMatch, setPointsToWinMatch] = useState(value?.pointsToWinMatch ?? value?.points_to_win ?? 21)
+  const [closingRule,      setClosingRule]      = useState(value?.closingRule ?? (value?.win_by === 1 ? 'muerte-subita' : 'diferencia'))
   const [touched, setTouched] = useState({ matches: false, points: false })
 
   useEffect(() => {

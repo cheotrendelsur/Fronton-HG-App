@@ -33,9 +33,9 @@ function NumField({ label, value, onChange, min, max, hint, touched }) {
   )
 }
 
-export default function NormalSetsForm({ onChange }) {
-  const [setsTotal,  setSetsTotal]  = useState(3)
-  const [gamesPerSet, setGamesPerSet] = useState(6)
+export default function NormalSetsForm({ value, onChange }) {
+  const [setsTotal,  setSetsTotal]  = useState(value?.setsTotal ?? (value?.sets_to_win ? value.sets_to_win * 2 - 1 : 3))
+  const [gamesPerSet, setGamesPerSet] = useState(value?.gamesPerSet ?? value?.games_per_set ?? 6)
   const [touched, setTouched] = useState({ sets: false, games: false })
 
   useEffect(() => {

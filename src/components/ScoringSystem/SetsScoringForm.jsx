@@ -2,13 +2,14 @@ import { useState } from 'react'
 import NormalSetsForm from './NormalSetsForm'
 import SumaSetsForm from './SumaSetsForm'
 
-export default function SetsScoringForm({ onChange }) {
-  const [subModalidad, setSubModalidad] = useState('normal')
+export default function SetsScoringForm({ value, onChange }) {
+  const [subModalidad, setSubModalidad] = useState(
+    value?.subModalidad ?? (value?.type === 'sets_suma' ? 'suma' : 'normal')
+  )
 
   function switchSub(next) {
     if (next === subModalidad) return
     setSubModalidad(next)
-    onChange(null)
   }
 
   return (
@@ -33,8 +34,8 @@ export default function SetsScoringForm({ onChange }) {
         ))}
       </div>
 
-      {subModalidad === 'normal' && <NormalSetsForm onChange={onChange} />}
-      {subModalidad === 'suma'   && <SumaSetsForm   onChange={onChange} />}
+      {subModalidad === 'normal' && <NormalSetsForm value={value} onChange={onChange} />}
+      {subModalidad === 'suma'   && <SumaSetsForm   value={value} onChange={onChange} />}
     </div>
   )
 }
