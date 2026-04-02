@@ -115,3 +115,13 @@ None - no external service configuration required.
 ---
 *Phase: 01-design-tokens-config-base*
 *Completed: 2026-04-02*
+
+## Self-Check: PASSED
+
+- FOUND: src/components/Scoreboard/ScoreInputModal.jsx
+- FOUND: src/components/Scoreboard/ScoreboardPage.jsx
+- FOUND: .planning/phases/01-design-tokens-config-base/01-01-SUMMARY.md
+- FOUND commit: 63f703e (feat: add end-time inputs to ScoreInputModal)
+- FOUND commit: ed87d27 (feat: extend handleSaveResult to accept endTime param)
+- FOUND commit: 68f755b (fix: suppress unused-vars lint for endTime param)
+- FOUND commit: 228d8d5 (docs: complete end-time input UI plan)
