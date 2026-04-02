@@ -36,7 +36,9 @@ Plans:
   2. Saving a group match result via the RPC path stores `actual_end_time` in the database row
   3. Saving an elimination match result via the direct UPDATE path stores `actual_end_time` in the database row
   4. Existing match rows without `actual_end_time` are unaffected (column is nullable)
-**Plans**: TBD
+**Plans**: 1 plan
+Plans:
+- [ ] 02-01-PLAN.md — Migration + JS wiring for actual_end_time in both save paths
 
 ### Phase 3: Cascade Recalculation Engine
 **Goal**: After any match is saved with an actual end time, all pending matches on the same court that day are recalculated in cascade, respecting court constraints
@@ -67,6 +69,6 @@ Plans:
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. End-Time Input UI | 1/1 | Complete   | 2026-04-02 |
-| 2. Persist Actual End Time | 0/? | Not started | - |
+| 2. Persist Actual End Time | 0/1 | Not started | - |
 | 3. Cascade Recalculation Engine | 0/? | Not started | - |
 | 4. Integration and Compatibility | 0/? | Not started | - |
