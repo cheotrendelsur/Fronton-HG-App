@@ -97,8 +97,8 @@
 | ISO-03 | Phase 4 | Pending |
 | VIS-01 | Phase 4 | Pending |
 | VIS-02 | Phase 4 | Pending |
-| BUILD-01 | Phase 5 | Pending |
-| BUILD-02 | Phase 5 | Pending |
+| BUILD-01 | Phase 4 | Pending |
+| BUILD-02 | Phase 4 | Pending |
 
 **Coverage:**
 - v1 requirements: 25 total
@@ -107,4 +107,4 @@
 
 ---
 *Requirements defined: 2026-04-02*
-*Last updated: 2026-04-02 after initial definition*
+*Last updated: 2026-04-02 after roadmap creation (BUILD-01, BUILD-02 moved from Phase 5 → Phase 4)*
