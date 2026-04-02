@@ -72,13 +72,34 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| — | — | — |
+| CANCH-01 | Phase 6 | Pending |
+| CANCH-02 | Phase 6 | Pending |
+| CANCH-03 | Phase 6 | Pending |
+| CANCH-04 | Phase 6 | Pending |
+| CONT-01 | Phase 6 | Pending |
+| CONT-02 | Phase 6 | Pending |
+| CONT-03 | Phase 5 | Pending |
+| CONT-04 | Phase 6 | Pending |
+| CONT-05 | Phase 6 | Pending |
+| REAN-01 | Phase 7 | Pending |
+| REAN-02 | Phase 7 | Pending |
+| REAN-03 | Phase 7 | Pending |
+| REAN-04 | Phase 7 | Pending |
+| REAN-05 | Phase 7 | Pending |
+| REAN-06 | Phase 5 | Pending |
+| CONF-01 | Phase 7 | Pending |
+| CONF-02 | Phase 7 | Pending |
+| NOTF-01 | Phase 5 | Pending |
+| NOTF-02 | Phase 5 | Pending |
+| NOTF-03 | Phase 8 | Pending |
+| NOTF-04 | Phase 8 | Pending |
+| SEGR-01 | Phase 6 | Pending |
 
 **Coverage:**
-- v1.1 requirements: 18 total
-- Mapped to phases: 0
-- Unmapped: 18
+- v1.1 requirements: 22 total
+- Mapped to phases: 22
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-04-02*
-*Last updated: 2026-04-02 after initial definition*
+*Last updated: 2026-04-02 after roadmap creation*
