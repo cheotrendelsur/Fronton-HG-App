@@ -17,17 +17,18 @@ When a match finishes, every pending match on that court instantly shows its cor
 
 - Actual end time is persisted to the database when saving a match result — Validated in Phase 2
 
+- Pure cascade recalculation engine recalculates pending matches on a court after a match ends — Validated in Phase 3
+- Cascade handles break windows, day overflow to next tournament day, multi-day cascading — Validated in Phase 3
+- Only scheduled_date and scheduled_time change; all other fields preserved — Validated in Phase 3
+- Completed matches immune to recalculation; court isolation enforced — Validated in Phase 3
+- DB persistence layer queries tournament data and batch-updates only time fields — Validated in Phase 3
+
 ### Active
-- [ ] After saving a result, all pending matches on the same court for that day are recalculated in cascade
-- [ ] If a match ends late, subsequent matches shift later proportionally
-- [ ] If a match ends early, subsequent matches shift earlier proportionally
-- [ ] Matches that overflow past court closing time (`available_to`) move to the next tournament day at court opening time (`available_from`)
-- [ ] Recalculated matches respect court break windows (skip over break periods)
-- [ ] Only pending/scheduled matches are adjusted — completed matches are never modified
-- [ ] Only the affected court's matches are adjusted — other courts remain independent
-- [ ] Match order, court assignment, team assignment, phase, and status are never changed by the adjustment
 - [ ] Updated schedule is immediately visible in the scoreboard page after adjustment
-- [ ] Team conflict detection: if a rescheduled match overlaps with the same team playing on another court, detect and flag (edge case)
+- [ ] After saving a result, cascade is automatically triggered (wired into save flow)
+- [ ] A player viewing the active tournament page sees corrected match times on refresh
+- [ ] All existing flows (creation, edit, inscription, scoring, classification, bracket) unbroken
+- [ ] Production build passes without errors or warnings
 
 ### Out of Scope
 
@@ -59,9 +60,9 @@ When a match finishes, every pending match on that court instantly shows its cor
 
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
-| Store actual_end_time as new column vs reuse scheduled_time | New column preserves original schedule as historical record | — Pending |
-| Cascade recalculation on client vs server (RPC) | Client has court data already loaded; server RPC is more atomic | — Pending |
-| Handle day overflow by moving to next calendar day vs next tournament day | Tournament may not have consecutive days | — Pending |
+| Store actual_end_time as new column vs reuse scheduled_time | New column preserves original schedule as historical record | New column (Phase 2) |
+| Cascade recalculation on client vs server (RPC) | Client has court data already loaded; pure JS engine is fully testable | Client-side pure JS engine (Phase 3) |
+| Handle day overflow by moving to next calendar day vs next tournament day | Tournament may not have consecutive days | Next tournament day from tournamentDays array (Phase 3) |
 
 ## Evolution
 
@@ -81,4 +82,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-02 after Phase 2 completion*
+*Last updated: 2026-04-02 after Phase 3 completion*
