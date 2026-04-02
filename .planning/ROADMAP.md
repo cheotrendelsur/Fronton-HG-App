@@ -53,7 +53,7 @@ Plans:
   6. Matches on other courts are completely untouched by the recalculation
 **Plans**: 1 plan
 Plans:
-- [ ] 03-01-PLAN.md — Pure cascade engine + DB persistence layer
+- [x] 03-01-PLAN.md — Pure cascade engine + DB persistence layer
 
 ### Phase 4: Integration and Compatibility
 **Goal**: The recalculation engine is invoked automatically after every result save, the scoreboard reflects updated times immediately, and all existing tournament flows remain unbroken

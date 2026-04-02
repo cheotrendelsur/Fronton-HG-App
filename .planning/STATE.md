@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: verifying
-stopped_at: Completed 02-persist-actual-end-time/02-01-PLAN.md
-last_updated: "2026-04-02T16:42:16.384Z"
+stopped_at: Completed 03-cascade-recalculation-engine/03-01-PLAN.md
+last_updated: "2026-04-02T17:04:22.387Z"
 last_activity: 2026-04-02
 progress:
   total_phases: 4
-  completed_phases: 2
-  total_plans: 2
-  completed_plans: 2
+  completed_phases: 3
+  total_plans: 3
+  completed_plans: 3
   percent: 0
 ---
 
@@ -21,12 +21,12 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-02)
 
 **Core value:** When a match finishes, every pending match on that court instantly shows its corrected start time — players always know when they actually play.
-**Current focus:** Phase 02 — Persist Actual End Time
+**Current focus:** Phase 03 — cascade-recalculation-engine
 
 ## Current Position
 
-Phase: 3
-Plan: Not started
+Phase: 03 (cascade-recalculation-engine) — EXECUTING
+Plan: 1 of 1
 Status: Phase complete — ready for verification
 Last activity: 2026-04-02
 
@@ -54,6 +54,7 @@ Progress: [░░░░░░░░░░] 0%
 *Updated after each plan completion*
 | Phase 01-design-tokens-config-base P01 | 8 | 3 tasks | 2 files |
 | Phase 02-persist-actual-end-time P01 | 8 | 2 tasks | 3 files |
+| Phase 03-cascade-recalculation-engine P01 | 8 | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -68,6 +69,9 @@ Pending decisions from PROJECT.md:
 - [Phase 01-design-tokens-config-base]: handleSaveResult accepts endTime param now; eslint-disable used for intentionally unused param until Phase 2 persistence
 - [Phase 02-persist-actual-end-time]: Post-RPC UPDATE for actual_end_time: score already persisted by atomic RPC; end-time failure is non-critical and silently ignored
 - [Phase 02-persist-actual-end-time]: actualEndTime constructed as ISO string YYYY-MM-DDTHH:MM:00 from endTime.date + endTime.time with null guard
+- [Phase 03-cascade-recalculation-engine]: Cascade recalculation client-side (not RPC): pure JS engine called from React, DB updates via individual Supabase UPDATEs
+- [Phase 03-cascade-recalculation-engine]: Day overflow uses next tournament day from tournamentDays array, not next calendar day
+- [Phase 03-cascade-recalculation-engine]: Cursor advances through completed matches too — they occupy time slots; triggering match identified as latest completed on anchorDate with scheduled_time <= anchorTimeStr
 
 ### Pending Todos
 
@@ -79,6 +83,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-02T16:39:45.254Z
-Stopped at: Completed 02-persist-actual-end-time/02-01-PLAN.md
+Last session: 2026-04-02T17:04:22.384Z
+Stopped at: Completed 03-cascade-recalculation-engine/03-01-PLAN.md
 Resume file: None

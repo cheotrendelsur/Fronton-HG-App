@@ -21,21 +21,21 @@
 
 ### Schedule Recalculation Engine
 
-- [ ] **SCHED-01**: After saving a result, recalculate start times for all pending matches on the same court for that day
-- [ ] **SCHED-02**: Next pending match on the court starts at the actual end time of the just-completed match
-- [ ] **SCHED-03**: Each subsequent match cascades: start = previous match start + estimated_duration_minutes
-- [ ] **SCHED-04**: If recalculated start time falls during court break, move match to after break ends
-- [ ] **SCHED-05**: If recalculated start time exceeds court `available_to`, move match to next tournament day at `available_from`
-- [ ] **SCHED-06**: Matches that overflow to next day continue cascading from `available_from` respecting breaks
-- [ ] **SCHED-07**: Only matches with status 'scheduled' or 'pending' are adjusted
-- [ ] **SCHED-08**: Completed matches are never modified
-- [ ] **SCHED-09**: Match order (match_number sequence) is preserved — only `scheduled_date` and `scheduled_time` change
-- [ ] **SCHED-10**: Updated `scheduled_date` and `scheduled_time` are persisted to database
+- [x] **SCHED-01**: After saving a result, recalculate start times for all pending matches on the same court for that day
+- [x] **SCHED-02**: Next pending match on the court starts at the actual end time of the just-completed match
+- [x] **SCHED-03**: Each subsequent match cascades: start = previous match start + estimated_duration_minutes
+- [x] **SCHED-04**: If recalculated start time falls during court break, move match to after break ends
+- [x] **SCHED-05**: If recalculated start time exceeds court `available_to`, move match to next tournament day at `available_from`
+- [x] **SCHED-06**: Matches that overflow to next day continue cascading from `available_from` respecting breaks
+- [x] **SCHED-07**: Only matches with status 'scheduled' or 'pending' are adjusted
+- [x] **SCHED-08**: Completed matches are never modified
+- [x] **SCHED-09**: Match order (match_number sequence) is preserved — only `scheduled_date` and `scheduled_time` change
+- [x] **SCHED-10**: Updated `scheduled_date` and `scheduled_time` are persisted to database
 
 ### Scope Isolation
 
-- [ ] **ISO-01**: Only the affected court's pending matches are recalculated — other courts untouched
-- [ ] **ISO-02**: Match `court_id`, `team1_id`, `team2_id`, `phase`, `status` (for non-adjusted) are never changed
+- [x] **ISO-01**: Only the affected court's pending matches are recalculated — other courts untouched
+- [x] **ISO-02**: Match `court_id`, `team1_id`, `team2_id`, `phase`, `status` (for non-adjusted) are never changed
 - [ ] **ISO-03**: Existing scoring, classification, and bracket progression logic is unaffected
 
 ### UI — Visual Feedback
@@ -82,18 +82,18 @@
 | PERS-01 | Phase 2 | Complete |
 | PERS-02 | Phase 2 | Complete |
 | PERS-03 | Phase 2 | Complete |
-| SCHED-01 | Phase 3 | Pending |
-| SCHED-02 | Phase 3 | Pending |
-| SCHED-03 | Phase 3 | Pending |
-| SCHED-04 | Phase 3 | Pending |
-| SCHED-05 | Phase 3 | Pending |
-| SCHED-06 | Phase 3 | Pending |
-| SCHED-07 | Phase 3 | Pending |
-| SCHED-08 | Phase 3 | Pending |
-| SCHED-09 | Phase 3 | Pending |
-| SCHED-10 | Phase 3 | Pending |
-| ISO-01 | Phase 3 | Pending |
-| ISO-02 | Phase 3 | Pending |
+| SCHED-01 | Phase 3 | Complete |
+| SCHED-02 | Phase 3 | Complete |
+| SCHED-03 | Phase 3 | Complete |
+| SCHED-04 | Phase 3 | Complete |
+| SCHED-05 | Phase 3 | Complete |
+| SCHED-06 | Phase 3 | Complete |
+| SCHED-07 | Phase 3 | Complete |
+| SCHED-08 | Phase 3 | Complete |
+| SCHED-09 | Phase 3 | Complete |
+| SCHED-10 | Phase 3 | Complete |
+| ISO-01 | Phase 3 | Complete |
+| ISO-02 | Phase 3 | Complete |
 | ISO-03 | Phase 4 | Pending |
 | VIS-01 | Phase 4 | Pending |
 | VIS-02 | Phase 4 | Pending |
