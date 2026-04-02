@@ -137,7 +137,8 @@ export default function ScoreboardPage({ tournament }) {
     ? categories.find(c => c.id === selectedMatch.category_id)?.name ?? ''
     : ''
 
-  async function handleSaveResult(match, result) {
+  async function handleSaveResult(match, result, endTime) {
+    // endTime = { date: 'YYYY-MM-DD', time: 'HH:MM' } — persisted in Phase 2
     const winnerId = result.winner === 'team1' ? match.team1_id : match.team2_id
     const isGroupPhase = match.phase === 'group_phase' && match.group_id
 
