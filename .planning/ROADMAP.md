@@ -6,7 +6,7 @@ This milestone adds real-time schedule recalculation to the RacketTourneys PWA. 
 
 ## Phases
 
-- [ ] **Phase 1: End-Time Input UI** - Add editable actual-end-time fields to ScoreInputModal
+- [x] **Phase 1: End-Time Input UI** - Add editable actual-end-time fields to ScoreInputModal (completed 2026-04-02)
 - [ ] **Phase 2: Persist Actual End Time** - Add DB column and persist end-time through both save paths
 - [ ] **Phase 3: Cascade Recalculation Engine** - Build and connect the court-scoped schedule recalculator
 - [ ] **Phase 4: Integration and Compatibility** - Wire engine into save flows, verify scoreboard refresh, validate build
@@ -24,7 +24,7 @@ This milestone adds real-time schedule recalculation to the RacketTourneys PWA. 
   4. Attempting to save a result without filling both end-time fields is blocked with a visible error
 **Plans**: 1 plan
 Plans:
-- [ ] 01-01-PLAN.md — End-time inputs in ScoreInputModal + onSave signature update in ScoreboardPage
+- [x] 01-01-PLAN.md — End-time inputs in ScoreInputModal + onSave signature update in ScoreboardPage
 **UI hint**: yes
 
 ### Phase 2: Persist Actual End Time
@@ -66,7 +66,7 @@ Plans:
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. End-Time Input UI | 0/1 | Not started | - |
+| 1. End-Time Input UI | 1/1 | Complete   | 2026-04-02 |
 | 2. Persist Actual End Time | 0/? | Not started | - |
 | 3. Cascade Recalculation Engine | 0/? | Not started | - |
 | 4. Integration and Compatibility | 0/? | Not started | - |

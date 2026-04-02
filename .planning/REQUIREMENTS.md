@@ -7,11 +7,11 @@
 
 ### UI — End Time Input
 
-- [ ] **UI-01**: ScoreInputModal shows a date input pre-filled with today's date when opened
-- [ ] **UI-02**: ScoreInputModal shows a time input pre-filled with the current time when opened
-- [ ] **UI-03**: End-time inputs appear above score fields, labeled clearly (e.g., "Cuando termino este partido?")
-- [ ] **UI-04**: End-time inputs are editable — organizer can adjust date and time manually
-- [ ] **UI-05**: End-time inputs are required — result cannot be saved without them
+- [x] **UI-01**: ScoreInputModal shows a date input pre-filled with today's date when opened
+- [x] **UI-02**: ScoreInputModal shows a time input pre-filled with the current time when opened
+- [x] **UI-03**: End-time inputs appear above score fields, labeled clearly (e.g., "Cuando termino este partido?")
+- [x] **UI-04**: End-time inputs are editable — organizer can adjust date and time manually
+- [x] **UI-05**: End-time inputs are required — result cannot be saved without them
 
 ### Persistence — Actual End Time
 
@@ -74,11 +74,11 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| UI-01 | Phase 1 | Pending |
-| UI-02 | Phase 1 | Pending |
-| UI-03 | Phase 1 | Pending |
-| UI-04 | Phase 1 | Pending |
-| UI-05 | Phase 1 | Pending |
+| UI-01 | Phase 1 | Complete |
+| UI-02 | Phase 1 | Complete |
+| UI-03 | Phase 1 | Complete |
+| UI-04 | Phase 1 | Complete |
+| UI-05 | Phase 1 | Complete |
 | PERS-01 | Phase 2 | Pending |
 | PERS-02 | Phase 2 | Pending |
 | PERS-03 | Phase 2 | Pending |
