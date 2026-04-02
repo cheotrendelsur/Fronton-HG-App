@@ -66,7 +66,7 @@ When a court has a setback, the organizer pauses it with one tap; when it's reso
 - **Existing cascade engine**: `cascadeRecalculator.js` (pure logic) + `cascadeSchedulePersistence.js` (DB layer) — resume recalculation will reuse this engine
 - **Score recording flow**: `ScoreInputModal` → `save_match_result` RPC / direct UPDATE → `applyCascadeRecalculation` → `loadData()` refetch
 - **Court model**: `courts` table has `available_from`, `available_to`, `break_start`, `break_end`
-- **New DB tables needed**: `court_setbacks` (setback events), `notifications` (in-app notifications)
+- **New DB tables created**: `court_setbacks` (setback events) and `notifications` (in-app notifications) — Phase 5 complete with RLS policies and CRUD helpers
 - **TASK-6 coexistence**: v1.0 micro-adjustments (per-match) coexist with v1.1 macro-adjustments (court pause/resume). Resume recalculation produces new "official" times; subsequent match results trigger TASK-6 micro-adjustments on top
 
 ## Constraints
@@ -106,4 +106,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-02 after v1.1 milestone start*
+*Last updated: 2026-04-02 after Phase 5 (Capa de Datos) completion*
