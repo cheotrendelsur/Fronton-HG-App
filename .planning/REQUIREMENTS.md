@@ -15,9 +15,9 @@
 
 ### Persistence — Actual End Time
 
-- [ ] **PERS-01**: `actual_end_time` timestamp column added to `tournament_matches` table
-- [ ] **PERS-02**: Saving a group match result (via RPC) persists `actual_end_time`
-- [ ] **PERS-03**: Saving an elimination match result (via direct UPDATE) persists `actual_end_time`
+- [x] **PERS-01**: `actual_end_time` timestamp column added to `tournament_matches` table
+- [x] **PERS-02**: Saving a group match result (via RPC) persists `actual_end_time`
+- [x] **PERS-03**: Saving an elimination match result (via direct UPDATE) persists `actual_end_time`
 
 ### Schedule Recalculation Engine
 
@@ -79,9 +79,9 @@
 | UI-03 | Phase 1 | Complete |
 | UI-04 | Phase 1 | Complete |
 | UI-05 | Phase 1 | Complete |
-| PERS-01 | Phase 2 | Pending |
-| PERS-02 | Phase 2 | Pending |
-| PERS-03 | Phase 2 | Pending |
+| PERS-01 | Phase 2 | Complete |
+| PERS-02 | Phase 2 | Complete |
+| PERS-03 | Phase 2 | Complete |
 | SCHED-01 | Phase 3 | Pending |
 | SCHED-02 | Phase 3 | Pending |
 | SCHED-03 | Phase 3 | Pending |

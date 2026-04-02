@@ -38,7 +38,7 @@ Plans:
   4. Existing match rows without `actual_end_time` are unaffected (column is nullable)
 **Plans**: 1 plan
 Plans:
-- [ ] 02-01-PLAN.md — Migration + JS wiring for actual_end_time in both save paths
+- [x] 02-01-PLAN.md — Migration + JS wiring for actual_end_time in both save paths
 
 ### Phase 3: Cascade Recalculation Engine
 **Goal**: After any match is saved with an actual end time, all pending matches on the same court that day are recalculated in cascade, respecting court constraints
