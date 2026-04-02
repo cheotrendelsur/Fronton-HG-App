@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: verifying
-stopped_at: Completed 03-cascade-recalculation-engine/03-01-PLAN.md
-last_updated: "2026-04-02T20:08:54.669Z"
+stopped_at: Completed 04-integration-and-compatibility/04-01-PLAN.md
+last_updated: "2026-04-02T20:47:28.835Z"
 last_activity: 2026-04-02
 progress:
   total_phases: 4
-  completed_phases: 3
-  total_plans: 3
-  completed_plans: 3
+  completed_phases: 4
+  total_plans: 4
+  completed_plans: 4
   percent: 0
 ---
 
@@ -21,12 +21,12 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-02)
 
 **Core value:** When a match finishes, every pending match on that court instantly shows its corrected start time — players always know when they actually play.
-**Current focus:** Phase 03 — cascade-recalculation-engine
+**Current focus:** Phase 04 — integration-and-compatibility
 
 ## Current Position
 
-Phase: 4
-Plan: Not started
+Phase: 04 (integration-and-compatibility) — EXECUTING
+Plan: 1 of 1
 Status: Phase complete — ready for verification
 Last activity: 2026-04-02
 
@@ -55,6 +55,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 01-design-tokens-config-base P01 | 8 | 3 tasks | 2 files |
 | Phase 02-persist-actual-end-time P01 | 8 | 2 tasks | 3 files |
 | Phase 03-cascade-recalculation-engine P01 | 8 | 2 tasks | 3 files |
+| Phase 04-integration-and-compatibility P01 | 1 | 2 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -72,6 +73,7 @@ Pending decisions from PROJECT.md:
 - [Phase 03-cascade-recalculation-engine]: Cascade recalculation client-side (not RPC): pure JS engine called from React, DB updates via individual Supabase UPDATEs
 - [Phase 03-cascade-recalculation-engine]: Day overflow uses next tournament day from tournamentDays array, not next calendar day
 - [Phase 03-cascade-recalculation-engine]: Cursor advances through completed matches too — they occupy time slots; triggering match identified as latest completed on anchorDate with scheduled_time <= anchorTimeStr
+- [Phase 04-integration-and-compatibility]: Cascade call placed in success block before loadData() so refetch picks up updated times; failure is non-critical and silently logged
 
 ### Pending Todos
 
@@ -83,6 +85,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-02T17:04:22.384Z
-Stopped at: Completed 03-cascade-recalculation-engine/03-01-PLAN.md
+Last session: 2026-04-02T20:47:28.830Z
+Stopped at: Completed 04-integration-and-compatibility/04-01-PLAN.md
 Resume file: None

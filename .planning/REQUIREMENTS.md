@@ -36,17 +36,17 @@
 
 - [x] **ISO-01**: Only the affected court's pending matches are recalculated — other courts untouched
 - [x] **ISO-02**: Match `court_id`, `team1_id`, `team2_id`, `phase`, `status` (for non-adjusted) are never changed
-- [ ] **ISO-03**: Existing scoring, classification, and bracket progression logic is unaffected
+- [x] **ISO-03**: Existing scoring, classification, and bracket progression logic is unaffected
 
 ### UI — Visual Feedback
 
-- [ ] **VIS-01**: After saving a result, scoreboard page refreshes and shows updated schedule times immediately
-- [ ] **VIS-02**: Players viewing the tournament see updated match times without manual refresh
+- [x] **VIS-01**: After saving a result, scoreboard page refreshes and shows updated schedule times immediately
+- [x] **VIS-02**: Players viewing the tournament see updated match times without manual refresh
 
 ### Build & Compatibility
 
-- [ ] **BUILD-01**: `npm run build` passes without errors after all changes
-- [ ] **BUILD-02**: All existing tournament flows (create, edit, inscribe, start, score, classify, bracket) continue working
+- [x] **BUILD-01**: `npm run build` passes without errors after all changes
+- [x] **BUILD-02**: All existing tournament flows (create, edit, inscribe, start, score, classify, bracket) continue working
 
 ## v2 Requirements
 
@@ -94,11 +94,11 @@
 | SCHED-10 | Phase 3 | Complete |
 | ISO-01 | Phase 3 | Complete |
 | ISO-02 | Phase 3 | Complete |
-| ISO-03 | Phase 4 | Pending |
-| VIS-01 | Phase 4 | Pending |
-| VIS-02 | Phase 4 | Pending |
-| BUILD-01 | Phase 4 | Pending |
-| BUILD-02 | Phase 4 | Pending |
+| ISO-03 | Phase 4 | Complete |
+| VIS-01 | Phase 4 | Complete |
+| VIS-02 | Phase 4 | Complete |
+| BUILD-01 | Phase 4 | Complete |
+| BUILD-02 | Phase 4 | Complete |
 
 **Coverage:**
 - v1 requirements: 25 total
