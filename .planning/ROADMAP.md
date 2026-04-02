@@ -22,7 +22,9 @@ This milestone adds real-time schedule recalculation to the RacketTourneys PWA. 
   2. Both fields are labeled clearly in Spanish (e.g., "Cuando termino este partido?") and appear above the score inputs
   3. Organizer can change both fields to any valid date and time before saving
   4. Attempting to save a result without filling both end-time fields is blocked with a visible error
-**Plans**: TBD
+**Plans**: 1 plan
+Plans:
+- [ ] 01-01-PLAN.md — End-time inputs in ScoreInputModal + onSave signature update in ScoreboardPage
 **UI hint**: yes
 
 ### Phase 2: Persist Actual End Time
@@ -64,7 +66,7 @@ This milestone adds real-time schedule recalculation to the RacketTourneys PWA. 
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. End-Time Input UI | 0/? | Not started | - |
+| 1. End-Time Input UI | 0/1 | Not started | - |
 | 2. Persist Actual End Time | 0/? | Not started | - |
 | 3. Cascade Recalculation Engine | 0/? | Not started | - |
 | 4. Integration and Compatibility | 0/? | Not started | - |
