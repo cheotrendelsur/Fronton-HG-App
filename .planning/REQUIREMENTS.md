@@ -1,0 +1,110 @@
+# Requirements: TASK-6 — Reajuste Dinamico del Cronograma
+
+**Defined:** 2026-04-02
+**Core Value:** When a match finishes, every pending match on that court instantly shows its corrected start time — players always know when they actually play.
+
+## v1 Requirements
+
+### UI — End Time Input
+
+- [ ] **UI-01**: ScoreInputModal shows a date input pre-filled with today's date when opened
+- [ ] **UI-02**: ScoreInputModal shows a time input pre-filled with the current time when opened
+- [ ] **UI-03**: End-time inputs appear above score fields, labeled clearly (e.g., "Cuando termino este partido?")
+- [ ] **UI-04**: End-time inputs are editable — organizer can adjust date and time manually
+- [ ] **UI-05**: End-time inputs are required — result cannot be saved without them
+
+### Persistence — Actual End Time
+
+- [ ] **PERS-01**: `actual_end_time` timestamp column added to `tournament_matches` table
+- [ ] **PERS-02**: Saving a group match result (via RPC) persists `actual_end_time`
+- [ ] **PERS-03**: Saving an elimination match result (via direct UPDATE) persists `actual_end_time`
+
+### Schedule Recalculation Engine
+
+- [ ] **SCHED-01**: After saving a result, recalculate start times for all pending matches on the same court for that day
+- [ ] **SCHED-02**: Next pending match on the court starts at the actual end time of the just-completed match
+- [ ] **SCHED-03**: Each subsequent match cascades: start = previous match start + estimated_duration_minutes
+- [ ] **SCHED-04**: If recalculated start time falls during court break, move match to after break ends
+- [ ] **SCHED-05**: If recalculated start time exceeds court `available_to`, move match to next tournament day at `available_from`
+- [ ] **SCHED-06**: Matches that overflow to next day continue cascading from `available_from` respecting breaks
+- [ ] **SCHED-07**: Only matches with status 'scheduled' or 'pending' are adjusted
+- [ ] **SCHED-08**: Completed matches are never modified
+- [ ] **SCHED-09**: Match order (match_number sequence) is preserved — only `scheduled_date` and `scheduled_time` change
+- [ ] **SCHED-10**: Updated `scheduled_date` and `scheduled_time` are persisted to database
+
+### Scope Isolation
+
+- [ ] **ISO-01**: Only the affected court's pending matches are recalculated — other courts untouched
+- [ ] **ISO-02**: Match `court_id`, `team1_id`, `team2_id`, `phase`, `status` (for non-adjusted) are never changed
+- [ ] **ISO-03**: Existing scoring, classification, and bracket progression logic is unaffected
+
+### UI — Visual Feedback
+
+- [ ] **VIS-01**: After saving a result, scoreboard page refreshes and shows updated schedule times immediately
+- [ ] **VIS-02**: Players viewing the tournament see updated match times without manual refresh
+
+### Build & Compatibility
+
+- [ ] **BUILD-01**: `npm run build` passes without errors after all changes
+- [ ] **BUILD-02**: All existing tournament flows (create, edit, inscribe, start, score, classify, bracket) continue working
+
+## v2 Requirements
+
+### Team Conflict Detection
+
+- **CONF-01**: Detect when a rescheduled match overlaps with the same team playing on another court
+- **CONF-02**: Display visual warning to organizer when team conflict detected
+
+### Visual Indicators
+
+- **IND-01**: Show "Horario actualizado" badge on matches whose schedule was adjusted
+- **IND-02**: Show original vs adjusted time comparison on rescheduled matches
+
+## Out of Scope
+
+| Feature | Reason |
+|---------|--------|
+| Changing initial schedule generation (TASK-3) | Only post-result adjustments; generation is separate concern |
+| Cross-court automatic conflict resolution | Too complex for v1; detection deferred to v2 |
+| Push notifications for schedule changes | No notification infrastructure exists yet |
+| Undo/revert schedule adjustments | Cascade-forward only; historical accuracy maintained via `actual_end_time` |
+| Modifying group/elimination/bracket logic | Schedule adjustment is time-only, not structural |
+
+## Traceability
+
+| Requirement | Phase | Status |
+|-------------|-------|--------|
+| UI-01 | Phase 1 | Pending |
+| UI-02 | Phase 1 | Pending |
+| UI-03 | Phase 1 | Pending |
+| UI-04 | Phase 1 | Pending |
+| UI-05 | Phase 1 | Pending |
+| PERS-01 | Phase 2 | Pending |
+| PERS-02 | Phase 2 | Pending |
+| PERS-03 | Phase 2 | Pending |
+| SCHED-01 | Phase 3 | Pending |
+| SCHED-02 | Phase 3 | Pending |
+| SCHED-03 | Phase 3 | Pending |
+| SCHED-04 | Phase 3 | Pending |
+| SCHED-05 | Phase 3 | Pending |
+| SCHED-06 | Phase 3 | Pending |
+| SCHED-07 | Phase 3 | Pending |
+| SCHED-08 | Phase 3 | Pending |
+| SCHED-09 | Phase 3 | Pending |
+| SCHED-10 | Phase 3 | Pending |
+| ISO-01 | Phase 3 | Pending |
+| ISO-02 | Phase 3 | Pending |
+| ISO-03 | Phase 4 | Pending |
+| VIS-01 | Phase 4 | Pending |
+| VIS-02 | Phase 4 | Pending |
+| BUILD-01 | Phase 5 | Pending |
+| BUILD-02 | Phase 5 | Pending |
+
+**Coverage:**
+- v1 requirements: 25 total
+- Mapped to phases: 25
+- Unmapped: 0
+
+---
+*Requirements defined: 2026-04-02*
+*Last updated: 2026-04-02 after initial definition*
