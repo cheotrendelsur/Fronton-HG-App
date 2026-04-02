@@ -23,12 +23,15 @@ When a match finishes, every pending match on that court instantly shows its cor
 - Completed matches immune to recalculation; court isolation enforced — Validated in Phase 3
 - DB persistence layer queries tournament data and batch-updates only time fields — Validated in Phase 3
 
+- Updated schedule is immediately visible in the scoreboard page after adjustment — Validated in Phase 4
+- After saving a result, cascade is automatically triggered (wired into save flow) — Validated in Phase 4
+- A player viewing the active tournament page sees corrected match times on refresh — Validated in Phase 4
+- All existing flows (creation, edit, inscription, scoring, classification, bracket) unbroken — Validated in Phase 4
+- Production build passes without errors or warnings — Validated in Phase 4
+
 ### Active
-- [ ] Updated schedule is immediately visible in the scoreboard page after adjustment
-- [ ] After saving a result, cascade is automatically triggered (wired into save flow)
-- [ ] A player viewing the active tournament page sees corrected match times on refresh
-- [ ] All existing flows (creation, edit, inscription, scoring, classification, bracket) unbroken
-- [ ] Production build passes without errors or warnings
+
+(All requirements validated — milestone complete)
 
 ### Out of Scope
 
@@ -63,6 +66,8 @@ When a match finishes, every pending match on that court instantly shows its cor
 | Store actual_end_time as new column vs reuse scheduled_time | New column preserves original schedule as historical record | New column (Phase 2) |
 | Cascade recalculation on client vs server (RPC) | Client has court data already loaded; pure JS engine is fully testable | Client-side pure JS engine (Phase 3) |
 | Handle day overflow by moving to next calendar day vs next tournament day | Tournament may not have consecutive days | Next tournament day from tournamentDays array (Phase 3) |
+| Cascade failure as non-critical | Score save is the critical operation; cascade is additive | try/catch with console.error, no user-facing error (Phase 4) |
+| No changes needed for player view (VIS-02) | ActiveTournamentPage already fetches scheduled_date/time from DB on mount | Confirmed in Phase 4 verification |
 
 ## Evolution
 
@@ -82,4 +87,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-02 after Phase 3 completion*
+*Last updated: 2026-04-02 after Phase 4 completion — all phases complete, milestone ready for closure*
