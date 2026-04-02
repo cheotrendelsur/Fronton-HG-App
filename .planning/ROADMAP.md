@@ -51,7 +51,9 @@ Plans:
   4. Completed matches are never modified; only matches with status 'scheduled' or 'pending' are adjusted
   5. Match order, court assignment, team assignments, phase, and non-time status fields are identical after recalculation; only `scheduled_date` and `scheduled_time` change in the DB
   6. Matches on other courts are completely untouched by the recalculation
-**Plans**: TBD
+**Plans**: 1 plan
+Plans:
+- [ ] 03-01-PLAN.md — Pure cascade engine + DB persistence layer
 
 ### Phase 4: Integration and Compatibility
 **Goal**: The recalculation engine is invoked automatically after every result save, the scoreboard reflects updated times immediately, and all existing tournament flows remain unbroken
@@ -70,5 +72,5 @@ Plans:
 |-------|----------------|--------|-----------|
 | 1. End-Time Input UI | 1/1 | Complete   | 2026-04-02 |
 | 2. Persist Actual End Time | 0/1 | Not started | - |
-| 3. Cascade Recalculation Engine | 0/? | Not started | - |
+| 3. Cascade Recalculation Engine | 0/1 | Not started | - |
 | 4. Integration and Compatibility | 0/? | Not started | - |
