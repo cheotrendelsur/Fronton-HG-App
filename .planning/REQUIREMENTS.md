@@ -1,0 +1,84 @@
+# Requirements: RacketTourneys
+
+**Defined:** 2026-04-02
+**Core Value:** When a court has a setback, the organizer pauses it with one tap; when it's resolved, resuming automatically fixes every pending match time — players are notified and always know their real schedule.
+
+## v1.1 Requirements
+
+Requirements for milestone v1.1: Gestión Dinámica de Contratiempos por Cancha.
+
+### Canchas (Court Management)
+
+- [ ] **CANCH-01**: Organizer sees a "Canchas" tab in active tournament page with swipe between courts
+- [ ] **CANCH-02**: Each court card shows current status (Operativa/Pausada), name, and upcoming pending matches
+- [ ] **CANCH-03**: Paused court shows live timer (time since pause), delayed match badges, and pause reason
+- [ ] **CANCH-04**: Each court shows a collapsible setback history with type, description, start/end times, and duration
+
+### Contratiempos (Setback Management)
+
+- [ ] **CONT-01**: Organizer can declare a setback via modal with type dropdown and description textarea
+- [ ] **CONT-02**: Setback types include: Lluvia, Mantenimiento, Lesión de jugador, Falla eléctrica, Problema de equipamiento, Otro (with custom text)
+- [ ] **CONT-03**: Declaring a setback persists to `court_setbacks` table and marks the court as paused
+- [ ] **CONT-04**: Only one active setback per court at a time (button disabled if already paused)
+- [ ] **CONT-05**: Setback button disabled when court has no pending matches
+
+### Reanudación (Resume & Recalculation)
+
+- [ ] **REAN-01**: Organizer can resume a paused court, recording ended_at and changing status to 'resolved'
+- [ ] **REAN-02**: On resume, all pending matches on that court are recalculated in cascade starting from current time
+- [ ] **REAN-03**: Cascade respects court break windows and availability hours (available_from/available_to)
+- [ ] **REAN-04**: Spill-over moves matches to next tournament day when they exceed court closing time
+- [ ] **REAN-05**: When spill-over exceeds tournament end_date, organizer is prompted to extend the date
+- [ ] **REAN-06**: Recalculated times are persisted to `tournament_matches` in the database
+
+### Conflictos (Conflict Detection)
+
+- [ ] **CONF-01**: After recalculation, system detects when a team has overlapping matches on different courts
+- [ ] **CONF-02**: Detected conflicts are shown to the organizer as visual alerts with details of the overlap
+
+### Notificaciones (Notifications)
+
+- [ ] **NOTF-01**: When a setback is activated, in-app notifications are sent to all players with matches on that court that day
+- [ ] **NOTF-02**: When a court is resumed, notifications are sent with the player's updated next match time
+- [ ] **NOTF-03**: Bell icon with unread count badge appears in the navigation bar
+- [ ] **NOTF-04**: Clicking the bell opens a notification panel listing all notifications with read/unread state
+
+### Seguridad (Safety)
+
+- [ ] **SEGR-01**: Registering a result on a paused court shows a confirmation warning before proceeding
+
+## Future Requirements
+
+### v2 Candidates
+
+- **CONF-03**: Automatic cross-court conflict resolution (move conflicting match to next available slot)
+- **NOTF-05**: Push notifications (browser/mobile) for schedule changes
+- **CANCH-05**: Manual match reordering within a court's schedule
+- **REAN-07**: Undo/revert schedule adjustments
+
+## Out of Scope
+
+| Feature | Reason |
+|---------|--------|
+| Automatic conflict resolution | Too complex and error-prone; organizer manual adjustment is safer |
+| Push notifications (browser/mobile) | In-app notifications sufficient for v1.1; push is a v2 enhancement |
+| Undo/revert schedule adjustments | Adjustments cascade forward only; adds significant complexity |
+| Initial schedule generation changes | TASK-3 logic untouched; only post-result/setback adjustments |
+| Group/elimination logic changes | Only schedule times are affected, not tournament structure |
+
+## Traceability
+
+Which phases cover which requirements. Updated during roadmap creation.
+
+| Requirement | Phase | Status |
+|-------------|-------|--------|
+| — | — | — |
+
+**Coverage:**
+- v1.1 requirements: 18 total
+- Mapped to phases: 0
+- Unmapped: 18
+
+---
+*Requirements defined: 2026-04-02*
+*Last updated: 2026-04-02 after initial definition*
