@@ -137,9 +137,11 @@ export default function ScoreboardPage({ tournament }) {
     ? categories.find(c => c.id === selectedMatch.category_id)?.name ?? ''
     : ''
 
-  // eslint-disable-next-line no-unused-vars
   async function handleSaveResult(match, result, endTime) {
-    // endTime = { date: 'YYYY-MM-DD', time: 'HH:MM' } — persisted in Phase 2
+    // endTime = { date: 'YYYY-MM-DD', time: 'HH:MM' }
+    const actualEndTime = endTime?.date && endTime?.time
+      ? `${endTime.date}T${endTime.time}:00`
+      : null
     const winnerId = result.winner === 'team1' ? match.team1_id : match.team2_id
     const isGroupPhase = match.phase === 'group_phase' && match.group_id
 
@@ -161,6 +163,7 @@ export default function ScoreboardPage({ tournament }) {
       const res = await saveMatchResult(
         supabase, match.id, result, winnerId,
         team1Member.id, team2Member.id, tournament.scoring_config,
+        actualEndTime,
       )
 
       setSelectedMatch(null)
@@ -196,6 +199,7 @@ export default function ScoreboardPage({ tournament }) {
           score_team2: result.score_team2,
           winner_id: winnerId,
           status: 'completed',
+          actual_end_time: actualEndTime,
         })
         .eq('id', match.id)
 

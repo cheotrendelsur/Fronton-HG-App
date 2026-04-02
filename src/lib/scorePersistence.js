@@ -50,7 +50,7 @@ function computeDeltas(matchResult, teamKey, scoringConfig) {
  * @param {object} scoringConfig - tournament scoring_config
  * @returns {{ success: boolean, error?: string }}
  */
-export async function saveMatchResult(supabaseClient, matchId, matchResult, winnerId, team1MemberId, team2MemberId, scoringConfig) {
+export async function saveMatchResult(supabaseClient, matchId, matchResult, winnerId, team1MemberId, team2MemberId, scoringConfig, actualEndTime = null) {
   try {
     const team1Stats = computeDeltas(matchResult, 'team1', scoringConfig)
     const team2Stats = computeDeltas(matchResult, 'team2', scoringConfig)
@@ -67,6 +67,15 @@ export async function saveMatchResult(supabaseClient, matchId, matchResult, winn
     })
 
     if (error) return { success: false, error: error.message }
+
+    if (actualEndTime) {
+      await supabaseClient
+        .from('tournament_matches')
+        .update({ actual_end_time: actualEndTime })
+        .eq('id', matchId)
+      // Non-critical: score already saved; silently continue if this fails
+    }
+
     return { success: true }
   } catch (err) {
     return { success: false, error: err instanceof Error ? err.message : String(err) }
