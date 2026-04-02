@@ -35,10 +35,27 @@ function getInitialScores(config) {
   return { team1_games: [], team2_games: [] }
 }
 
+function getTodayISO() {
+  const d = new Date()
+  const yyyy = d.getFullYear()
+  const mm = String(d.getMonth() + 1).padStart(2, '0')
+  const dd = String(d.getDate()).padStart(2, '0')
+  return `${yyyy}-${mm}-${dd}`
+}
+
+function getCurrentTimeHHMM() {
+  const d = new Date()
+  const hh = String(d.getHours()).padStart(2, '0')
+  const min = String(d.getMinutes()).padStart(2, '0')
+  return `${hh}:${min}`
+}
+
 export default function ScoreInputModal({ match, scoringConfig, categoryName, onSave, onClose }) {
   const safeConfig = scoringConfig ?? null
   const [scores, setScores] = useState(() => getInitialScores(safeConfig))
   const [saving, setSaving] = useState(false)
+  const [endDate, setEndDate] = useState(() => getTodayISO())
+  const [endTime, setEndTime] = useState(() => getCurrentTimeHHMM())
 
   // Block body scroll while modal is open
   useEffect(() => {
@@ -56,7 +73,7 @@ export default function ScoreInputModal({ match, scoringConfig, categoryName, on
     return calculateMatchResult(scores, safeConfig)
   }, [validation, scores, safeConfig])
 
-  const canSave = validation.valid && validation.complete && result?.winner
+  const canSave = validation.valid && validation.complete && result?.winner && endDate.trim() !== '' && endTime.trim() !== ''
 
   const winnerName = result?.winner === 'team1'
     ? `${match?.team1_p1 ?? '?'} / ${match?.team1_p2 ?? '?'}`
@@ -71,7 +88,7 @@ export default function ScoreInputModal({ match, scoringConfig, categoryName, on
   async function handleSave() {
     if (!canSave) return
     setSaving(true)
-    if (onSave) await onSave(match, result)
+    if (onSave) await onSave(match, result, { date: endDate, time: endTime })
     setSaving(false)
   }
 
@@ -188,6 +205,61 @@ export default function ScoreInputModal({ match, scoringConfig, categoryName, on
                 <p className="text-[10px] font-medium" style={{ color: '#6B7280' }}>/</p>
                 <p className="text-xs font-semibold" style={{ color: '#1F2937' }}>{match?.team2_p2 ?? '?'}</p>
               </div>
+            </div>
+
+            {/* End-time section — per D-01, D-02, D-03, D-04, D-05, D-06 */}
+            <div>
+              <p className="text-[11px] font-medium mb-2" style={{ color: '#1F2937' }}>
+                ¿Cuándo terminó este partido?
+              </p>
+              <div className="flex gap-3">
+                {/* Date input — left side, per D-03 */}
+                <div className="flex-1">
+                  <label className="block text-[11px] mb-1" style={{ color: '#6B7280' }}>
+                    Fecha
+                  </label>
+                  <input
+                    type="date"
+                    value={endDate}
+                    onChange={e => setEndDate(e.target.value)}
+                    className="w-full rounded-lg text-sm px-3 py-2"
+                    style={{
+                      background: '#FFFFFF',
+                      border: '1px solid #E0E2E6',
+                      color: '#1F2937',
+                      outline: 'none',
+                    }}
+                  />
+                </div>
+                {/* Time input — right side, per D-03 */}
+                <div className="flex-1">
+                  <label className="block text-[11px] mb-1" style={{ color: '#6B7280' }}>
+                    Hora
+                  </label>
+                  <input
+                    type="time"
+                    value={endTime}
+                    onChange={e => setEndTime(e.target.value)}
+                    className="w-full rounded-lg text-sm px-3 py-2"
+                    style={{
+                      background: '#FFFFFF',
+                      border: '1px solid #E0E2E6',
+                      color: '#1F2937',
+                      outline: 'none',
+                    }}
+                  />
+                </div>
+              </div>
+              {/* Inline validation errors — per D-08 */}
+              {(endDate.trim() === '' || endTime.trim() === '') && (
+                <p className="text-[10px] mt-1" style={{ color: '#EF4444' }}>
+                  {endDate.trim() === '' && endTime.trim() === ''
+                    ? 'Ingresa la fecha y hora de finalización'
+                    : endDate.trim() === ''
+                    ? 'Ingresa la fecha de finalización'
+                    : 'Ingresa la hora de finalización'}
+                </p>
+              )}
             </div>
 
             {/* Scoring banner */}
