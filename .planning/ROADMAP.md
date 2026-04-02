@@ -64,7 +64,9 @@ Plans:
   2. A player viewing the active tournament page sees corrected match times when they open or refresh the page
   3. All existing flows — tournament creation, edit, inscription, start, scoring, classification, and bracket progression — work exactly as before
   4. `npm run build` completes without errors or warnings introduced by this milestone
-**Plans**: TBD
+**Plans**: 1 plan
+Plans:
+- [ ] 04-01-PLAN.md — Wire cascade into ScoreboardPage save flows + build/test verification
 
 ## Progress
 
@@ -73,4 +75,4 @@ Plans:
 | 1. End-Time Input UI | 1/1 | Complete   | 2026-04-02 |
 | 2. Persist Actual End Time | 0/1 | Not started | - |
 | 3. Cascade Recalculation Engine | 0/1 | Not started | - |
-| 4. Integration and Compatibility | 0/? | Not started | - |
+| 4. Integration and Compatibility | 0/1 | Not started | - |
