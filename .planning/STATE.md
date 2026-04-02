@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Gestión Dinámica de Contratiempos por Cancha
 status: verifying
-stopped_at: Completed 05-01-PLAN.md
-last_updated: "2026-04-02T22:43:02.889Z"
+stopped_at: Phase 6 context gathered
+last_updated: "2026-04-02T22:49:34.064Z"
 last_activity: 2026-04-02
 progress:
   total_phases: 4
@@ -77,7 +77,7 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-02T22:39:39.348Z
-Stopped at: Completed 05-01-PLAN.md
-Resume file: None
+Last session: 2026-04-02T22:49:34.059Z
+Stopped at: Phase 6 context gathered
+Resume file: .planning/phases/06-ui-de-canchas-y-contratiempos/06-CONTEXT.md
 Next step: `/gsd:plan-phase 5`
