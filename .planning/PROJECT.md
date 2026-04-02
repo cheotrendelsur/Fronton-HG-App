@@ -43,12 +43,12 @@ When a match finishes, every pending match on that court instantly shows its cor
 
 ## Context
 
-- **Existing codebase**: Brownfield — this adds to a fully functional tournament management PWA with group phases, elimination brackets, and a complete scoreboard system
-- **Current state**: Schedule is static after initial generation. `tournament_matches` has `scheduled_date`, `scheduled_time`, `estimated_duration_minutes` fields already
-- **Score recording flow**: `ScoreInputModal` → `save_match_result` RPC (group) or direct UPDATE (elimination) → `postGroupPhase.js` progression
-- **Court model**: `courts` table has `available_from`, `available_to`, `break_start`, `break_end` time fields
-- **Scheduling engine**: `schedulingEngine.js` already has `generateTimeSlots()` which respects court hours and breaks — can be reused for recalculation
-- **Key constraint**: The `save_match_result` RPC handles group matches atomically; elimination matches use direct UPDATE. Schedule adjustment must work after both paths.
+- **Codebase**: Brownfield PWA with group phases, elimination brackets, complete scoreboard, and now real-time schedule adjustment
+- **Current state (v1.0 shipped)**: Schedule dynamically adjusts after every match result. `tournament_matches` has `scheduled_date`, `scheduled_time`, `estimated_duration_minutes`, and `actual_end_time` fields
+- **Score recording flow**: `ScoreInputModal` (with end-time inputs) → `save_match_result` RPC (group) or direct UPDATE (elimination) → `applyCascadeRecalculation` → `loadData()` refetch
+- **New modules**: `cascadeRecalculator.js` (pure engine, 12 tests), `cascadeSchedulePersistence.js` (DB persistence layer)
+- **Court model**: `courts` table has `available_from`, `available_to`, `break_start`, `break_end` — all respected by cascade engine
+- **v2 candidates**: Team conflict detection (CONF-01/02), visual indicators for adjusted matches (IND-01/02)
 
 ## Constraints
 
@@ -87,4 +87,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-02 after Phase 4 completion — all phases complete, milestone ready for closure*
+*Last updated: 2026-04-02 after v1.0 milestone*
