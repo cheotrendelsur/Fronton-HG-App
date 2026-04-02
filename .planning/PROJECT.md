@@ -12,12 +12,10 @@ When a match finishes, every pending match on that court instantly shows its cor
 
 ### Validated
 
-(None yet — ship to validate)
+- End-time input fields (date + time) pre-filled with current date/time appear in ScoreInputModal — Validated in Phase 1
+- End-time inputs are editable so organizer can adjust if not recording in real time — Validated in Phase 1
 
 ### Active
-
-- [ ] End-time input fields (date + time) pre-filled with current date/time appear in ScoreInputModal when registering a result
-- [ ] End-time inputs are editable so organizer can adjust if not recording in real time
 - [ ] Actual end time is persisted to the database when saving a match result
 - [ ] After saving a result, all pending matches on the same court for that day are recalculated in cascade
 - [ ] If a match ends late, subsequent matches shift later proportionally
@@ -82,4 +80,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-02 after initialization*
+*Last updated: 2026-04-02 after Phase 1 completion*
