@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react'
 import { supabase } from '../../lib/supabaseClient'
 import { saveMatchResult, checkGroupPhaseComplete } from '../../lib/scorePersistence'
 import { processGroupPhaseCompletion, advanceBracketWinner, checkAllCategoriesComplete } from '../../lib/postGroupPhase'
+import { applyCascadeRecalculation } from '../../lib/cascadeSchedulePersistence'
 import BrandLoader from '../BrandLoader'
 import DaySwiper from './DaySwiper'
 import ScoreInputModal from './ScoreInputModal'
@@ -189,6 +190,13 @@ export default function ScoreboardPage({ tournament }) {
             setBanner({ type: 'error', text: classResult.error || 'Error en clasificación automática' })
           }
         }
+
+        // Cascade recalculate schedule for affected court
+        try {
+          await applyCascadeRecalculation(supabase, tournament.id, match.id)
+        } catch (cascadeErr) {
+          console.error('[Cascade] Group phase recalculation failed:', cascadeErr)
+        }
       }
     } else {
       // Elimination phase: update match + advance bracket
@@ -219,6 +227,13 @@ export default function ScoreboardPage({ tournament }) {
 
         // Check if entire tournament is finished
         await checkAllCategoriesComplete(supabase, tournament.id)
+
+        // Cascade recalculate schedule for affected court
+        try {
+          await applyCascadeRecalculation(supabase, tournament.id, match.id)
+        } catch (cascadeErr) {
+          console.error('[Cascade] Elimination phase recalculation failed:', cascadeErr)
+        }
       }
     }
 
