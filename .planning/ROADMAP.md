@@ -23,7 +23,7 @@
 
 ## Phase Summary
 
-- [ ] **Phase 5: Capa de Datos** - DB tables, RLS policies, and CRUD operations for court setbacks and notifications
+- [x] **Phase 5: Capa de Datos** - DB tables, RLS policies, and CRUD operations for court setbacks and notifications (completed 2026-04-02)
 - [ ] **Phase 6: UI de Canchas y Contratiempos** - "Canchas" tab, court status cards, setback declaration form, paused state display, setback history, and paused-court warning
 - [ ] **Phase 7: Reanudación y Detección de Conflictos** - Resume flow, cascade recalculation on resume, spill-over handling, date extension prompt, and conflict detection alerts
 - [ ] **Phase 8: Notificaciones** - In-app notification system: bell icon, unread badge, notification panel, and setback/resume notifications
@@ -39,10 +39,10 @@
   2. `notifications` table exists with columns: id, tournament_id, user_id, type, payload (jsonb), read_at, created_at
   3. RLS policies allow organizers to insert/update court_setbacks and read their own tournaments' data; players can read their own notifications
   4. Basic CRUD helper functions (supabase queries) for setbacks and notifications are available in `src/lib/`
-**Plans:** 1 plan
+**Plans:** 1/1 plans complete
 
 Plans:
-- [ ] 05-01-PLAN.md — SQL migration (2 tables + RLS) and CRUD helper modules (setbackPersistence.js, notificationPersistence.js)
+- [x] 05-01-PLAN.md — SQL migration (2 tables + RLS) and CRUD helper modules (setbackPersistence.js, notificationPersistence.js)
 
 ### Phase 6: UI de Canchas y Contratiempos
 **Goal**: Organizers can see all courts with live status, declare setbacks with a form, and the paused state is clearly communicated; a warning appears when recording a result on a paused court
@@ -91,7 +91,7 @@ Plans:
 | 2. Persist Actual End Time | v1.0 | 1/1 | Complete | 2026-04-02 |
 | 3. Cascade Recalculation Engine | v1.0 | 1/1 | Complete | 2026-04-02 |
 | 4. Integration and Compatibility | v1.0 | 1/1 | Complete | 2026-04-02 |
-| 5. Capa de Datos | v1.1 | 0/1 | Not started | - |
+| 5. Capa de Datos | v1.1 | 1/1 | Complete   | 2026-04-02 |
 | 6. UI de Canchas y Contratiempos | v1.1 | 0/? | Not started | - |
 | 7. Reanudación y Detección de Conflictos | v1.1 | 0/? | Not started | - |
 | 8. Notificaciones | v1.1 | 0/? | Not started | - |

@@ -18,7 +18,7 @@ Requirements for milestone v1.1: Gestión Dinámica de Contratiempos por Cancha.
 
 - [ ] **CONT-01**: Organizer can declare a setback via modal with type dropdown and description textarea
 - [ ] **CONT-02**: Setback types include: Lluvia, Mantenimiento, Lesión de jugador, Falla eléctrica, Problema de equipamiento, Otro (with custom text)
-- [ ] **CONT-03**: Declaring a setback persists to `court_setbacks` table and marks the court as paused
+- [x] **CONT-03**: Declaring a setback persists to `court_setbacks` table and marks the court as paused
 - [ ] **CONT-04**: Only one active setback per court at a time (button disabled if already paused)
 - [ ] **CONT-05**: Setback button disabled when court has no pending matches
 
@@ -29,7 +29,7 @@ Requirements for milestone v1.1: Gestión Dinámica de Contratiempos por Cancha.
 - [ ] **REAN-03**: Cascade respects court break windows and availability hours (available_from/available_to)
 - [ ] **REAN-04**: Spill-over moves matches to next tournament day when they exceed court closing time
 - [ ] **REAN-05**: When spill-over exceeds tournament end_date, organizer is prompted to extend the date
-- [ ] **REAN-06**: Recalculated times are persisted to `tournament_matches` in the database
+- [x] **REAN-06**: Recalculated times are persisted to `tournament_matches` in the database
 
 ### Conflictos (Conflict Detection)
 
@@ -38,8 +38,8 @@ Requirements for milestone v1.1: Gestión Dinámica de Contratiempos por Cancha.
 
 ### Notificaciones (Notifications)
 
-- [ ] **NOTF-01**: When a setback is activated, in-app notifications are sent to all players with matches on that court that day
-- [ ] **NOTF-02**: When a court is resumed, notifications are sent with the player's updated next match time
+- [x] **NOTF-01**: When a setback is activated, in-app notifications are sent to all players with matches on that court that day
+- [x] **NOTF-02**: When a court is resumed, notifications are sent with the player's updated next match time
 - [ ] **NOTF-03**: Bell icon with unread count badge appears in the navigation bar
 - [ ] **NOTF-04**: Clicking the bell opens a notification panel listing all notifications with read/unread state
 
@@ -78,7 +78,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | CANCH-04 | Phase 6 | Pending |
 | CONT-01 | Phase 6 | Pending |
 | CONT-02 | Phase 6 | Pending |
-| CONT-03 | Phase 5 | Pending |
+| CONT-03 | Phase 5 | Complete |
 | CONT-04 | Phase 6 | Pending |
 | CONT-05 | Phase 6 | Pending |
 | REAN-01 | Phase 7 | Pending |
@@ -86,11 +86,11 @@ Which phases cover which requirements. Updated during roadmap creation.
 | REAN-03 | Phase 7 | Pending |
 | REAN-04 | Phase 7 | Pending |
 | REAN-05 | Phase 7 | Pending |
-| REAN-06 | Phase 5 | Pending |
+| REAN-06 | Phase 5 | Complete |
 | CONF-01 | Phase 7 | Pending |
 | CONF-02 | Phase 7 | Pending |
-| NOTF-01 | Phase 5 | Pending |
-| NOTF-02 | Phase 5 | Pending |
+| NOTF-01 | Phase 5 | Complete |
+| NOTF-02 | Phase 5 | Complete |
 | NOTF-03 | Phase 8 | Pending |
 | NOTF-04 | Phase 8 | Pending |
 | SEGR-01 | Phase 6 | Pending |

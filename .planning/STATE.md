@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Gestión Dinámica de Contratiempos por Cancha
-status: roadmap_ready
-stopped_at: null
-last_updated: "2026-04-02T22:00:00.000Z"
+status: verifying
+stopped_at: Completed 05-01-PLAN.md
+last_updated: "2026-04-02T22:39:39.352Z"
 last_activity: 2026-04-02
 progress:
   total_phases: 4
-  completed_phases: 0
-  total_plans: 0
-  completed_plans: 0
+  completed_phases: 1
+  total_plans: 1
+  completed_plans: 1
   percent: 0
 ---
 
@@ -21,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-02)
 
 **Core value:** When a court has a setback, the organizer pauses it with one tap; when it's resolved, resuming automatically fixes every pending match time — players are notified and always know their real schedule.
-**Current focus:** Phase 5 — Capa de Datos (DB tables + CRUD helpers)
+**Current focus:** Phase 05 — capa-de-datos
 
 ## Current Position
 
-Phase: 5 — Capa de Datos
-Plan: Not started
-Status: Roadmap created, awaiting phase planning
-Last activity: 2026-04-02 — Roadmap v1.1 created (4 phases, 22 requirements mapped)
+Phase: 05 (capa-de-datos) — EXECUTING
+Plan: 1 of 1
+Status: Phase complete — ready for verification
+Last activity: 2026-04-02
 
 Progress: [░░░░░░░░░░] 0%
 
@@ -52,6 +52,7 @@ Progress: [░░░░░░░░░░] 0%
 - Trend: —
 
 *Updated after each plan completion*
+| Phase 05-capa-de-datos P01 | 2 | 3 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -62,6 +63,8 @@ Progress: [░░░░░░░░░░] 0%
 - TASK-6 micro-adjustments (per-match result) coexist with TASK-7 macro-adjustments (court pause/resume)
 - Notifications are in-app only (no push) — in `notifications` table, polled on navigation open
 - Phase 5 provides the DB layer so Phases 6-8 can be built independently without migrations mid-feature
+- [Phase 05-capa-de-datos]: supabaseClient passed as argument (not imported) to match existing persistence pattern
+- [Phase 05-capa-de-datos]: notifications UPDATE policy scoped to user_id = auth.uid() for player self-management of read status
 
 ### Pending Todos
 
@@ -74,7 +77,7 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-02
-Stopped at: Roadmap creation for v1.1
+Last session: 2026-04-02T22:39:39.348Z
+Stopped at: Completed 05-01-PLAN.md
 Resume file: None
 Next step: `/gsd:plan-phase 5`
