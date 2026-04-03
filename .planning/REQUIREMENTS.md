@@ -40,8 +40,8 @@ Requirements for milestone v1.1: Gestión Dinámica de Contratiempos por Cancha.
 
 - [x] **NOTF-01**: When a setback is activated, in-app notifications are sent to all players with matches on that court that day
 - [x] **NOTF-02**: When a court is resumed, notifications are sent with the player's updated next match time
-- [ ] **NOTF-03**: Bell icon with unread count badge appears in the navigation bar
-- [ ] **NOTF-04**: Clicking the bell opens a notification panel listing all notifications with read/unread state
+- [x] **NOTF-03**: Bell icon with unread count badge appears in the navigation bar
+- [x] **NOTF-04**: Clicking the bell opens a notification panel listing all notifications with read/unread state
 
 ### Seguridad (Safety)
 
@@ -91,8 +91,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 | CONF-02 | Phase 7 | Complete |
 | NOTF-01 | Phase 5 | Complete |
 | NOTF-02 | Phase 5 | Complete |
-| NOTF-03 | Phase 8 | Pending |
-| NOTF-04 | Phase 8 | Pending |
+| NOTF-03 | Phase 8 | Complete |
+| NOTF-04 | Phase 8 | Complete |
 | SEGR-01 | Phase 6 | Complete |
 
 **Coverage:**

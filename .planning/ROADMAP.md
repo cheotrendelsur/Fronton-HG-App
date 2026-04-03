@@ -92,7 +92,7 @@ Plans:
 **UI hint**: yes
 
 Plans:
-- [ ] 08-01-PLAN.md — Bell icon with unread badge in header + slide-out notification panel with read/unread state and mark-as-read
+- [x] 08-01-PLAN.md — Bell icon with unread badge in header + slide-out notification panel with read/unread state and mark-as-read
 
 ## Progress
 

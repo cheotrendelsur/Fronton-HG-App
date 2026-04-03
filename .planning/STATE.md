@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Gestión Dinámica de Contratiempos por Cancha
 status: executing
-stopped_at: Phase 8 context gathered
-last_updated: "2026-04-03T03:06:03.213Z"
+stopped_at: Completed 08-01-PLAN.md
+last_updated: "2026-04-03T03:48:01.908Z"
 last_activity: 2026-04-03
 progress:
   total_phases: 4
-  completed_phases: 3
-  total_plans: 7
-  completed_plans: 7
+  completed_phases: 4
+  total_plans: 8
+  completed_plans: 8
   percent: 0
 ---
 
@@ -57,6 +57,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 06-ui-de-canchas-y-contratiempos P02 | 2 | 2 tasks | 5 files |
 | Phase 06-ui-de-canchas-y-contratiempos P03 | 2 | 2 tasks | 2 files |
 | Phase 07 P02 | 2 | 1 tasks | 2 files |
+| Phase 08 P01 | 3 | 3 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -75,6 +76,8 @@ Progress: [░░░░░░░░░░] 0%
 - [Phase 06]: notifiedCount computed from unique team IDs * 2 — more accurate than affected_match_ids.length * 4
 - [Phase 06]: SetbackHistory loads history on mount so count in header is accurate before expanding the accordion
 - [Phase 07]: Deduplication key includes teamId so same match pair reports conflict for each team
+- [Phase 08]: 30s polling interval for unread count refresh
+- [Phase 08]: Portal-based drawer consistent with ScoreInputModal pattern
 
 ### Pending Todos
 
@@ -87,7 +90,7 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-03T03:06:03.209Z
-Stopped at: Phase 8 context gathered
-Resume file: .planning/phases/08-notificaciones/08-CONTEXT.md
+Last session: 2026-04-03T03:48:01.905Z
+Stopped at: Completed 08-01-PLAN.md
+Resume file: None
 Next step: `/gsd:plan-phase 5`
