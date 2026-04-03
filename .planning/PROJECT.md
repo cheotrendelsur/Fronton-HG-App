@@ -38,19 +38,20 @@ When a court has a setback, the organizer pauses it with one tap; when it's reso
 - A player viewing the active tournament page sees corrected match times on refresh — Validated in v1.0 Phase 4
 - All existing flows (creation, edit, inscription, scoring, classification, bracket) unbroken — Validated in v1.0 Phase 4
 - Production build passes without errors or warnings — Validated in v1.0 Phase 4
+- Organizer can pause a court via setback declaration form (type + description) — Validated in v1.1 Phase 6
+- Court shows paused state with live timer and delayed match badges — Validated in v1.1 Phase 6
+- Setback history visible per court — Validated in v1.1 Phase 6
+- New "Canchas" tab in active tournament page with swipe between courts — Validated in v1.1 Phase 6
+- Warning shown when recording result on paused court — Validated in v1.1 Phase 6
 
 ### Active
 
-- Organizer can pause a court via setback declaration form (type + description)
-- Court shows paused state with live timer and delayed match badges
 - Organizer can resume a paused court triggering automatic cascade recalculation
 - Cascade respects court breaks, availability windows, and day overflow (spill-over)
 - In-app notifications sent to affected players on pause and resume
 - Notification bell icon with unread badge in navigation
 - Cross-court conflict detection after recalculation
 - Tournament date extension when spill-over exceeds end_date
-- Setback history visible per court
-- New "Canchas" tab in active tournament page with swipe between courts
 
 ### Out of Scope
 
