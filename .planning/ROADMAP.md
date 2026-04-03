@@ -88,8 +88,11 @@ Plans:
   2. When a court is resumed, affected players receive a notification with their updated next match time
   3. A bell icon with an unread count badge appears in the navigation bar and updates in real time as notifications arrive
   4. Clicking the bell opens a notification panel listing all notifications with read/unread visual distinction; marking as read clears the badge count
-**Plans**: TBD
+**Plans**: 1 plan
 **UI hint**: yes
+
+Plans:
+- [ ] 08-01-PLAN.md — Bell icon with unread badge in header + slide-out notification panel with read/unread state and mark-as-read
 
 ## Progress
 
@@ -102,4 +105,4 @@ Plans:
 | 5. Capa de Datos | v1.1 | 1/1 | Complete   | 2026-04-02 |
 | 6. UI de Canchas y Contratiempos | v1.1 | 3/3 | Complete   | 2026-04-03 |
 | 7. Reanudación y Detección de Conflictos | v1.1 | 0/3 | Not started | - |
-| 8. Notificaciones | v1.1 | 0/? | Not started | - |
+| 8. Notificaciones | v1.1 | 0/1 | Not started | - |
