@@ -5,6 +5,7 @@ import Layout from '../components/Layout'
 import BrandLoader from '../components/BrandLoader'
 import InscritosView from '../components/TournamentActive/InscritosView'
 import ClasificacionView from '../components/TournamentActive/ClasificacionView'
+import CanchasView from '../components/TournamentActive/CanchasView'
 
 export default function ActiveTournamentPage() {
   const { id } = useParams()
@@ -16,6 +17,8 @@ export default function ActiveTournamentPage() {
   const [groups, setGroups]             = useState([])
   const [groupMembers, setGroupMembers] = useState([])
   const [matches, setMatches]           = useState([])
+  const [courts, setCourts]             = useState([])
+  const [activeSetbacks, setActiveSetbacks] = useState({})
   const [loading, setLoading]           = useState(true)
   const [activeTab, setActiveTab]       = useState('inscritos')
 
@@ -114,6 +117,26 @@ export default function ActiveTournamentPage() {
     }))
     setMatches(enrichedMatches)
 
+    // Fetch courts for this tournament
+    const { data: crts } = await supabase
+      .from('courts')
+      .select('id, name, available_from, available_to, break_start, break_end')
+      .eq('tournament_id', id)
+      .order('name')
+    setCourts(crts ?? [])
+
+    // Fetch active setbacks for all courts of this tournament
+    const { data: setbacks } = await supabase
+      .from('court_setbacks')
+      .select('*')
+      .eq('tournament_id', id)
+      .eq('status', 'active')
+    const setbackMap = {}
+    for (const sb of (setbacks ?? [])) {
+      setbackMap[sb.court_id] = sb
+    }
+    setActiveSetbacks(setbackMap)
+
     setLoading(false)
   }, [id, navigate])
 
@@ -160,6 +183,7 @@ export default function ActiveTournamentPage() {
           {[
             { key: 'inscritos', label: 'Inscritos' },
             { key: 'clasificacion', label: 'Clasificación' },
+            { key: 'canchas', label: 'Canchas' },
           ].map(tab => {
             const isActive = activeTab === tab.key
             return (
@@ -191,12 +215,21 @@ export default function ActiveTournamentPage() {
             categories={categories}
             teamsByCategory={teamsByCategory}
           />
-        ) : (
+        ) : activeTab === 'clasificacion' ? (
           <ClasificacionView
             categories={categories}
             groups={groups}
             groupMembers={groupMembers}
             matches={matches}
+          />
+        ) : (
+          <CanchasView
+            courts={courts}
+            matches={matches}
+            categories={categories}
+            activeSetbacks={activeSetbacks}
+            tournamentId={id}
+            onDataRefresh={loadData}
           />
         )}
       </div>
