@@ -1,7 +1,7 @@
 import { useRef, useState, useEffect } from 'react'
 import CourtCard from './CourtCard'
 
-export default function CourtSwiper({ courts, tournamentId, onDataRefresh }) {
+export default function CourtSwiper({ courts, tournamentId, onDataRefresh, onSpillOver }) {
   const scrollRef = useRef(null)
   const [activeIdx, setActiveIdx] = useState(0)
 
@@ -82,6 +82,7 @@ export default function CourtSwiper({ courts, tournamentId, onDataRefresh }) {
               court={court}
               tournamentId={tournamentId}
               onDataRefresh={onDataRefresh}
+              onSpillOver={onSpillOver}
             />
           </div>
         ))}

@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabaseClient'
 import { resolveSetback } from '../../lib/setbackPersistence'
+import { applyCascadeOnResume } from '../../lib/cascadeSchedulePersistence'
 import CourtMatchMiniCard from './CourtMatchMiniCard'
 import SetbackFormModal from './SetbackFormModal'
 import SetbackHistory from './SetbackHistory'
 
-export default function CourtCard({ court, tournamentId, onDataRefresh }) {
-  const { name, pendingMatches, activeSetback, categoryMap } = court
+export default function CourtCard({ court, tournamentId, onDataRefresh, onSpillOver }) {
+  const { id, name, pendingMatches, activeSetback, categoryMap } = court
   const isPaused = !!activeSetback
   const hasPending = pendingMatches.length > 0
 
@@ -61,11 +62,26 @@ export default function CourtCard({ court, tournamentId, onDataRefresh }) {
   async function handleResume() {
     if (!activeSetback?.id) return
     setResuming(true)
-    const result = await resolveSetback(supabase, activeSetback.id)
-    setResuming(false)
-    if (result.success) {
-      onDataRefresh()
+
+    // Step 1: Resolve the setback
+    const resolveResult = await resolveSetback(supabase, activeSetback.id)
+    if (!resolveResult.success) {
+      setResuming(false)
+      return
     }
+
+    // Step 2: Run cascade recalculation (per D-02, D-03)
+    const cascadeResult = await applyCascadeOnResume(supabase, tournamentId, id)
+
+    setResuming(false)
+
+    // Step 3: Handle spill-over (per D-06) — pass courtId so CanchasView can re-run cascade after extension
+    if (cascadeResult.success && cascadeResult.spillOver) {
+      onSpillOver(id, cascadeResult.spillOverDate)
+    }
+
+    // Step 4: Refresh data (loads new match times + resolved setback)
+    onDataRefresh()
   }
 
   return (

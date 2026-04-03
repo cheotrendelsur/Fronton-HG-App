@@ -29,7 +29,7 @@ export default function ActiveTournamentPage() {
     // Fetch tournament + categories
     const { data: t } = await supabase
       .from('tournaments')
-      .select('id, name, status, categories(id, name, max_couples)')
+      .select('id, name, status, start_date, end_date, categories(id, name, max_couples)')
       .eq('id', id)
       .single()
 
