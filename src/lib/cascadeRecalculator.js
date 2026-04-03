@@ -77,10 +77,14 @@ export function recalculateCourt({ courtId, actualEndTime, courtMatches, court, 
   // in the court queue. We process completed ones to advance the cursor (they
   // occupy time slots), but only add pending ones to the updates array.
   function isAfterTrigger(m) {
+    // Matches on future days are always affected
     if (m.scheduled_date > anchorDate) return true
     if (m.scheduled_date === anchorDate) {
       if (!triggeringMatch) {
-        return m.scheduled_time >= anchorTimeStr
+        // No completed match found on anchor day — this is a resume scenario.
+        // ALL non-completed matches on anchor day should be recalculated
+        // from the anchor time, regardless of their original scheduled_time.
+        return m.status !== 'completed'
       }
       const tm = triggeringMatch.scheduled_time
       if (m.scheduled_time > tm) return true
@@ -112,10 +116,14 @@ export function recalculateCourt({ courtId, actualEndTime, courtMatches, court, 
    * Advance time past break window if it falls inside it.
    * Returns minutes after applying break window push.
    */
-  function applyBreak(timeMinutes) {
+  function applyBreak(timeMinutes, duration = 0) {
     if (!hasBreak) return timeMinutes
     // If start time falls inside break window [break_start, break_end), push to break_end
     if (timeMinutes >= breakStart && timeMinutes < breakEnd) {
+      return breakEnd
+    }
+    // If match would extend into break (doesn't fit before break starts), push to break_end
+    if (duration > 0 && timeMinutes < breakStart && timeMinutes + duration > breakStart) {
       return breakEnd
     }
     return timeMinutes
@@ -152,8 +160,8 @@ export function recalculateCourt({ courtId, actualEndTime, courtMatches, court, 
     const duration = match.estimated_duration_minutes || 60
     const isCompleted = match.status === 'completed'
 
-    // Apply break window to cursor
-    cursorTime = applyBreak(cursorTime)
+    // Apply break window to cursor (including check that match fits before break)
+    cursorTime = applyBreak(cursorTime, duration)
 
     // Check overflow: match can't start AND finish within available_to
     if (cursorTime >= availableTo || cursorTime + duration > availableTo) {
@@ -169,7 +177,7 @@ export function recalculateCourt({ courtId, actualEndTime, courtMatches, court, 
       }
 
       // Re-apply break after overflow (in case available_from falls in break)
-      cursorTime = applyBreak(cursorTime)
+      cursorTime = applyBreak(cursorTime, duration)
     }
 
     const newDate = cursorDate
