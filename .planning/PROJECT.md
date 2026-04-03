@@ -48,11 +48,12 @@ When a court has a setback, the organizer pauses it with one tap; when it's reso
 - Cascade respects court breaks, availability windows, and day overflow (spill-over) — Validated in v1.1 Phase 7
 - Cross-court conflict detection after recalculation — Validated in v1.1 Phase 7
 - Tournament date extension when spill-over exceeds end_date — Validated in v1.1 Phase 7
+- In-app notifications sent to affected players on pause and resume — Validated in v1.1 Phase 8
+- Notification bell icon with unread badge in navigation — Validated in v1.1 Phase 8
 
 ### Active
 
-- In-app notifications sent to affected players on pause and resume
-- Notification bell icon with unread badge in navigation
+None — all v1.1 requirements validated
 
 ### Out of Scope
 
@@ -108,4 +109,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-03 after Phase 7 (Reanudación y Detección de Conflictos) completion*
+*Last updated: 2026-04-03 after Phase 8 (Notificaciones) completion — all v1.1 phases complete*
