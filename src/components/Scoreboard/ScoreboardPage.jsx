@@ -5,6 +5,7 @@ import { processGroupPhaseCompletion, advanceBracketWinner, checkAllCategoriesCo
 import BrandLoader from '../BrandLoader'
 import DaySwiper from './DaySwiper'
 import ScoreInputModal from './ScoreInputModal'
+import PausedCourtWarning from './PausedCourtWarning'
 
 export default function ScoreboardPage({ tournament }) {
   const [matches, setMatches] = useState([])
@@ -13,6 +14,8 @@ export default function ScoreboardPage({ tournament }) {
   const [loading, setLoading] = useState(true)
   const [selectedMatch, setSelectedMatch] = useState(null)
   const [banner, setBanner] = useState(null)
+  const [activeSetbacks, setActiveSetbacks] = useState({})
+  const [pendingWarningMatch, setPendingWarningMatch] = useState(null)
 
   const loadData = useCallback(async () => {
     if (!tournament?.id) return
@@ -73,6 +76,19 @@ export default function ScoreboardPage({ tournament }) {
       .in('group_id', (mts ?? []).map(m => m.group_id).filter(Boolean))
 
     setGroupMembers(gm ?? [])
+
+    // Fetch active setbacks for paused court detection
+    const { data: setbacksData } = await supabase
+      .from('court_setbacks')
+      .select('court_id, setback_type')
+      .eq('tournament_id', tournament.id)
+      .eq('status', 'active')
+    const sbMap = {}
+    for (const sb of (setbacksData ?? [])) {
+      sbMap[sb.court_id] = sb
+    }
+    setActiveSetbacks(sbMap)
+
     setLoading(false)
   }, [tournament?.id])
 
@@ -129,7 +145,24 @@ export default function ScoreboardPage({ tournament }) {
   }, [allDays, matchesByDate])
 
   function handleRegister(match) {
-    setSelectedMatch(match)
+    // Check if match is on a paused court (per SEGR-01)
+    const setback = match.court_id ? activeSetbacks[match.court_id] : null
+    if (setback) {
+      setPendingWarningMatch({ match, setbackType: setback.setback_type })
+    } else {
+      setSelectedMatch(match)
+    }
+  }
+
+  function handleWarningProceed() {
+    if (pendingWarningMatch) {
+      setSelectedMatch(pendingWarningMatch.match)
+      setPendingWarningMatch(null)
+    }
+  }
+
+  function handleWarningCancel() {
+    setPendingWarningMatch(null)
   }
 
   // Find the category name for the selected match
@@ -289,6 +322,14 @@ export default function ScoreboardPage({ tournament }) {
           categoryName={selectedCategoryName}
           onSave={handleSaveResult}
           onClose={() => setSelectedMatch(null)}
+        />
+      )}
+
+      {pendingWarningMatch && (
+        <PausedCourtWarning
+          setbackType={pendingWarningMatch.setbackType}
+          onCancel={handleWarningCancel}
+          onProceed={handleWarningProceed}
         />
       )}
     </>
