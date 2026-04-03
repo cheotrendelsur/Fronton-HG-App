@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Gestión Dinámica de Contratiempos por Cancha
-status: executing
-stopped_at: Completed 06-02-PLAN.md
-last_updated: "2026-04-03T01:23:18.892Z"
+status: verifying
+stopped_at: Completed 06-03-PLAN.md
+last_updated: "2026-04-03T01:30:52.087Z"
 last_activity: 2026-04-03
 progress:
   total_phases: 4
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 4
-  completed_plans: 3
+  completed_plans: 4
   percent: 0
 ---
 
@@ -27,7 +27,7 @@ See: .planning/PROJECT.md (updated 2026-04-02)
 
 Phase: 06 (ui-de-canchas-y-contratiempos) — EXECUTING
 Plan: 3 of 3
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-04-03
 
 Progress: [░░░░░░░░░░] 0%
@@ -55,6 +55,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 05-capa-de-datos P01 | 2 | 3 tasks | 3 files |
 | Phase 06 P01 | 3 | 2 tasks | 5 files |
 | Phase 06-ui-de-canchas-y-contratiempos P02 | 2 | 2 tasks | 5 files |
+| Phase 06-ui-de-canchas-y-contratiempos P03 | 2 | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -70,6 +71,8 @@ Progress: [░░░░░░░░░░] 0%
 - [Phase 06]: CanchasView receives enriched court objects for clean component separation
 - [Phase 06]: onDeclareSetback prop no-op in Plan 01 — Plan 02 wires the setback declaration modal
 - [Phase 06]: activeSetbacks stored as court_id-keyed object for O(1) lookup in handleRegister
+- [Phase 06]: notifiedCount computed from unique team IDs * 2 — more accurate than affected_match_ids.length * 4
+- [Phase 06]: SetbackHistory loads history on mount so count in header is accurate before expanding the accordion
 
 ### Pending Todos
 
@@ -82,7 +85,7 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-03T01:23:18.877Z
-Stopped at: Completed 06-02-PLAN.md
+Last session: 2026-04-03T01:30:52.067Z
+Stopped at: Completed 06-03-PLAN.md
 Resume file: None
 Next step: `/gsd:plan-phase 5`

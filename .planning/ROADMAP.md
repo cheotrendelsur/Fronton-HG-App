@@ -24,7 +24,7 @@
 ## Phase Summary
 
 - [x] **Phase 5: Capa de Datos** - DB tables, RLS policies, and CRUD operations for court setbacks and notifications (completed 2026-04-02)
-- [ ] **Phase 6: UI de Canchas y Contratiempos** - "Canchas" tab, court status cards, setback declaration form, paused state display, setback history, and paused-court warning
+- [x] **Phase 6: UI de Canchas y Contratiempos** - "Canchas" tab, court status cards, setback declaration form, paused state display, setback history, and paused-court warning (completed 2026-04-03)
 - [ ] **Phase 7: Reanudación y Detección de Conflictos** - Resume flow, cascade recalculation on resume, spill-over handling, date extension prompt, and conflict detection alerts
 - [ ] **Phase 8: Notificaciones** - In-app notification system: bell icon, unread badge, notification panel, and setback/resume notifications
 
@@ -60,7 +60,7 @@ Plans:
 Plans:
 - [x] 06-01-PLAN.md — Canchas tab, CanchasView, CourtSwiper, CourtCard, CourtMatchMiniCard (Wave 1)
 - [x] 06-02-PLAN.md — SetbackFormModal, PausedCourtWarning, ScoreboardPage integration (Wave 1)
-- [ ] 06-03-PLAN.md — Paused court state (live timer, badges, resume button), SetbackHistory accordion (Wave 2)
+- [x] 06-03-PLAN.md — Paused court state (live timer, badges, resume button), SetbackHistory accordion (Wave 2)
 
 ### Phase 7: Reanudación y Detección de Conflictos
 **Goal**: Organizers can resume a paused court and all pending matches instantly show corrected times; spill-over moves matches to the next tournament day, and cross-court conflicts are surfaced as alerts
@@ -96,6 +96,6 @@ Plans:
 | 3. Cascade Recalculation Engine | v1.0 | 1/1 | Complete | 2026-04-02 |
 | 4. Integration and Compatibility | v1.0 | 1/1 | Complete | 2026-04-02 |
 | 5. Capa de Datos | v1.1 | 1/1 | Complete   | 2026-04-02 |
-| 6. UI de Canchas y Contratiempos | v1.1 | 2/3 | In Progress|  |
+| 6. UI de Canchas y Contratiempos | v1.1 | 3/3 | Complete   | 2026-04-03 |
 | 7. Reanudación y Detección de Conflictos | v1.1 | 0/? | Not started | - |
 | 8. Notificaciones | v1.1 | 0/? | Not started | - |

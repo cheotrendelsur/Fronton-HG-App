@@ -11,8 +11,8 @@ Requirements for milestone v1.1: Gestión Dinámica de Contratiempos por Cancha.
 
 - [x] **CANCH-01**: Organizer sees a "Canchas" tab in active tournament page with swipe between courts
 - [x] **CANCH-02**: Each court card shows current status (Operativa/Pausada), name, and upcoming pending matches
-- [ ] **CANCH-03**: Paused court shows live timer (time since pause), delayed match badges, and pause reason
-- [ ] **CANCH-04**: Each court shows a collapsible setback history with type, description, start/end times, and duration
+- [x] **CANCH-03**: Paused court shows live timer (time since pause), delayed match badges, and pause reason
+- [x] **CANCH-04**: Each court shows a collapsible setback history with type, description, start/end times, and duration
 
 ### Contratiempos (Setback Management)
 
@@ -74,8 +74,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 |-------------|-------|--------|
 | CANCH-01 | Phase 6 | Complete |
 | CANCH-02 | Phase 6 | Complete |
-| CANCH-03 | Phase 6 | Pending |
-| CANCH-04 | Phase 6 | Pending |
+| CANCH-03 | Phase 6 | Complete |
+| CANCH-04 | Phase 6 | Complete |
 | CONT-01 | Phase 6 | Complete |
 | CONT-02 | Phase 6 | Complete |
 | CONT-03 | Phase 5 | Complete |
