@@ -16,8 +16,8 @@ Requirements for milestone v1.1: Gestión Dinámica de Contratiempos por Cancha.
 
 ### Contratiempos (Setback Management)
 
-- [ ] **CONT-01**: Organizer can declare a setback via modal with type dropdown and description textarea
-- [ ] **CONT-02**: Setback types include: Lluvia, Mantenimiento, Lesión de jugador, Falla eléctrica, Problema de equipamiento, Otro (with custom text)
+- [x] **CONT-01**: Organizer can declare a setback via modal with type dropdown and description textarea
+- [x] **CONT-02**: Setback types include: Lluvia, Mantenimiento, Lesión de jugador, Falla eléctrica, Problema de equipamiento, Otro (with custom text)
 - [x] **CONT-03**: Declaring a setback persists to `court_setbacks` table and marks the court as paused
 - [x] **CONT-04**: Only one active setback per court at a time (button disabled if already paused)
 - [x] **CONT-05**: Setback button disabled when court has no pending matches
@@ -45,7 +45,7 @@ Requirements for milestone v1.1: Gestión Dinámica de Contratiempos por Cancha.
 
 ### Seguridad (Safety)
 
-- [ ] **SEGR-01**: Registering a result on a paused court shows a confirmation warning before proceeding
+- [x] **SEGR-01**: Registering a result on a paused court shows a confirmation warning before proceeding
 
 ## Future Requirements
 
@@ -76,8 +76,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 | CANCH-02 | Phase 6 | Complete |
 | CANCH-03 | Phase 6 | Pending |
 | CANCH-04 | Phase 6 | Pending |
-| CONT-01 | Phase 6 | Pending |
-| CONT-02 | Phase 6 | Pending |
+| CONT-01 | Phase 6 | Complete |
+| CONT-02 | Phase 6 | Complete |
 | CONT-03 | Phase 5 | Complete |
 | CONT-04 | Phase 6 | Complete |
 | CONT-05 | Phase 6 | Complete |
@@ -93,7 +93,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | NOTF-02 | Phase 5 | Complete |
 | NOTF-03 | Phase 8 | Pending |
 | NOTF-04 | Phase 8 | Pending |
-| SEGR-01 | Phase 6 | Pending |
+| SEGR-01 | Phase 6 | Complete |
 
 **Coverage:**
 - v1.1 requirements: 22 total
