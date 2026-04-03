@@ -55,8 +55,12 @@ Plans:
   4. A paused court displays a live elapsed timer, delayed match badges, and the pause reason; the declare-setback button is disabled while the court is already paused or has no pending matches
   5. Each court shows a collapsible setback history with type, description, start/end times, and duration
   6. Attempting to register a result on a paused court shows a Spanish-language confirmation warning before proceeding
-**Plans**: TBD
-**UI hint**: yes
+**Plans**: 0/3 plans complete
+
+Plans:
+- [ ] 06-01-PLAN.md — Canchas tab, CanchasView, CourtSwiper, CourtCard, CourtMatchMiniCard (Wave 1)
+- [ ] 06-02-PLAN.md — SetbackFormModal, PausedCourtWarning, ScoreboardPage integration (Wave 1)
+- [ ] 06-03-PLAN.md — Paused court state (live timer, badges, resume button), SetbackHistory accordion (Wave 2)
 
 ### Phase 7: Reanudación y Detección de Conflictos
 **Goal**: Organizers can resume a paused court and all pending matches instantly show corrected times; spill-over moves matches to the next tournament day, and cross-court conflicts are surfaced as alerts
@@ -92,6 +96,6 @@ Plans:
 | 3. Cascade Recalculation Engine | v1.0 | 1/1 | Complete | 2026-04-02 |
 | 4. Integration and Compatibility | v1.0 | 1/1 | Complete | 2026-04-02 |
 | 5. Capa de Datos | v1.1 | 1/1 | Complete   | 2026-04-02 |
-| 6. UI de Canchas y Contratiempos | v1.1 | 0/? | Not started | - |
+| 6. UI de Canchas y Contratiempos | v1.1 | 0/3 | Planned | - |
 | 7. Reanudación y Detección de Conflictos | v1.1 | 0/? | Not started | - |
 | 8. Notificaciones | v1.1 | 0/? | Not started | - |
