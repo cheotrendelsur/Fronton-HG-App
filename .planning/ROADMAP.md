@@ -58,8 +58,8 @@ Plans:
 **Plans**: 0/3 plans complete
 
 Plans:
-- [ ] 06-01-PLAN.md — Canchas tab, CanchasView, CourtSwiper, CourtCard, CourtMatchMiniCard (Wave 1)
-- [ ] 06-02-PLAN.md — SetbackFormModal, PausedCourtWarning, ScoreboardPage integration (Wave 1)
+- [x] 06-01-PLAN.md — Canchas tab, CanchasView, CourtSwiper, CourtCard, CourtMatchMiniCard (Wave 1)
+- [x] 06-02-PLAN.md — SetbackFormModal, PausedCourtWarning, ScoreboardPage integration (Wave 1)
 - [ ] 06-03-PLAN.md — Paused court state (live timer, badges, resume button), SetbackHistory accordion (Wave 2)
 
 ### Phase 7: Reanudación y Detección de Conflictos
@@ -96,6 +96,6 @@ Plans:
 | 3. Cascade Recalculation Engine | v1.0 | 1/1 | Complete | 2026-04-02 |
 | 4. Integration and Compatibility | v1.0 | 1/1 | Complete | 2026-04-02 |
 | 5. Capa de Datos | v1.1 | 1/1 | Complete   | 2026-04-02 |
-| 6. UI de Canchas y Contratiempos | v1.1 | 0/3 | Planned | - |
+| 6. UI de Canchas y Contratiempos | v1.1 | 2/3 | In Progress|  |
 | 7. Reanudación y Detección de Conflictos | v1.1 | 0/? | Not started | - |
 | 8. Notificaciones | v1.1 | 0/? | Not started | - |

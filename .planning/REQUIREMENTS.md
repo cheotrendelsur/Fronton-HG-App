@@ -9,8 +9,8 @@ Requirements for milestone v1.1: Gestión Dinámica de Contratiempos por Cancha.
 
 ### Canchas (Court Management)
 
-- [ ] **CANCH-01**: Organizer sees a "Canchas" tab in active tournament page with swipe between courts
-- [ ] **CANCH-02**: Each court card shows current status (Operativa/Pausada), name, and upcoming pending matches
+- [x] **CANCH-01**: Organizer sees a "Canchas" tab in active tournament page with swipe between courts
+- [x] **CANCH-02**: Each court card shows current status (Operativa/Pausada), name, and upcoming pending matches
 - [ ] **CANCH-03**: Paused court shows live timer (time since pause), delayed match badges, and pause reason
 - [ ] **CANCH-04**: Each court shows a collapsible setback history with type, description, start/end times, and duration
 
@@ -19,8 +19,8 @@ Requirements for milestone v1.1: Gestión Dinámica de Contratiempos por Cancha.
 - [ ] **CONT-01**: Organizer can declare a setback via modal with type dropdown and description textarea
 - [ ] **CONT-02**: Setback types include: Lluvia, Mantenimiento, Lesión de jugador, Falla eléctrica, Problema de equipamiento, Otro (with custom text)
 - [x] **CONT-03**: Declaring a setback persists to `court_setbacks` table and marks the court as paused
-- [ ] **CONT-04**: Only one active setback per court at a time (button disabled if already paused)
-- [ ] **CONT-05**: Setback button disabled when court has no pending matches
+- [x] **CONT-04**: Only one active setback per court at a time (button disabled if already paused)
+- [x] **CONT-05**: Setback button disabled when court has no pending matches
 
 ### Reanudación (Resume & Recalculation)
 
@@ -72,15 +72,15 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| CANCH-01 | Phase 6 | Pending |
-| CANCH-02 | Phase 6 | Pending |
+| CANCH-01 | Phase 6 | Complete |
+| CANCH-02 | Phase 6 | Complete |
 | CANCH-03 | Phase 6 | Pending |
 | CANCH-04 | Phase 6 | Pending |
 | CONT-01 | Phase 6 | Pending |
 | CONT-02 | Phase 6 | Pending |
 | CONT-03 | Phase 5 | Complete |
-| CONT-04 | Phase 6 | Pending |
-| CONT-05 | Phase 6 | Pending |
+| CONT-04 | Phase 6 | Complete |
+| CONT-05 | Phase 6 | Complete |
 | REAN-01 | Phase 7 | Pending |
 | REAN-02 | Phase 7 | Pending |
 | REAN-03 | Phase 7 | Pending |
