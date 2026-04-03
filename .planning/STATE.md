@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Gestión Dinámica de Contratiempos por Cancha
 status: executing
-stopped_at: Completed 07-01-PLAN.md
-last_updated: "2026-04-03T02:34:55.888Z"
+stopped_at: Completed 07-02-PLAN.md
+last_updated: "2026-04-03T02:33:53.580Z"
 last_activity: 2026-04-03
 progress:
   total_phases: 4
-  completed_phases: 2
-  total_plans: 7
-  completed_plans: 5
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 1
   percent: 0
 ---
 
@@ -56,7 +56,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 06 P01 | 3 | 2 tasks | 5 files |
 | Phase 06-ui-de-canchas-y-contratiempos P02 | 2 | 2 tasks | 5 files |
 | Phase 06-ui-de-canchas-y-contratiempos P03 | 2 | 2 tasks | 2 files |
-| Phase 07 P01 | 3 | 1 tasks | 3 files |
+| Phase 07 P02 | 2 | 1 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -74,7 +74,7 @@ Progress: [░░░░░░░░░░] 0%
 - [Phase 06]: activeSetbacks stored as court_id-keyed object for O(1) lookup in handleRegister
 - [Phase 06]: notifiedCount computed from unique team IDs * 2 — more accurate than affected_match_ids.length * 4
 - [Phase 06]: SetbackHistory loads history on mount so count in header is accurate before expanding the accordion
-- [Phase 07]: Resume anchor uses new Date().toISOString() per D-04; fixed isAfterTrigger for resume scenario
+- [Phase 07]: Deduplication key includes teamId so same match pair reports conflict for each team
 
 ### Pending Todos
 
@@ -87,7 +87,7 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-03T02:34:55.884Z
-Stopped at: Completed 07-01-PLAN.md
+Last session: 2026-04-03T02:33:53.576Z
+Stopped at: Completed 07-02-PLAN.md
 Resume file: None
 Next step: `/gsd:plan-phase 5`

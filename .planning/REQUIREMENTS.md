@@ -24,17 +24,17 @@ Requirements for milestone v1.1: Gestión Dinámica de Contratiempos por Cancha.
 
 ### Reanudación (Resume & Recalculation)
 
-- [x] **REAN-01**: Organizer can resume a paused court, recording ended_at and changing status to 'resolved'
-- [x] **REAN-02**: On resume, all pending matches on that court are recalculated in cascade starting from current time
-- [x] **REAN-03**: Cascade respects court break windows and availability hours (available_from/available_to)
-- [x] **REAN-04**: Spill-over moves matches to next tournament day when they exceed court closing time
-- [x] **REAN-05**: When spill-over exceeds tournament end_date, organizer is prompted to extend the date
+- [ ] **REAN-01**: Organizer can resume a paused court, recording ended_at and changing status to 'resolved'
+- [ ] **REAN-02**: On resume, all pending matches on that court are recalculated in cascade starting from current time
+- [ ] **REAN-03**: Cascade respects court break windows and availability hours (available_from/available_to)
+- [ ] **REAN-04**: Spill-over moves matches to next tournament day when they exceed court closing time
+- [ ] **REAN-05**: When spill-over exceeds tournament end_date, organizer is prompted to extend the date
 - [x] **REAN-06**: Recalculated times are persisted to `tournament_matches` in the database
 
 ### Conflictos (Conflict Detection)
 
-- [ ] **CONF-01**: After recalculation, system detects when a team has overlapping matches on different courts
-- [ ] **CONF-02**: Detected conflicts are shown to the organizer as visual alerts with details of the overlap
+- [x] **CONF-01**: After recalculation, system detects when a team has overlapping matches on different courts
+- [x] **CONF-02**: Detected conflicts are shown to the organizer as visual alerts with details of the overlap
 
 ### Notificaciones (Notifications)
 
@@ -81,14 +81,14 @@ Which phases cover which requirements. Updated during roadmap creation.
 | CONT-03 | Phase 5 | Complete |
 | CONT-04 | Phase 6 | Complete |
 | CONT-05 | Phase 6 | Complete |
-| REAN-01 | Phase 7 | Complete |
-| REAN-02 | Phase 7 | Complete |
-| REAN-03 | Phase 7 | Complete |
-| REAN-04 | Phase 7 | Complete |
-| REAN-05 | Phase 7 | Complete |
+| REAN-01 | Phase 7 | Pending |
+| REAN-02 | Phase 7 | Pending |
+| REAN-03 | Phase 7 | Pending |
+| REAN-04 | Phase 7 | Pending |
+| REAN-05 | Phase 7 | Pending |
 | REAN-06 | Phase 5 | Complete |
-| CONF-01 | Phase 7 | Pending |
-| CONF-02 | Phase 7 | Pending |
+| CONF-01 | Phase 7 | Complete |
+| CONF-02 | Phase 7 | Complete |
 | NOTF-01 | Phase 5 | Complete |
 | NOTF-02 | Phase 5 | Complete |
 | NOTF-03 | Phase 8 | Pending |
