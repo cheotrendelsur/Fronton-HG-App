@@ -44,14 +44,15 @@ When a court has a setback, the organizer pauses it with one tap; when it's reso
 - New "Canchas" tab in active tournament page with swipe between courts — Validated in v1.1 Phase 6
 - Warning shown when recording result on paused court — Validated in v1.1 Phase 6
 
+- Organizer can resume a paused court triggering automatic cascade recalculation — Validated in v1.1 Phase 7
+- Cascade respects court breaks, availability windows, and day overflow (spill-over) — Validated in v1.1 Phase 7
+- Cross-court conflict detection after recalculation — Validated in v1.1 Phase 7
+- Tournament date extension when spill-over exceeds end_date — Validated in v1.1 Phase 7
+
 ### Active
 
-- Organizer can resume a paused court triggering automatic cascade recalculation
-- Cascade respects court breaks, availability windows, and day overflow (spill-over)
 - In-app notifications sent to affected players on pause and resume
 - Notification bell icon with unread badge in navigation
-- Cross-court conflict detection after recalculation
-- Tournament date extension when spill-over exceeds end_date
 
 ### Out of Scope
 
@@ -107,4 +108,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-02 after Phase 5 (Capa de Datos) completion*
+*Last updated: 2026-04-03 after Phase 7 (Reanudación y Detección de Conflictos) completion*
