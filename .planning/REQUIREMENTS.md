@@ -24,11 +24,11 @@ Requirements for milestone v1.1: Gestión Dinámica de Contratiempos por Cancha.
 
 ### Reanudación (Resume & Recalculation)
 
-- [ ] **REAN-01**: Organizer can resume a paused court, recording ended_at and changing status to 'resolved'
-- [ ] **REAN-02**: On resume, all pending matches on that court are recalculated in cascade starting from current time
-- [ ] **REAN-03**: Cascade respects court break windows and availability hours (available_from/available_to)
-- [ ] **REAN-04**: Spill-over moves matches to next tournament day when they exceed court closing time
-- [ ] **REAN-05**: When spill-over exceeds tournament end_date, organizer is prompted to extend the date
+- [x] **REAN-01**: Organizer can resume a paused court, recording ended_at and changing status to 'resolved'
+- [x] **REAN-02**: On resume, all pending matches on that court are recalculated in cascade starting from current time
+- [x] **REAN-03**: Cascade respects court break windows and availability hours (available_from/available_to)
+- [x] **REAN-04**: Spill-over moves matches to next tournament day when they exceed court closing time
+- [x] **REAN-05**: When spill-over exceeds tournament end_date, organizer is prompted to extend the date
 - [x] **REAN-06**: Recalculated times are persisted to `tournament_matches` in the database
 
 ### Conflictos (Conflict Detection)
@@ -81,11 +81,11 @@ Which phases cover which requirements. Updated during roadmap creation.
 | CONT-03 | Phase 5 | Complete |
 | CONT-04 | Phase 6 | Complete |
 | CONT-05 | Phase 6 | Complete |
-| REAN-01 | Phase 7 | Pending |
-| REAN-02 | Phase 7 | Pending |
-| REAN-03 | Phase 7 | Pending |
-| REAN-04 | Phase 7 | Pending |
-| REAN-05 | Phase 7 | Pending |
+| REAN-01 | Phase 7 | Complete |
+| REAN-02 | Phase 7 | Complete |
+| REAN-03 | Phase 7 | Complete |
+| REAN-04 | Phase 7 | Complete |
+| REAN-05 | Phase 7 | Complete |
 | REAN-06 | Phase 5 | Complete |
 | CONF-01 | Phase 7 | Pending |
 | CONF-02 | Phase 7 | Pending |

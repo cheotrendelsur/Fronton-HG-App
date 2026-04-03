@@ -75,7 +75,7 @@ Plans:
 **Plans:** 3 plans
 
 Plans:
-- [ ] 07-01-PLAN.md — applyCascadeOnResume function with spill-over detection + resume notifications (Wave 1)
+- [x] 07-01-PLAN.md — applyCascadeOnResume function with spill-over detection + resume notifications (Wave 1)
 - [ ] 07-02-PLAN.md — Conflict detection engine: detectTeamConflicts pure function + tests (Wave 1)
 - [ ] 07-03-PLAN.md — UI wiring: CourtCard resume cascade, DateExtensionModal, ConflictAlert (Wave 2)
 
