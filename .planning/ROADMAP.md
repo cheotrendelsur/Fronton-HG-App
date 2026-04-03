@@ -75,9 +75,9 @@ Plans:
 **Plans:** 3 plans
 
 Plans:
-- [ ] 07-01-PLAN.md — applyCascadeOnResume function with spill-over detection + resume notifications (Wave 1)
+- [x] 07-01-PLAN.md — applyCascadeOnResume function with spill-over detection + resume notifications (Wave 1)
 - [x] 07-02-PLAN.md — Conflict detection engine: detectTeamConflicts pure function + tests (Wave 1)
-- [ ] 07-03-PLAN.md — UI wiring: CourtCard resume cascade, DateExtensionModal, ConflictAlert (Wave 2)
+- [x] 07-03-PLAN.md — UI wiring: CourtCard resume cascade, DateExtensionModal, ConflictAlert (Wave 2)
 
 ### Phase 8: Notificaciones
 **Goal**: Players receive in-app notifications when their court is paused or resumed, and can view all notifications via a bell icon panel in the navigation
