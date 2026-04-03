@@ -1,6 +1,7 @@
 import { NavLink, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import BrandLoader from './BrandLoader'
+import NotificationBell from './NotificationBell'
 import lobo from '../assets/lobo.png'
 
 const PAGE_TITLES = {
@@ -150,8 +151,9 @@ export default function Layout({ children }) {
             {pageTitle}
           </span>
 
-          {/* Identidad derecha: texto → escudo → (avatar futuro) */}
-          <div className="flex items-center gap-2">
+          {/* Right side: bell + identity */}
+          <div className="flex items-center gap-3">
+            <NotificationBell />
             <span
               style={{
                 color:    '#6B7280',
