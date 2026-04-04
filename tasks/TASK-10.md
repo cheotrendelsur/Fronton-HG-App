@@ -81,7 +81,7 @@ CREATE INDEX IF NOT EXISTS idx_notifications_user
 
 ## FASE 1 — Esqueleto de navegación y layout del jugador
 
-**Status:** READY
+**Status:** DONE
 
 ### Qué construir
 
@@ -124,18 +124,18 @@ CREATE INDEX IF NOT EXISTS idx_notifications_user
 
 ### Tests fase 1
 
-- [ ] Las 4 rutas cargan sus placeholders correctamente.
-- [ ] El bottom nav resalta el tab activo según la ruta actual.
-- [ ] `usePlayerContext` retorna datos reales del jugador logueado.
-- [ ] `playerRegistrations` retorna las inscripciones aprobadas con sus categorías.
-- [ ] La transición de página es visible (fade-in + slide-up).
-- [ ] `npm run build` pasa limpio.
+- [x] Las 4 rutas cargan sus placeholders correctamente.
+- [x] El bottom nav resalta el tab activo según la ruta actual.
+- [x] `usePlayerContext` retorna datos reales del jugador logueado.
+- [x] `playerRegistrations` retorna las inscripciones aprobadas con sus categorías.
+- [x] La transición de página es visible (fade-in + slide-up).
+- [x] `npm run build` pasa limpio.
 
 ---
 
 ## FASE 2 — Dashboard del jugador (Pantalla de Inicio)
 
-**Status:** WAITING
+**Status:** DONE
 
 ### 2A. Hero Widget — Próximo Partido
 
@@ -266,22 +266,22 @@ Orden vertical de los componentes en la pantalla:
 
 ### Tests fase 2
 
-- [ ] El hero muestra el próximo partido real del jugador logueado con todos los datos (torneo, categoría, rivales, cancha, fecha, hora).
-- [ ] El countdown se actualiza en vivo.
-- [ ] El carrusel de torneos muestra todos los torneos activos con las categorías correctas del jugador.
-- [ ] Los resultados recientes muestran marcador y resultado correcto (victoria/derrota).
-- [ ] La tabla de grupo muestra la clasificación real con la fila del jugador resaltada.
-- [ ] Si el jugador tiene varias categorías, la tabla es un carrusel deslizable.
-- [ ] Las alertas se marcan como leídas al tocar y desaparecen con animación.
-- [ ] El badge del bottom nav refleja el conteo de alertas no leídas.
-- [ ] Skeleton loaders aparecen mientras cargan los datos.
-- [ ] `npm run build` pasa limpio.
+- [x] El hero muestra el próximo partido real del jugador logueado con todos los datos (torneo, categoría, rivales, cancha, fecha, hora).
+- [x] El countdown se actualiza en vivo.
+- [x] El carrusel de torneos muestra todos los torneos activos con las categorías correctas del jugador.
+- [x] Los resultados recientes muestran marcador y resultado correcto (victoria/derrota).
+- [x] La tabla de grupo muestra la clasificación real con la fila del jugador resaltada.
+- [x] Si el jugador tiene varias categorías, la tabla es un carrusel deslizable.
+- [x] Las alertas se marcan como leídas al tocar y desaparecen con animación.
+- [x] El badge del bottom nav refleja el conteo de alertas no leídas.
+- [x] Skeleton loaders aparecen mientras cargan los datos.
+- [x] `npm run build` pasa limpio.
 
 ---
 
-## FASE 3 — Pantalla de Torneos (Búsqueda e Inscripción)
+## FASE 3 — Pantalla de Torneos (B��squeda e Inscripción)
 
-**Status:** WAITING
+**Status:** DONE
 
 ### 3A. Buscador y Filtros
 
@@ -402,24 +402,24 @@ tournament_registrations:
 
 ### Tests fase 3
 
-- [ ] La búsqueda filtra torneos en tiempo real por nombre.
-- [ ] Los filtros de estado, fecha y categoría funcionan y se combinan.
-- [ ] Las tarjetas del directorio muestran datos reales de Supabase.
-- [ ] Tap en una tarjeta navega a la vista detallada con datos completos.
-- [ ] El badge "Inscrito" aparece si el jugador ya tiene registración aprobada.
-- [ ] El modal de inscripción permite seleccionar múltiples categorías.
-- [ ] La búsqueda de compañero funciona con autocompletado real.
-- [ ] No se puede seleccionar un compañero ya inscrito en esa categoría con otra pareja.
-- [ ] Al confirmar se crean los registros en `tournament_registrations` con status `pending`.
-- [ ] El team_name se genera correctamente.
-- [ ] Categorías llenas aparecen deshabilitadas.
-- [ ] `npm run build` pasa limpio.
+- [x] La búsqueda filtra torneos en tiempo real por nombre.
+- [x] Los filtros de estado, fecha y categoría funcionan y se combinan.
+- [x] Las tarjetas del directorio muestran datos reales de Supabase.
+- [x] Tap en una tarjeta navega a la vista detallada con datos completos.
+- [x] El badge "Inscrito" aparece si el jugador ya tiene registración aprobada.
+- [x] El modal de inscripción permite seleccionar múltiples categorías.
+- [x] La búsqueda de compañero funciona con autocompletado real.
+- [x] No se puede seleccionar un compañero ya inscrito en esa categoría con otra pareja.
+- [x] Al confirmar se crean los registros en `tournament_registrations` con status `pending`.
+- [x] El team_name se genera correctamente.
+- [x] Categorías llenas aparecen deshabilitadas.
+- [x] `npm run build` pasa limpio.
 
 ---
 
 ## FASE 4 — Pantalla de Clasificación (Hub Competitivo)
 
-**Status:** WAITING
+**Status:** DONE
 
 ### 4A. Selector de Contexto Doble
 
@@ -530,22 +530,22 @@ tournament_registrations:
 
 ### Tests fase 4
 
-- [ ] El selector de torneo muestra solo torneos donde el jugador está inscrito.
-- [ ] Al cambiar torneo, las categorías se actualizan correctamente.
-- [ ] Mi Itinerario muestra los partidos futuros reales del jugador en la categoría seleccionada.
-- [ ] La tabla de grupo muestra la clasificación real con la fila resaltada.
-- [ ] El bracket renderiza correctamente la estructura de eliminatoria.
-- [ ] El camino del jugador está visualmente resaltado en el bracket.
-- [ ] Drag-to-pan funciona en el bracket.
-- [ ] Los grupos de otros jugadores se pueden ver en la navegación externa.
-- [ ] Las transiciones entre grupo y bracket son suaves.
-- [ ] `npm run build` pasa limpio.
+- [x] El selector de torneo muestra solo torneos donde el jugador está inscrito.
+- [x] Al cambiar torneo, las categorías se actualizan correctamente.
+- [x] Mi Itinerario muestra los partidos futuros reales del jugador en la categoría seleccionada.
+- [x] La tabla de grupo muestra la clasificación real con la fila resaltada.
+- [x] El bracket renderiza correctamente la estructura de eliminatoria.
+- [x] El camino del jugador está visualmente resaltado en el bracket.
+- [x] Drag-to-pan funciona en el bracket.
+- [x] Los grupos de otros jugadores se pueden ver en la navegación externa.
+- [x] Las transiciones entre grupo y bracket son suaves.
+- [x] `npm run build` pasa limpio.
 
 ---
 
 ## FASE 5 — Pantalla de Perfil
 
-**Status:** WAITING
+**Status:** DONE
 
 ### 5A. Cabecera de Identidad
 
@@ -663,22 +663,22 @@ Orden vertical:
 
 ### Tests fase 5
 
-- [ ] El avatar muestra la imagen de Supabase Storage o la inicial como fallback.
-- [ ] Se puede subir una imagen nueva y se refleja inmediatamente.
-- [ ] Las estadísticas son correctas comparando manualmente con los datos de `tournament_matches`.
-- [ ] El filtro por categoría en estadísticas funciona.
-- [ ] Se puede editar username y email con validación.
-- [ ] Se puede cambiar la contraseña.
-- [ ] El toggle de tema claro/oscuro funciona y persiste entre sesiones.
-- [ ] Los toggles de notificaciones se guardan automáticamente.
-- [ ] Cerrar sesión redirige al login.
-- [ ] `npm run build` pasa limpio.
+- [x] El avatar muestra la imagen de Supabase Storage o la inicial como fallback.
+- [x] Se puede subir una imagen nueva y se refleja inmediatamente.
+- [x] Las estadísticas son correctas comparando manualmente con los datos de `tournament_matches`.
+- [x] El filtro por categoría en estadísticas funciona.
+- [x] Se puede editar username y email con validación.
+- [x] Se puede cambiar la contraseña.
+- [x] El toggle de tema claro/oscuro funciona y persiste entre sesiones.
+- [x] Los toggles de notificaciones se guardan automáticamente.
+- [x] Cerrar sesión redirige al login.
+- [x] `npm run build` pasa limpio.
 
 ---
 
 ## FASE 6 — Animaciones, pulido visual y UX final
 
-**Status:** WAITING
+**Status:** DONE
 
 ### Qué hacer
 
@@ -723,16 +723,16 @@ Esta fase es de PULIDO. Todo debe funcionar ya. Aquí se mejora la experiencia v
 
 ### Tests fase 6
 
-- [ ] Skeletons aparecen en todas las pantallas durante la carga.
-- [ ] Pull-to-refresh funciona en dashboard, torneos, clasificación y perfil.
-- [ ] Empty states se muestran correctamente cuando no hay datos.
-- [ ] Las animaciones son fluidas (no hay jank/stutter).
-- [ ] La navegación entre tabs tiene transición visible.
-- [ ] El modal de inscripción tiene animación de entrada y salida.
-- [ ] Se ve bien en iPhone SE (375px).
-- [ ] Se ve bien en iPad (768px).
-- [ ] `npm run build` pasa limpio.
-- [ ] Lighthouse performance score ≥ 80.
+- [x] Skeletons aparecen en todas las pantallas durante la carga.
+- [x] Pull-to-refresh funciona en dashboard, torneos, clasificación y perfil.
+- [x] Empty states se muestran correctamente cuando no hay datos.
+- [x] Las animaciones son fluidas (no hay jank/stutter).
+- [x] La navegación entre tabs tiene transición visible.
+- [x] El modal de inscripción tiene animación de entrada y salida.
+- [x] Se ve bien en iPhone SE (375px).
+- [x] Se ve bien en iPad (768px).
+- [x] `npm run build` pasa limpio.
+- [x] Lighthouse performance score ≥ 80.
 
 ---
 

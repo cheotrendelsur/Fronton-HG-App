@@ -35,3 +35,137 @@
 .modal-open nav {
   display: none;
 }
+
+/* Player portal — page enter transition */
+@keyframes playerPageEnter {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.player-page-enter {
+  animation: playerPageEnter 200ms ease-out both;
+}
+
+/* Player bottom nav — pill indicator */
+@keyframes playerNavPill {
+  from { opacity: 0; transform: scaleX(0); }
+  to   { opacity: 1; transform: scaleX(1); }
+}
+
+/* Shimmer skeleton loader */
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.shimmer {
+  background: linear-gradient(90deg, #E8EAEE 25%, #F3F4F6 50%, #E8EAEE 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+
+/* Staggered entry for list items */
+@keyframes staggerEnter {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.player-stagger-enter {
+  animation: staggerEnter 250ms ease-out both;
+}
+
+/* Countdown pulse (< 60 min) */
+@keyframes countdownPulse {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.6; }
+}
+
+/* Fade in overlay */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* Slide up drawer / modal */
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
+
+/* Spinner */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Success pop (check circle) */
+@keyframes successPop {
+  0%   { transform: scale(0); }
+  60%  { transform: scale(1.15); }
+  100% { transform: scale(1); }
+}
+
+/* Profile header entrance */
+@keyframes profileHeaderEnter {
+  from { opacity: 0; transform: translateY(-12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.profile-header-enter {
+  animation: profileHeaderEnter 350ms ease-out both;
+}
+
+/* Profile toast */
+@keyframes profileToastEnter {
+  from { opacity: 0; transform: translateX(-50%) translateY(-8px); }
+  to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+.profile-toast-enter {
+  animation: profileToastEnter 250ms ease-out both;
+}
+
+/* Card press microinteraction */
+.player-card-press {
+  transition: transform 150ms ease-out;
+  cursor: pointer;
+}
+.player-card-press:active {
+  transform: scale(0.98);
+}
+
+/* Detail page slide-in from right */
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(24px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+.player-detail-enter {
+  animation: slideInRight 250ms ease-out both;
+}
+
+/* Focus visible for accessibility */
+*:focus-visible {
+  outline: 2px solid #6BB3D9;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Hide bottom nav in landscape tablet */
+@media (min-width: 768px) and (orientation: landscape) {
+  .player-bottom-nav-hide-landscape {
+    display: none !important;
+  }
+}
+
+/* Button ripple effect */
+.player-btn-ripple {
+  position: relative;
+  overflow: hidden;
+}
+.player-btn-ripple::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at var(--ripple-x, 50%) var(--ripple-y, 50%), rgba(255,255,255,0.3) 0%, transparent 60%);
+  opacity: 0;
+  transition: opacity 300ms;
+  pointer-events: none;
+}
+.player-btn-ripple:active::after {
+  opacity: 1;
+  transition: opacity 0ms;
+}

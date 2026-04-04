@@ -14,6 +14,12 @@ import TournamentsPage          from './pages/TournamentsPage'
 import ActiveTournamentPage     from './pages/ActiveTournamentPage'
 import TournamentManagePage     from './pages/TournamentManagePage'
 import Layout               from './components/Layout'
+import PlayerLayout         from './components/Player/PlayerLayout'
+import PlayerDashboard      from './pages/Player/PlayerDashboard'
+import PlayerTournaments    from './pages/Player/PlayerTournaments'
+import PlayerTournamentDetail from './pages/Player/PlayerTournamentDetail'
+import PlayerClassification from './pages/Player/PlayerClassification'
+import PlayerProfile        from './pages/Player/PlayerProfile'
 import SplashPage, { SPLASH_KEY } from './pages/SplashPage'
 
 function AppLoader() {
@@ -55,7 +61,8 @@ function AdminRoute({ children }) {
 }
 
 function AppRoutes() {
-  const { session, isOnboardingComplete } = useAuth()
+  const { session, profile, isOnboardingComplete } = useAuth()
+  const homeForRole = profile?.role === 'player' ? '/player' : '/dashboard'
 
   return (
     <Routes>
@@ -112,13 +119,30 @@ function AppRoutes() {
         <AdminRoute><AdminPanelPage /></AdminRoute>
       }/>
 
+      {/* Player portal routes */}
+      <Route path="/player" element={
+        <ProtectedRoute><PlayerLayout><PlayerDashboard /></PlayerLayout></ProtectedRoute>
+      }/>
+      <Route path="/player/torneos" element={
+        <ProtectedRoute><PlayerLayout><PlayerTournaments /></PlayerLayout></ProtectedRoute>
+      }/>
+      <Route path="/player/torneos/:tournamentId" element={
+        <ProtectedRoute><PlayerLayout><PlayerTournamentDetail /></PlayerLayout></ProtectedRoute>
+      }/>
+      <Route path="/player/clasificacion" element={
+        <ProtectedRoute><PlayerLayout><PlayerClassification /></PlayerLayout></ProtectedRoute>
+      }/>
+      <Route path="/player/perfil" element={
+        <ProtectedRoute><PlayerLayout><PlayerProfile /></PlayerLayout></ProtectedRoute>
+      }/>
+
       <Route
         path="/"
         element={
           !session
             ? <Navigate to="/auth" replace />
             : isOnboardingComplete
-              ? <Navigate to="/dashboard" replace />
+              ? <Navigate to={homeForRole} replace />
               : <Navigate to="/onboarding" replace />
         }
       />
