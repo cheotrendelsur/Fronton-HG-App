@@ -4,47 +4,53 @@ import { resolveSetback } from '../../lib/setbackPersistence'
 import { applyCascadeOnResume } from '../../lib/cascadeSchedulePersistence'
 import CourtMatchMiniCard from './CourtMatchMiniCard'
 import SetbackFormModal from './SetbackFormModal'
+import ResumeFormModal from './ResumeFormModal'
 import SetbackHistory from './SetbackHistory'
 
-export default function CourtCard({ court, tournamentId, onDataRefresh, onSpillOver }) {
+export default function CourtCard({ court, tournamentId, onDataRefresh, onSpillOver, onConflicts, onResolutionSummary }) {
   const { id, name, pendingMatches, activeSetback, categoryMap } = court
   const isPaused = !!activeSetback
   const hasPending = pendingMatches.length > 0
 
   const [showSetbackModal, setShowSetbackModal] = useState(false)
+  const [showResumeModal, setShowResumeModal] = useState(false)
   const [resuming, setResuming] = useState(false)
   const [elapsed, setElapsed] = useState('')
 
   // Live elapsed timer for paused court
   useEffect(() => {
-    if (!isPaused || !activeSetback?.started_at) {
+    if (!isPaused || !activeSetback) {
       setElapsed('')
       return
     }
 
-    function updateElapsed() {
-      const start = new Date(activeSetback.started_at).getTime()
-      const now = Date.now()
-      const diffSec = Math.max(0, Math.floor((now - start) / 1000))
+    const startMs = activeSetback.started_at
+      ? new Date(activeSetback.started_at).getTime()
+      : null
+
+    // If started_at is missing or unparseable, use current time as fallback
+    const anchorMs = (startMs && !isNaN(startMs)) ? startMs : Date.now()
+
+    function formatElapsed() {
+      const diffSec = Math.max(0, Math.floor((Date.now() - anchorMs) / 1000))
       const hours = Math.floor(diffSec / 3600)
       const mins = Math.floor((diffSec % 3600) / 60)
       const secs = diffSec % 60
       const pad = n => String(n).padStart(2, '0')
-      if (hours > 0) {
-        setElapsed(`${pad(hours)}:${pad(mins)}:${pad(secs)}`)
-      } else {
-        setElapsed(`${pad(mins)}:${pad(secs)}`)
-      }
+      return hours > 0
+        ? `${pad(hours)}:${pad(mins)}:${pad(secs)}`
+        : `${pad(mins)}:${pad(secs)}`
     }
 
-    updateElapsed()
-    const interval = setInterval(updateElapsed, 1000)
+    setElapsed(formatElapsed())
+    const interval = setInterval(() => setElapsed(formatElapsed()), 1000)
     return () => clearInterval(interval)
-  }, [isPaused, activeSetback?.started_at])
+  }, [isPaused, activeSetback])
 
-  // Formatted pause start time
-  const pausedSinceTime = activeSetback?.started_at
-    ? new Date(activeSetback.started_at).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })
+  // Formatted pause start time — use organizer's reported_start if available, else started_at
+  const reportedStartTime = activeSetback?.reported_start || activeSetback?.started_at
+  const pausedSinceTime = reportedStartTime
+    ? new Date(reportedStartTime).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })
     : ''
 
   // Unique notified player count from pending matches
@@ -59,29 +65,49 @@ export default function CourtCard({ court, tournamentId, onDataRefresh, onSpillO
       })()
     : 0
 
-  async function handleResume() {
+  async function handleResume(reportedEnd) {
     if (!activeSetback?.id) return
     setResuming(true)
 
-    // Step 1: Resolve the setback
-    const resolveResult = await resolveSetback(supabase, activeSetback.id)
-    if (!resolveResult.success) {
+    try {
+      // Step 1: Resolve the setback with organizer's reported end time
+      const resolveResult = await resolveSetback(supabase, activeSetback.id, { reportedEnd })
+      if (!resolveResult.success) {
+        console.error('Failed to resolve setback:', resolveResult.error)
+        onDataRefresh()
+        return
+      }
+
+      // Step 2: Run cascade recalculation — pass setback start time directly to avoid DB race condition
+      const setbackStart = activeSetback.reported_start || activeSetback.started_at
+      const cascadeResult = await applyCascadeOnResume(supabase, tournamentId, id, reportedEnd, setbackStart)
+
+      // Step 3: Handle spill-over
+      if (cascadeResult.success && cascadeResult.spillOver) {
+        onSpillOver(id, cascadeResult.spillOverDate)
+      }
+
+      // Step 4: Surface resolution summary and remaining conflicts
+      if (cascadeResult.success && cascadeResult.resolutionSummary) {
+        // Enrich summary with final validation reverts if any
+        const summary = { ...cascadeResult.resolutionSummary }
+        if (cascadeResult.finalValidationResult?.reverted?.length > 0) {
+          summary.reverted = cascadeResult.finalValidationResult.reverted
+          summary.finalViolations = cascadeResult.finalValidationResult.violations
+        }
+        onResolutionSummary?.(summary)
+      }
+      if (cascadeResult.success && cascadeResult.conflicts && cascadeResult.conflicts.length > 0) {
+        onConflicts?.(cascadeResult.conflicts)
+      }
+    } catch (err) {
+      console.error('Resume flow error:', err)
+    } finally {
       setResuming(false)
-      return
+      setShowResumeModal(false)
+      // Always refresh data to sync UI with DB state
+      onDataRefresh()
     }
-
-    // Step 2: Run cascade recalculation (per D-02, D-03)
-    const cascadeResult = await applyCascadeOnResume(supabase, tournamentId, id)
-
-    setResuming(false)
-
-    // Step 3: Handle spill-over (per D-06) — pass courtId so CanchasView can re-run cascade after extension
-    if (cascadeResult.success && cascadeResult.spillOver) {
-      onSpillOver(id, cascadeResult.spillOverDate)
-    }
-
-    // Step 4: Refresh data (loads new match times + resolved setback)
-    onDataRefresh()
   }
 
   return (
@@ -134,7 +160,7 @@ export default function CourtCard({ court, tournamentId, onDataRefresh, onSpillO
           {isPaused ? (
             <button
               type="button"
-              onClick={handleResume}
+              onClick={() => setShowResumeModal(true)}
               disabled={resuming}
               className="w-full py-3 rounded-xl text-sm font-semibold transition-colors duration-150"
               style={{ background: '#F0FDF4', color: '#16A34A', cursor: resuming ? 'not-allowed' : 'pointer' }}
@@ -211,6 +237,14 @@ export default function CourtCard({ court, tournamentId, onDataRefresh, onSpillO
             setShowSetbackModal(false)
             onDataRefresh()
           }}
+        />
+      )}
+
+      {showResumeModal && (
+        <ResumeFormModal
+          court={court}
+          onClose={() => setShowResumeModal(false)}
+          onConfirm={handleResume}
         />
       )}
     </>

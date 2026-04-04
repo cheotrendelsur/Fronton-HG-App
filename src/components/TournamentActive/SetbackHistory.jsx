@@ -104,13 +104,15 @@ export default function SetbackHistory({ courtId }) {
                   {entry.status === 'active' ? 'En curso' : 'Resuelto'}
                 </span>
               </div>
-              <p className="text-[10px] mb-1.5" style={{ color: '#6B7280' }}>
-                {entry.description}
-              </p>
-              <div className="flex items-center gap-3 text-[10px]" style={{ color: '#9CA3AF' }}>
-                <span>Inicio: {formatDateTime(entry.started_at)}</span>
-                <span>Fin: {entry.ended_at ? formatDateTime(entry.ended_at) : 'En curso'}</span>
-                <span>Duracion: {formatDuration(entry.started_at, entry.ended_at)}</span>
+              {entry.description && (
+                <p className="text-[10px] mb-1.5" style={{ color: '#6B7280' }}>
+                  {entry.description}
+                </p>
+              )}
+              <div className="flex items-center gap-3 text-[10px] flex-wrap" style={{ color: '#9CA3AF' }}>
+                <span>Inicio: {formatDateTime(entry.reported_start || entry.started_at)}</span>
+                <span>Fin: {(entry.reported_end || entry.ended_at) ? formatDateTime(entry.reported_end || entry.ended_at) : 'En curso'}</span>
+                <span>Duracion: {formatDuration(entry.reported_start || entry.started_at, entry.reported_end || entry.ended_at)}</span>
               </div>
             </div>
           ))}

@@ -22,7 +22,17 @@
       "Bash(node test-fixes.mjs)",
       "Bash(cd:*)",
       "Bash(node test-comprehensive.mjs)",
-      "Bash(node test-elim-schedule.mjs)"
+      "Bash(node test-elim-schedule.mjs)",
+      "Bash(node -e \"const m = require\\('./src/lib/notificationPersistence.js'\\); console.log\\(Object.keys\\(m\\)\\)\")",
+      "Bash(node __TRACKED_VAR__/.claude/get-shit-done/bin/gsd-tools.cjs phase complete 08)",
+      "Bash(node __TRACKED_VAR__/.claude/get-shit-done/bin/gsd-tools.cjs commit 'docs\\(phase-08\\): complete phase execution' --files .planning/ROADMAP.md .planning/STATE.md .planning/REQUIREMENTS.md .planning/phases/08-notificaciones/08-VERIFICATION.md)",
+      "Bash(node __TRACKED_VAR__/.claude/get-shit-done/bin/gsd-tools.cjs commit 'docs\\(phase-08\\): evolve PROJECT.md after phase completion' --files .planning/PROJECT.md)",
+      "Bash(npx vitest:*)",
+      "Bash(node -e ':*)",
+      "Bash(node test-swap.mjs)",
+      "Bash(node test-e2e-phase5.mjs)",
+      "Bash(xargs grep:*)",
+      "Bash(git add:*)"
     ]
   }
 }

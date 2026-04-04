@@ -17,6 +17,7 @@ export default function ScoreboardPage({ tournament }) {
   const [banner, setBanner] = useState(null)
   const [activeSetbacks, setActiveSetbacks] = useState({})
   const [pendingWarningMatch, setPendingWarningMatch] = useState(null)
+  const [tournamentDays, setTournamentDays] = useState(null) // null = not loaded yet
 
   const loadData = useCallback(async () => {
     if (!tournament?.id) return
@@ -90,6 +91,18 @@ export default function ScoreboardPage({ tournament }) {
     }
     setActiveSetbacks(sbMap)
 
+    // Fetch tournament_days (flexible dates)
+    const { data: daysData } = await supabase
+      .from('tournament_days')
+      .select('day_date')
+      .eq('tournament_id', tournament.id)
+      .order('day_order')
+    if (daysData && daysData.length > 0) {
+      setTournamentDays(daysData.map(d => d.day_date))
+    } else {
+      setTournamentDays(null) // fallback to start_date→end_date
+    }
+
     setLoading(false)
   }, [tournament?.id])
 
@@ -97,8 +110,11 @@ export default function ScoreboardPage({ tournament }) {
     loadData()
   }, [loadData])
 
-  // Generate ALL days from tournament start_date to end_date
+  // Use tournament_days (active days only) if available, else fallback to start→end range
   const allDays = useMemo(() => {
+    if (tournamentDays && tournamentDays.length > 0) {
+      return [...tournamentDays].sort()
+    }
     if (!tournament?.start_date || !tournament?.end_date) return []
     const result = []
     const start = new Date(tournament.start_date + 'T00:00:00')
@@ -110,7 +126,7 @@ export default function ScoreboardPage({ tournament }) {
       result.push(`${yyyy}-${mm}-${dd}`)
     }
     return result
-  }, [tournament?.start_date, tournament?.end_date])
+  }, [tournamentDays, tournament?.start_date, tournament?.end_date])
 
   // Group matches by date → category_id
   const matchesByDate = useMemo(() => {
@@ -224,9 +240,18 @@ export default function ScoreboardPage({ tournament }) {
           }
         }
 
-        // Cascade recalculate schedule for affected court
+        // Cascade recalculate schedule for affected court + resolve cross-court conflicts
         try {
-          await applyCascadeRecalculation(supabase, tournament.id, match.id)
+          const cascadeResult = await applyCascadeRecalculation(supabase, tournament.id, match.id)
+          if (cascadeResult.resolutionSummary?.detected > 0) {
+            const rs = cascadeResult.resolutionSummary
+            const resolvedTotal = rs.resolvedBySwap + rs.resolvedByMove
+            if (rs.unresolved > 0) {
+              setBanner({ type: 'error', text: `Horarios ajustados. ${resolvedTotal} conflicto(s) resueltos, ${rs.unresolved} requieren atencion manual.` })
+            } else if (resolvedTotal > 0) {
+              setBanner({ type: 'success', text: `Horarios ajustados. ${resolvedTotal} conflicto(s) entre canchas resueltos automaticamente.` })
+            }
+          }
         } catch (cascadeErr) {
           console.error('[Cascade] Group phase recalculation failed:', cascadeErr)
         }
@@ -261,9 +286,18 @@ export default function ScoreboardPage({ tournament }) {
         // Check if entire tournament is finished
         await checkAllCategoriesComplete(supabase, tournament.id)
 
-        // Cascade recalculate schedule for affected court
+        // Cascade recalculate schedule for affected court + resolve cross-court conflicts
         try {
-          await applyCascadeRecalculation(supabase, tournament.id, match.id)
+          const cascadeResult = await applyCascadeRecalculation(supabase, tournament.id, match.id)
+          if (cascadeResult.resolutionSummary?.detected > 0) {
+            const rs = cascadeResult.resolutionSummary
+            const resolvedTotal = rs.resolvedBySwap + rs.resolvedByMove
+            if (rs.unresolved > 0) {
+              setBanner({ type: 'error', text: `Horarios ajustados. ${resolvedTotal} conflicto(s) resueltos, ${rs.unresolved} requieren atencion manual.` })
+            } else if (resolvedTotal > 0) {
+              setBanner({ type: 'success', text: `Horarios ajustados. ${resolvedTotal} conflicto(s) entre canchas resueltos automaticamente.` })
+            }
+          }
         } catch (cascadeErr) {
           console.error('[Cascade] Elimination phase recalculation failed:', cascadeErr)
         }

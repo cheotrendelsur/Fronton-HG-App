@@ -16,23 +16,59 @@ export default function ScheduleConfigStep({ tournament, matches, configs, onBac
   const [courts, setCourts] = useState([])
   const [courtEnabled, setCourtEnabled] = useState({}) // court_id → boolean
   const [loadingCourts, setLoadingCourts] = useState(true)
+  const [tournamentDays, setTournamentDays] = useState([])
+  const [courtSchedules, setCourtSchedules] = useState({})
 
-  // Fetch courts
+  // Fetch courts, tournament_days, and court_schedules
   useEffect(() => {
     if (!tournament?.id) return
     setLoadingCourts(true)
-    supabase
-      .from('courts')
-      .select('id, name, available_from, available_to, break_start, break_end')
-      .eq('tournament_id', tournament.id)
-      .then(({ data }) => {
-        const list = data ?? []
-        setCourts(list)
-        const enabled = {}
-        for (const c of list) enabled[c.id] = true
-        setCourtEnabled(enabled)
-        setLoadingCourts(false)
-      })
+
+    Promise.all([
+      supabase
+        .from('courts')
+        .select('id, name, available_from, available_to, break_start, break_end')
+        .eq('tournament_id', tournament.id),
+      supabase
+        .from('tournament_days')
+        .select('day_date')
+        .eq('tournament_id', tournament.id)
+        .order('day_order'),
+    ]).then(async ([courtsRes, daysRes]) => {
+      const list = courtsRes.data ?? []
+      setCourts(list)
+      const enabled = {}
+      for (const c of list) enabled[c.id] = true
+      setCourtEnabled(enabled)
+
+      // Tournament days
+      const days = (daysRes.data ?? []).map(d => d.day_date)
+      setTournamentDays(days)
+
+      // Court schedules
+      if (list.length > 0) {
+        const courtIds = list.map(c => c.id)
+        const { data: csData } = await supabase
+          .from('court_schedules')
+          .select('court_id, day_of_week, available_from, available_to, break_start, break_end')
+          .in('court_id', courtIds)
+        const schedMap = {}
+        if (csData) {
+          for (const cs of csData) {
+            if (!schedMap[cs.court_id]) schedMap[cs.court_id] = {}
+            schedMap[cs.court_id][cs.day_of_week] = {
+              available_from: cs.available_from,
+              available_to:   cs.available_to,
+              break_start:    cs.break_start,
+              break_end:      cs.break_end,
+            }
+          }
+        }
+        setCourtSchedules(schedMap)
+      }
+
+      setLoadingCourts(false)
+    })
   }, [tournament?.id])
 
   const selectedCourts = useMemo(
@@ -40,11 +76,18 @@ export default function ScheduleConfigStep({ tournament, matches, configs, onBac
     [courts, courtEnabled],
   )
 
-  // Calculate slots
+  // Calculate slots — use tournament_days if available, otherwise fallback to start_date→end_date
   const slots = useMemo(() => {
-    if (!selectedCourts.length || !tournament?.start_date || !tournament?.end_date) return []
-    return generateAllSlots(selectedCourts, tournament.start_date, tournament.end_date, matchDuration)
-  }, [selectedCourts, tournament?.start_date, tournament?.end_date, matchDuration])
+    if (!selectedCourts.length) return []
+    if (tournamentDays.length === 0 && (!tournament?.start_date || !tournament?.end_date)) return []
+    return generateAllSlots(
+      selectedCourts,
+      tournament.start_date,
+      tournament.end_date,
+      matchDuration,
+      { tournamentDays, courtSchedules },
+    )
+  }, [selectedCourts, tournament?.start_date, tournament?.end_date, matchDuration, tournamentDays, courtSchedules])
 
   const groupMatches = useMemo(
     () => matches.filter(m => m.phase === 'group_phase'),
@@ -72,18 +115,23 @@ export default function ScheduleConfigStep({ tournament, matches, configs, onBac
 
   // Date display
   const dateRange = useMemo(() => {
-    if (!tournament?.start_date || !tournament?.end_date) return null
     const fmt = d => {
       const dt = new Date(d + 'T00:00:00')
       const day = dt.getDate()
       const months = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic']
       return `${day} ${months[dt.getMonth()]} ${dt.getFullYear()}`
     }
+    if (tournamentDays.length > 0) {
+      const sorted = [...tournamentDays].sort()
+      const count = sorted.length
+      return { label: `${fmt(sorted[0])} → ${fmt(sorted[sorted.length - 1])} (${count} dia${count !== 1 ? 's' : ''} activo${count !== 1 ? 's' : ''})`, days: count }
+    }
+    if (!tournament?.start_date || !tournament?.end_date) return null
     const start = new Date(tournament.start_date + 'T00:00:00')
     const end = new Date(tournament.end_date + 'T00:00:00')
     const days = Math.round((end - start) / 86400000) + 1
-    return { label: `${fmt(tournament.start_date)} → ${fmt(tournament.end_date)} (${days} día${days !== 1 ? 's' : ''})`, days }
-  }, [tournament?.start_date, tournament?.end_date])
+    return { label: `${fmt(tournament.start_date)} → ${fmt(tournament.end_date)} (${days} dia${days !== 1 ? 's' : ''})`, days }
+  }, [tournament?.start_date, tournament?.end_date, tournamentDays])
 
   const canGenerate = capacity.sufficient && selectedCourts.length > 0
 
@@ -256,14 +304,22 @@ export default function ScheduleConfigStep({ tournament, matches, configs, onBac
                 <p className="text-sm font-medium" style={{ color: '#1F2937' }}>
                   {court.name}
                 </p>
-                <p className="text-xs mt-0.5" style={{ color: '#6B7280' }}>
-                  {court.available_from} - {court.available_to}
-                </p>
-                <p className="text-[10px] mt-0.5" style={{ color: '#9CA3AF' }}>
-                  {court.break_start && court.break_end
-                    ? `Descanso: ${court.break_start} - ${court.break_end}`
-                    : 'Sin descanso'}
-                </p>
+                {courtSchedules[court.id] && Object.keys(courtSchedules[court.id]).length > 0 ? (
+                  <p className="text-xs mt-0.5" style={{ color: '#6B7280' }}>
+                    Horarios por dia configurados
+                  </p>
+                ) : (
+                  <>
+                    <p className="text-xs mt-0.5" style={{ color: '#6B7280' }}>
+                      {court.available_from} - {court.available_to}
+                    </p>
+                    <p className="text-[10px] mt-0.5" style={{ color: '#9CA3AF' }}>
+                      {court.break_start && court.break_end
+                        ? `Descanso: ${court.break_start} - ${court.break_end}`
+                        : 'Sin descanso'}
+                    </p>
+                  </>
+                )}
               </div>
             </div>
           ))}

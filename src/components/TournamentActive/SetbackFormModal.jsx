@@ -17,6 +17,14 @@ export default function SetbackFormModal({ court, tournamentId, onClose, onSucce
   const [setbackType, setSetbackType] = useState('')
   const [customType, setCustomType] = useState('')
   const [description, setDescription] = useState('')
+  const [startDate, setStartDate] = useState(() => {
+    const now = new Date()
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
+  })
+  const [startTime, setStartTime] = useState(() => {
+    const now = new Date()
+    return `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`
+  })
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState(null)
 
@@ -27,14 +35,24 @@ export default function SetbackFormModal({ court, tournamentId, onClose, onSucce
   }, [])
 
   const effectiveType = setbackType === 'Otro' ? customType.trim() : setbackType
-  const isValid = effectiveType.length > 0 && description.trim().length >= 10
+  const isValid = effectiveType.length > 0 && startDate.length > 0 && startTime.length > 0
 
   async function handleSubmit() {
     if (!isValid || submitting) return
     setSubmitting(true)
     setError(null)
 
-    const affectedMatchIds = (court.pendingMatches ?? []).map(m => m.id)
+    const reportedStart = new Date(`${startDate}T${startTime}:00`).toISOString()
+
+    // Fetch ALL pending matches on this court (not just the pre-sliced 3 from UI)
+    const { data: allPendingOnCourt } = await supabase
+      .from('tournament_matches')
+      .select('id, team1_id, team2_id, scheduled_date')
+      .eq('tournament_id', tournamentId)
+      .eq('court_id', court.id)
+      .in('status', ['scheduled', 'pending'])
+
+    const affectedMatchIds = (allPendingOnCourt ?? []).map(m => m.id)
 
     const result = await createSetback(supabase, {
       tournamentId,
@@ -42,6 +60,7 @@ export default function SetbackFormModal({ court, tournamentId, onClose, onSucce
       setbackType: effectiveType,
       description: description.trim(),
       affectedMatchIds,
+      reportedStart,
     })
 
     if (!result.success) {
@@ -50,8 +69,11 @@ export default function SetbackFormModal({ court, tournamentId, onClose, onSucce
       return
     }
 
-    // Send notifications to affected players
-    const matchIds = (court.pendingMatches ?? []).filter(m => m.team1_id && m.team2_id).map(m => m.id)
+    // Send notifications to players with matches on this court TODAY
+    const todayMatches = (allPendingOnCourt ?? []).filter(m =>
+      m.scheduled_date === startDate && (m.team1_id || m.team2_id)
+    )
+    const matchIds = todayMatches.map(m => m.id)
     if (matchIds.length > 0) {
       const { data: regData } = await supabase
         .from('tournament_matches')
@@ -163,25 +185,47 @@ export default function SetbackFormModal({ court, tournamentId, onClose, onSucce
             </div>
           )}
 
+          {/* Date and time inputs */}
+          <div className="flex gap-3">
+            <div className="flex-1">
+              <label className="block text-xs font-medium mb-1.5" style={{ color: '#1F2937' }}>
+                Fecha de inicio *
+              </label>
+              <input
+                type="date"
+                value={startDate}
+                onChange={e => setStartDate(e.target.value)}
+                className="w-full px-3 py-2.5 rounded-xl text-sm"
+                style={{ background: '#F9FAFB', border: '1px solid #E0E2E6', color: '#1F2937' }}
+              />
+            </div>
+            <div className="flex-1">
+              <label className="block text-xs font-medium mb-1.5" style={{ color: '#1F2937' }}>
+                Hora de inicio *
+              </label>
+              <input
+                type="time"
+                value={startTime}
+                onChange={e => setStartTime(e.target.value)}
+                className="w-full px-3 py-2.5 rounded-xl text-sm"
+                style={{ background: '#F9FAFB', border: '1px solid #E0E2E6', color: '#1F2937' }}
+              />
+            </div>
+          </div>
+
           {/* Description textarea */}
           <div>
             <label className="block text-xs font-medium mb-1.5" style={{ color: '#1F2937' }}>
-              Descripcion *
+              Descripcion (opcional)
             </label>
             <textarea
               value={description}
               onChange={e => setDescription(e.target.value)}
-              placeholder="Describe la situacion (minimo 10 caracteres)"
+              placeholder="Describe la situacion"
               rows={3}
               className="w-full px-3 py-2.5 rounded-xl text-sm resize-none"
               style={{ background: '#F9FAFB', border: '1px solid #E0E2E6', color: '#1F2937' }}
             />
-            <p
-              className="text-[10px] mt-1"
-              style={{ color: description.trim().length >= 10 ? '#9CA3AF' : '#EA580C' }}
-            >
-              {description.trim().length}/10 caracteres minimo
-            </p>
           </div>
 
           {/* Warning text */}

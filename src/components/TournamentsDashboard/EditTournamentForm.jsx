@@ -1,6 +1,9 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { supabase } from '../../lib/supabaseClient'
 import ScoringSystemSelector from '../ScoringSystem/ScoringSystemSelector'
+import TournamentCalendar from '../TournamentCalendar'
+import CourtScheduleEditor, { allWeekdaysConfigured, hasScheduleErrors } from '../CourtScheduleEditor'
+import CategorySelector from '../CategorySelector'
 
 // ─── Primitive UI ──────────────────────────────────────────────────────────
 
@@ -110,50 +113,9 @@ function AddButton({ onClick, label }) {
   )
 }
 
-// ─── Category editor ───────────────────────────────────────────────────────
-
-function CategoryEditRow({ category, index, onChange, onRemove, canRemove }) {
-  function update(field, value) {
-    onChange(index, { ...category, [field]: value })
-  }
-
-  return (
-    <div className="rounded-xl p-4 space-y-3"
-         style={{ background: '#F9FAFB', border: '1px solid #E0E2E6' }}>
-      <div className="flex items-center justify-between">
-        <span className="text-xs font-semibold uppercase tracking-widest" style={{ color: '#6B7280' }}>
-          Categoría {index + 1}
-        </span>
-        {canRemove && <RemoveButton onClick={() => onRemove(index)} />}
-      </div>
-
-      <div>
-        <FieldLabel>Nombre</FieldLabel>
-        <Input
-          type="text"
-          placeholder="Ej. 3.ª Categoría"
-          value={category.name}
-          onChange={e => update('name', e.target.value)}
-        />
-      </div>
-
-      <div>
-        <FieldLabel>Límite de parejas</FieldLabel>
-        <Input
-          type="number"
-          min={2}
-          max={128}
-          value={category.max_couples}
-          onChange={e => update('max_couples', Number(e.target.value))}
-        />
-      </div>
-    </div>
-  )
-}
-
 // ─── Court editor ──────────────────────────────────────────────────────────
 
-function CourtEditRow({ court, index, onChange, onRemove, canRemove }) {
+function CourtEditRow({ court, index, onChange, onRemove, canRemove, selectedDays }) {
   function update(field, value) {
     onChange(index, { ...court, [field]: value })
   }
@@ -178,41 +140,11 @@ function CourtEditRow({ court, index, onChange, onRemove, canRemove }) {
         />
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
-        <div>
-          <FieldLabel>Apertura</FieldLabel>
-          <Input type="time" value={court.available_from}
-            onChange={e => update('available_from', e.target.value)} />
-        </div>
-        <div>
-          <FieldLabel>Cierre</FieldLabel>
-          <Input type="time" value={court.available_to}
-            onChange={e => update('available_to', e.target.value)} />
-        </div>
-      </div>
-
-      <div className="flex items-center justify-between py-1">
-        <div>
-          <p className="text-sm font-medium" style={{ color: '#1F2937' }}>Hay descanso</p>
-          <p className="text-xs mt-0.5" style={{ color: '#6B7280' }}>Bloque sin partidos</p>
-        </div>
-        <Toggle checked={court.has_break} onChange={v => update('has_break', v)} />
-      </div>
-
-      {court.has_break && (
-        <div className="grid grid-cols-2 gap-3 pt-1" style={{ borderTop: '1px solid #E8EAEE' }}>
-          <div>
-            <FieldLabel>Inicio descanso</FieldLabel>
-            <Input type="time" value={court.break_start ?? '14:00'}
-              onChange={e => update('break_start', e.target.value)} />
-          </div>
-          <div>
-            <FieldLabel>Fin descanso</FieldLabel>
-            <Input type="time" value={court.break_end ?? '16:00'}
-              onChange={e => update('break_end', e.target.value)} />
-          </div>
-        </div>
-      )}
+      <CourtScheduleEditor
+        selectedDays={selectedDays}
+        schedules={court.schedules || {}}
+        onChange={schedules => update('schedules', schedules)}
+      />
     </div>
   )
 }
@@ -236,11 +168,7 @@ function normalizeScoringConfig(config) {
 
 const DEFAULT_COURT = {
   name: '',
-  available_from: '08:00',
-  available_to:   '22:00',
-  has_break:      false,
-  break_start:    '14:00',
-  break_end:      '16:00',
+  schedules: {},
 }
 
 export default function EditTournamentForm({ tournament, onUpdate }) {
@@ -248,8 +176,8 @@ export default function EditTournamentForm({ tournament, onUpdate }) {
   const [name,           setName]           = useState(tournament.name ?? '')
   const [description,    setDescription]    = useState(tournament.description ?? '')
   const [location,       setLocation]       = useState(tournament.location ?? '')
-  const [startDate,      setStartDate]      = useState(tournament.start_date ?? '')
-  const [endDate,        setEndDate]        = useState(tournament.end_date ?? '')
+  const [selectedDays,   setSelectedDays]   = useState([])
+  const [daysLoading,    setDaysLoading]    = useState(true)
   const [inscriptionFee, setInscriptionFee] = useState(tournament.inscription_fee ?? '')
 
   // Scoring
@@ -293,7 +221,38 @@ export default function EditTournamentForm({ tournament, onUpdate }) {
         .eq('tournament_id', tournament.id)
         .order('name')
       if (error) throw error
-      setCourts((data ?? []).map(c => ({ ...c, has_break: !!c.break_start })))
+
+      const courtIds = (data ?? []).map(c => c.id)
+      let schedulesMap = {}
+
+      if (courtIds.length > 0) {
+        const { data: csData } = await supabase
+          .from('court_schedules')
+          .select('court_id, day_of_week, available_from, available_to, break_start, break_end')
+          .in('court_id', courtIds)
+        if (csData) {
+          for (const cs of csData) {
+            if (!schedulesMap[cs.court_id]) schedulesMap[cs.court_id] = {}
+            schedulesMap[cs.court_id][cs.day_of_week] = {
+              available_from: cs.available_from,
+              available_to:   cs.available_to,
+              has_break:      !!cs.break_start,
+              break_start:    cs.break_start || '14:00',
+              break_end:      cs.break_end   || '16:00',
+            }
+          }
+        }
+      }
+
+      setCourts((data ?? []).map(c => {
+        // If no court_schedules exist, build fallback schedule from court's flat fields
+        let schedules = schedulesMap[c.id] || {}
+        if (Object.keys(schedules).length === 0 && c.available_from) {
+          // Legacy court without court_schedules — no per-day data yet
+          schedules = {}
+        }
+        return { ...c, schedules }
+      }))
     } catch {
       setCourtsError(true)
       setCourts([])
@@ -304,23 +263,53 @@ export default function EditTournamentForm({ tournament, onUpdate }) {
 
   useEffect(() => { loadCourts() }, [loadCourts])
 
+  // Load existing tournament_days
+  const loadDays = useCallback(async () => {
+    setDaysLoading(true)
+    try {
+      const { data, error } = await supabase
+        .from('tournament_days')
+        .select('day_date')
+        .eq('tournament_id', tournament.id)
+        .order('day_order')
+      if (error) throw error
+      if (data && data.length > 0) {
+        setSelectedDays(data.map(d => d.day_date))
+      } else if (tournament.start_date && tournament.end_date) {
+        // Fallback: generate days from start_date to end_date for legacy tournaments
+        const days = []
+        const start = new Date(tournament.start_date + 'T00:00:00')
+        const end = new Date(tournament.end_date + 'T00:00:00')
+        for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+          const y = d.getFullYear()
+          const m = String(d.getMonth() + 1).padStart(2, '0')
+          const dd = String(d.getDate()).padStart(2, '0')
+          days.push(`${y}-${m}-${dd}`)
+        }
+        setSelectedDays(days)
+      }
+    } catch {
+      // Silent fallback — use start/end dates if available
+      if (tournament.start_date) setSelectedDays([tournament.start_date])
+    } finally {
+      setDaysLoading(false)
+    }
+  }, [tournament.id, tournament.start_date, tournament.end_date])
+
+  useEffect(() => { loadDays() }, [loadDays])
+
   function markDirty() { setIsDirty(true); setSaveStatus('idle') }
 
-  // Category handlers
-  function updateCategory(index, updated) {
-    setCategories(prev => prev.map((c, i) => i === index ? updated : c))
-    markDirty()
-  }
-
-  function addCategory() {
-    setCategories(prev => [...prev, { name: '', max_couples: 16 }])
-    markDirty()
-  }
-
-  function removeCategory(index) {
-    const cat = categories[index]
-    if (cat.id) setRemovedCategoryIds(prev => [...prev, cat.id])
-    setCategories(prev => prev.filter((_, i) => i !== index))
+  // Category handler — CategorySelector provides full array
+  function handleCategoriesChange(newCategories) {
+    // Track removed IDs
+    const newIds = new Set(newCategories.filter(c => c.id).map(c => c.id))
+    for (const c of categories) {
+      if (c.id && !newIds.has(c.id)) {
+        setRemovedCategoryIds(prev => prev.includes(c.id) ? prev : [...prev, c.id])
+      }
+    }
+    setCategories(newCategories)
     markDirty()
   }
 
@@ -345,12 +334,15 @@ export default function EditTournamentForm({ tournament, onUpdate }) {
   // Validation
   const nameValid      = name.trim().length >= 3 && name.trim().length <= 100
   const locationValid  = location.trim().length > 0
-  const datesValid     = !startDate || !endDate || startDate <= endDate
+  const daysValid      = selectedDays.length > 0
   const feeValid       = inscriptionFee === '' || Number(inscriptionFee) >= 0
-  const catsValid      = categories.length > 0 && categories.every(c => c.name.trim())
+  const catsValid      = categories.length > 0
   const courtsValid    = courts.length > 0 && courts.every(c => c.name.trim())
+  const schedulesValid = selectedDays.length === 0 || courts.every(c =>
+    allWeekdaysConfigured(selectedDays, c.schedules) && !hasScheduleErrors(c.schedules || {})
+  )
 
-  const canSave = isDirty && nameValid && locationValid && datesValid && feeValid && catsValid && courtsValid && saveStatus !== 'saving'
+  const canSave = isDirty && nameValid && locationValid && daysValid && feeValid && catsValid && courtsValid && schedulesValid && saveStatus !== 'saving'
 
   async function handleSave() {
     if (!canSave) return
@@ -391,13 +383,34 @@ export default function EditTournamentForm({ tournament, onUpdate }) {
         }
       }
 
+      // 1d. Persist tournament_days (delete + re-insert)
+      const sortedDays = [...selectedDays].sort()
+      const startDate = sortedDays[0] || null
+      const endDate   = sortedDays[sortedDays.length - 1] || null
+
+      const { error: delDaysErr } = await supabase
+        .from('tournament_days')
+        .delete()
+        .eq('tournament_id', tournament.id)
+      if (delDaysErr) throw delDaysErr
+
+      if (sortedDays.length > 0) {
+        const daysPayload = sortedDays.map((d, i) => ({
+          tournament_id: tournament.id,
+          day_date:      d,
+          day_order:     i + 1,
+        }))
+        const { error: insDaysErr } = await supabase.from('tournament_days').insert(daysPayload)
+        if (insDaysErr) throw insDaysErr
+      }
+
       // 2. Update tournament core fields
       const updatePayload = {
         name:            name.trim(),
         description:     description.trim() || null,
         location:        location.trim(),
-        start_date:      startDate || null,
-        end_date:        endDate   || null,
+        start_date:      startDate,
+        end_date:        endDate,
         inscription_fee: inscriptionFee !== '' ? Number(inscriptionFee) : null,
       }
       // scoring_config is only editable during inscription phase
@@ -445,38 +458,92 @@ export default function EditTournamentForm({ tournament, onUpdate }) {
       const existingCourts = courts.filter(c => c.id)
       const newCourts      = courts.filter(c => !c.id)
 
+      function courtFallback(c) {
+        const scheduleKeys = Object.keys(c.schedules || {})
+        const firstSched = scheduleKeys.length > 0 ? c.schedules[scheduleKeys[0]] : null
+        return {
+          available_from: firstSched?.available_from || c.available_from || '08:00',
+          available_to:   firstSched?.available_to   || c.available_to   || '22:00',
+          break_start:    firstSched?.has_break ? firstSched.break_start : null,
+          break_end:      firstSched?.has_break ? firstSched.break_end   : null,
+        }
+      }
+
       await Promise.all(
-        existingCourts.map(c =>
-          supabase.from('courts').update({
+        existingCourts.map(c => {
+          const fb = courtFallback(c)
+          return supabase.from('courts').update({
             name:           c.name.trim(),
-            available_from: c.available_from,
-            available_to:   c.available_to,
-            break_start:    c.has_break ? (c.break_start ?? '14:00') : null,
-            break_end:      c.has_break ? (c.break_end   ?? '16:00') : null,
+            available_from: fb.available_from,
+            available_to:   fb.available_to,
+            break_start:    fb.break_start,
+            break_end:      fb.break_end,
           }).eq('id', c.id)
-        )
+        })
       )
 
       if (newCourts.length > 0) {
-        const { error: courtInsErr } = await supabase.from('courts').insert(
-          newCourts.map(c => ({
-            tournament_id:  tournament.id,
-            name:           c.name.trim(),
-            available_from: c.available_from,
-            available_to:   c.available_to,
-            break_start:    c.has_break ? (c.break_start ?? '14:00') : null,
-            break_end:      c.has_break ? (c.break_end   ?? '16:00') : null,
-          }))
-        )
+        const { data: insertedNew, error: courtInsErr } = await supabase.from('courts').insert(
+          newCourts.map(c => {
+            const fb = courtFallback(c)
+            return {
+              tournament_id:  tournament.id,
+              name:           c.name.trim(),
+              available_from: fb.available_from,
+              available_to:   fb.available_to,
+              break_start:    fb.break_start,
+              break_end:      fb.break_end,
+            }
+          })
+        ).select('id')
         if (courtInsErr) throw courtInsErr
+
+        // Merge new court IDs back
+        if (insertedNew) {
+          let newIdx = 0
+          setCourts(prev => prev.map(c => {
+            if (!c.id && newIdx < insertedNew.length) {
+              return { ...c, id: insertedNew[newIdx++].id }
+            }
+            return c
+          }))
+        }
       }
 
       if (removedCourtIds.length > 0) {
+        // court_schedules cascade-deleted via FK
         const { error: courtDelErr } = await supabase
           .from('courts')
           .delete()
           .in('id', removedCourtIds)
         if (courtDelErr) throw courtDelErr
+      }
+
+      // 4b. Persist court_schedules (delete all for tournament courts + re-insert)
+      const allCourtIds = courts.filter(c => c.id).map(c => c.id)
+      if (allCourtIds.length > 0) {
+        await supabase
+          .from('court_schedules')
+          .delete()
+          .in('court_id', allCourtIds)
+      }
+      const schedulesPayload = []
+      for (const c of courts) {
+        if (!c.id) continue
+        for (const [dow, sched] of Object.entries(c.schedules || {})) {
+          schedulesPayload.push({
+            court_id:       c.id,
+            day_of_week:    Number(dow),
+            available_from: sched.available_from,
+            available_to:   sched.available_to,
+            break_start:    sched.has_break ? sched.break_start : null,
+            break_end:      sched.has_break ? sched.break_end   : null,
+          })
+        }
+      }
+      if (schedulesPayload.length > 0) {
+        const { error: csErr } = await supabase.from('court_schedules').insert(schedulesPayload)
+        if (csErr) throw csErr
       }
 
       // 5. Reload courts to get server-assigned IDs for newly inserted ones
@@ -485,7 +552,32 @@ export default function EditTournamentForm({ tournament, onUpdate }) {
         .select('id, name, available_from, available_to, break_start, break_end')
         .eq('tournament_id', tournament.id)
         .order('name')
-      if (freshCourts) setCourts(freshCourts.map(c => ({ ...c, has_break: !!c.break_start })))
+
+      // Reload court_schedules
+      let freshSchedulesMap = {}
+      if (freshCourts && freshCourts.length > 0) {
+        const freshIds = freshCourts.map(c => c.id)
+        const { data: csData } = await supabase
+          .from('court_schedules')
+          .select('court_id, day_of_week, available_from, available_to, break_start, break_end')
+          .in('court_id', freshIds)
+        if (csData) {
+          for (const cs of csData) {
+            if (!freshSchedulesMap[cs.court_id]) freshSchedulesMap[cs.court_id] = {}
+            freshSchedulesMap[cs.court_id][cs.day_of_week] = {
+              available_from: cs.available_from,
+              available_to:   cs.available_to,
+              has_break:      !!cs.break_start,
+              break_start:    cs.break_start || '14:00',
+              break_end:      cs.break_end   || '16:00',
+            }
+          }
+        }
+      }
+      if (freshCourts) setCourts(freshCourts.map(c => ({
+        ...c,
+        schedules: freshSchedulesMap[c.id] || {},
+      })))
 
       // 6. Reload categories to get IDs for newly inserted ones
       const { data: freshCats } = await supabase
@@ -505,8 +597,8 @@ export default function EditTournamentForm({ tournament, onUpdate }) {
         name:            name.trim(),
         description:     description.trim() || null,
         location:        location.trim(),
-        start_date:      startDate || null,
-        end_date:        endDate   || null,
+        start_date:      startDate,
+        end_date:        endDate,
         inscription_fee: inscriptionFee !== '' ? Number(inscriptionFee) : null,
         scoring_config:  normalizeScoringConfig(scoringConfig),
         categories:      freshCats ?? categories,
@@ -572,20 +664,13 @@ export default function EditTournamentForm({ tournament, onUpdate }) {
           />
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <FieldLabel>Fecha inicio</FieldLabel>
-            <Input type="date" value={startDate}
-              onChange={e => { setStartDate(e.target.value); markDirty() }} />
-          </div>
-          <div>
-            <FieldLabel>Fecha fin</FieldLabel>
-            <Input type="date" value={endDate}
-              onChange={e => { setEndDate(e.target.value); markDirty() }} />
-          </div>
-        </div>
-        {startDate && endDate && startDate > endDate && (
-          <p className="text-red-400 text-[11px]">La fecha de inicio debe ser anterior o igual a la de fin.</p>
+        {daysLoading ? (
+          <div className="h-24 rounded-xl animate-pulse" style={{ background: '#F3F4F6' }} />
+        ) : (
+          <TournamentCalendar
+            selectedDays={selectedDays}
+            onChange={(days) => { setSelectedDays(days); markDirty() }}
+          />
         )}
       </SectionCard>
 
@@ -613,22 +698,12 @@ export default function EditTournamentForm({ tournament, onUpdate }) {
         )}
       </SectionCard>
 
-      <SectionCard title="Categorías y Cupos">
-        <div className="space-y-3">
-          {categories.map((cat, i) => (
-            <CategoryEditRow
-              key={cat.id ?? `new-${i}`}
-              category={cat}
-              index={i}
-              onChange={updateCategory}
-              onRemove={removeCategory}
-              canRemove={categories.length > 1 && tournament.status !== 'active'}
-            />
-          ))}
-        </div>
-        {tournament.status !== 'active' && (
-          <AddButton onClick={addCategory} label="Agregar categoría" />
-        )}
+      <SectionCard title="Categorias y Cupos">
+        <CategorySelector
+          categories={categories}
+          onChange={handleCategoriesChange}
+          canRemove={tournament.status !== 'active'}
+        />
       </SectionCard>
 
       <SectionCard title="Canchas y horarios">
@@ -657,6 +732,7 @@ export default function EditTournamentForm({ tournament, onUpdate }) {
                   onChange={updateCourt}
                   onRemove={removeCourt}
                   canRemove={courts.length > 1 && tournament.status !== 'active'}
+                  selectedDays={selectedDays}
                 />
               ))}
             </div>

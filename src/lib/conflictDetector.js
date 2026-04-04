@@ -11,6 +11,20 @@ function parseTime(timeStr) {
 }
 
 /**
+ * Extracts match end time in minutes from midnight.
+ * Priority: actual_end_time > (scheduled_time + duration)
+ */
+function getMatchEndTime(match) {
+  if (match.actual_end_time) {
+    const timePart = match.actual_end_time.includes('T')
+      ? match.actual_end_time.split('T')[1].substring(0, 5)
+      : match.actual_end_time.split(' ')[1].substring(0, 5)
+    return parseTime(timePart)
+  }
+  return parseTime(match.scheduled_time) + (match.estimated_duration_minutes || 60)
+}
+
+/**
  * Detects teams with overlapping matches on different courts.
  * A conflict = same team_id has two matches on different courts where
  * time ranges overlap (start to start + duration). Per D-10.
@@ -43,6 +57,7 @@ export function detectTeamConflicts(matches, courtNames = {}) {
       courtId: m.court_id,
       date: m.scheduled_date,
       time: m.scheduled_time,
+      endTime: getMatchEndTime(m),
       duration: m.estimated_duration_minutes || 60,
       team1_id: m.team1_id,
       team2_id: m.team2_id,
@@ -79,10 +94,11 @@ export function detectTeamConflicts(matches, courtNames = {}) {
         if (a.date !== b.date) continue
 
         // Compute time ranges and check overlap
+        // Use endTime (which includes actual_end_time if available)
         const startA = parseTime(a.time)
-        const endA = startA + a.duration
+        const endA = a.endTime
         const startB = parseTime(b.time)
-        const endB = startB + b.duration
+        const endB = b.endTime
 
         if (startA < endB && startB < endA) {
           // Deduplicate: use teamId + sorted match IDs as key

@@ -98,25 +98,54 @@ export function generateTimeSlots(court, date, matchDurationMinutes) {
  * @param {string} startDate - Fecha inicio "YYYY-MM-DD"
  * @param {string} endDate - Fecha fin "YYYY-MM-DD"
  * @param {number} matchDurationMinutes - Duración del partido en minutos
+ * @param {Object} [opts] - Optional overrides
+ * @param {string[]} [opts.tournamentDays] - If provided, only generate slots for these dates (sorted YYYY-MM-DD strings).
+ *   Overrides startDate/endDate iteration. "Next day" = next entry in this array, NOT next calendar day.
+ * @param {Object} [opts.courtSchedules] - Per-court per-weekday schedule overrides.
+ *   Shape: { [courtId]: { [dayOfWeek]: { available_from, available_to, break_start, break_end } } }
+ *   dayOfWeek uses JS getDay() convention: 0=Sun, 1=Mon, ..., 6=Sat.
+ *   If a court+weekday has an entry here, it overrides the court's own fields for that day.
  * @returns {Array} Array plano de todos los slots
  */
-export function generateAllSlots(courts, startDate, endDate, matchDurationMinutes) {
+export function generateAllSlots(courts, startDate, endDate, matchDurationMinutes, opts = {}) {
+  const { tournamentDays, courtSchedules } = opts;
   const allSlots = [];
-  const dates = [];
+  let dates;
 
-  // Iterar días desde startDate hasta endDate inclusive
-  const start = new Date(startDate + 'T00:00:00');
-  const end = new Date(endDate + 'T00:00:00');
-  for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
-    const yyyy = d.getFullYear();
-    const mm = String(d.getMonth() + 1).padStart(2, '0');
-    const dd = String(d.getDate()).padStart(2, '0');
-    dates.push(`${yyyy}-${mm}-${dd}`);
+  if (tournamentDays && tournamentDays.length > 0) {
+    // Use explicit tournament days (may be non-consecutive)
+    dates = [...tournamentDays].sort();
+  } else {
+    // Legacy: iterate from startDate to endDate inclusive
+    dates = [];
+    const start = new Date(startDate + 'T00:00:00');
+    const end = new Date(endDate + 'T00:00:00');
+    for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+      const yyyy = d.getFullYear();
+      const mm = String(d.getMonth() + 1).padStart(2, '0');
+      const dd = String(d.getDate()).padStart(2, '0');
+      dates.push(`${yyyy}-${mm}-${dd}`);
+    }
   }
 
   for (const date of dates) {
+    const dayOfWeek = new Date(date + 'T00:00:00').getDay();
+
     for (const court of courts) {
-      const slots = generateTimeSlots(court, date, matchDurationMinutes);
+      // Determine schedule for this court on this day
+      let effectiveCourt = court;
+      if (courtSchedules && courtSchedules[court.id] && courtSchedules[court.id][dayOfWeek]) {
+        const sched = courtSchedules[court.id][dayOfWeek];
+        effectiveCourt = {
+          ...court,
+          available_from: sched.available_from,
+          available_to:   sched.available_to,
+          break_start:    sched.break_start,
+          break_end:      sched.break_end,
+        };
+      }
+
+      const slots = generateTimeSlots(effectiveCourt, date, matchDurationMinutes);
       allSlots.push(...slots);
     }
   }
@@ -182,13 +211,19 @@ function interleaveByGroup(matches) {
 }
 
 /**
- * Checks if a team is playing at a specific date+time in existing assignments.
+ * Checks if a team has an overlapping match at a specific date+time range.
+ * Two matches overlap if: (startA < endB) AND (startB < endA)
  */
-function isTeamBusyAt(teamId, date, startTime, assignments) {
-  return assignments.some(
-    a => a.scheduled_date === date && a.scheduled_time === startTime &&
-         (a.team1_id === teamId || a.team2_id === teamId)
-  );
+function isTeamBusyAt(teamId, date, startTime, duration, assignments) {
+  const newStart = parseTime(startTime);
+  const newEnd = newStart + duration;
+  return assignments.some(a => {
+    if (a.scheduled_date !== date) return false;
+    if (a.team1_id !== teamId && a.team2_id !== teamId) return false;
+    const existingStart = parseTime(a.scheduled_time);
+    const existingEnd = existingStart + (a.estimated_duration_minutes || duration);
+    return newStart < existingEnd && existingStart < newEnd;
+  });
 }
 
 /**
@@ -315,12 +350,24 @@ export function distributeMatches(matches, slots, options = {}) {
 
       const slot = slots[si];
       const duration = parseTime(slot.end_time) - parseTime(slot.start_time)
+      const slotStart = parseTime(slot.start_time)
+      const slotEnd = slotStart + duration
+
+      // R1: verify no assigned match on this court overlaps this time range
+      let courtBusy = false
+      for (const a of assignments) {
+        if (a.court_id !== slot.court_id || a.scheduled_date !== slot.date) continue
+        const aStart = parseTime(a.scheduled_time)
+        const aEnd = aStart + (a.estimated_duration_minutes || duration)
+        if (slotStart < aEnd && aStart < slotEnd) { courtBusy = true; break }
+      }
+      if (courtBusy) continue
 
       // Team-based constraints only apply when both teams are known
       if (hasTeams) {
-        // R2: neither team is playing at this date+time
-        if (isTeamBusyAt(match.team1_id, slot.date, slot.start_time, assignments)) continue;
-        if (isTeamBusyAt(match.team2_id, slot.date, slot.start_time, assignments)) continue;
+        // R2: neither team has an overlapping match (time range check)
+        if (isTeamBusyAt(match.team1_id, slot.date, slot.start_time, duration, assignments)) continue;
+        if (isTeamBusyAt(match.team2_id, slot.date, slot.start_time, duration, assignments)) continue;
 
         // R3: neither team would exceed max consecutive
         if (wouldViolateConsecutive(match.team1_id, slot.date, slot.start_time, slot.end_time, maxConsecutive, teamHistory)) continue;
@@ -413,6 +460,9 @@ export function distributeFullTournament(groupMatches, elimMatches, slots, optio
   // Track last assigned time per round per category for inter-round gap
   const roundLastTime = new Map() // "catId|round" → { date, end_time }
 
+  // All assignments so far (group + elim) for R1 range overlap checking
+  const allAssignmentsSoFar = [...groupResult.assignments]
+
   for (const match of sortedElim) {
     let assigned = false
     const roundKey = `${match.category_id}|${match.round_number ?? 0}`
@@ -425,6 +475,20 @@ export function distributeFullTournament(groupMatches, elimMatches, slots, optio
 
       if (occupied.has(slotKey)) continue
 
+      const duration = parseTime(slot.end_time) - parseTime(slot.start_time)
+      const slotStart = parseTime(slot.start_time)
+      const slotEnd = slotStart + duration
+
+      // R1: verify no assigned match on this court overlaps this time range
+      let courtBusy = false
+      for (const a of allAssignmentsSoFar) {
+        if (a.court_id !== slot.court_id || a.scheduled_date !== slot.date) continue
+        const aStart = parseTime(a.scheduled_time)
+        const aEnd = aStart + (a.estimated_duration_minutes || duration)
+        if (slotStart < aEnd && aStart < slotEnd) { courtBusy = true; break }
+      }
+      if (courtBusy) continue
+
       // R_ORDER: elimination cannot be on a date before the last group match
       if (lastGroupDate && slot.date < lastGroupDate) continue
 
@@ -435,7 +499,6 @@ export function distributeFullTournament(groupMatches, elimMatches, slots, optio
       }
 
       // Assign
-      const duration = parseTime(slot.end_time) - parseTime(slot.start_time)
       const assignment = {
         match_id: match.id || null,
         match_number: match.match_number,
@@ -452,6 +515,7 @@ export function distributeFullTournament(groupMatches, elimMatches, slots, optio
       }
 
       elimAssignments.push(assignment)
+      allAssignmentsSoFar.push(assignment)
       occupied.add(slotKey)
 
       // Track for round ordering
@@ -487,41 +551,61 @@ export function distributeFullTournament(groupMatches, elimMatches, slots, optio
 export function validateDistribution(assignments, matches) {
   const violations = [];
 
-  // R1: No two assignments on same court at same date+time
-  const courtTimeMap = new Map();
+  // R1: No two assignments on same court overlap in time range
+  const byCourtDate = new Map();
   for (const a of assignments) {
-    const key = `${a.court_id}|${a.scheduled_date}|${a.scheduled_time}`;
-    if (courtTimeMap.has(key)) {
-      violations.push({
-        rule: 'R1',
-        description: `Court ${a.court_name} double-booked at ${a.scheduled_date} ${a.scheduled_time}`,
-        details: { match1: courtTimeMap.get(key), match2: a.match_number },
-      });
-    } else {
-      courtTimeMap.set(key, a.match_number);
+    const key = `${a.court_id}|${a.scheduled_date}`;
+    if (!byCourtDate.has(key)) byCourtDate.set(key, []);
+    byCourtDate.get(key).push(a);
+  }
+  for (const [key, courtMatches] of byCourtDate) {
+    courtMatches.sort((a, b) => a.scheduled_time.localeCompare(b.scheduled_time));
+    for (let i = 0; i < courtMatches.length; i++) {
+      for (let j = i + 1; j < courtMatches.length; j++) {
+        const a = courtMatches[i];
+        const b = courtMatches[j];
+        const aStart = parseTime(a.scheduled_time);
+        const aEnd = aStart + (a.estimated_duration_minutes || 45);
+        const bStart = parseTime(b.scheduled_time);
+        const bEnd = bStart + (b.estimated_duration_minutes || 45);
+        if (aStart < bEnd && bStart < aEnd) {
+          violations.push({
+            rule: 'R1',
+            description: `Court ${a.court_name} overlap: #${a.match_number} (${a.scheduled_time}-${minutesToTime(aEnd)}) vs #${b.match_number} (${b.scheduled_time}-${minutesToTime(bEnd)}) on ${a.scheduled_date}`,
+            details: { match1: a.match_number, match2: b.match_number, overlap: Math.min(aEnd, bEnd) - Math.max(aStart, bStart) },
+          });
+        }
+      }
     }
   }
 
-  // R2: No team playing in two courts at the same date+time (skip null team_ids)
-  const timeSlotTeams = new Map();
+  // R2: No team playing overlapping matches on different courts (skip null team_ids)
+  // Two matches overlap if: (startA < endB) AND (startB < endA)
+  const teamAssignments = new Map();
   for (const a of assignments) {
-    const key = `${a.scheduled_date}|${a.scheduled_time}`;
-    if (!timeSlotTeams.has(key)) timeSlotTeams.set(key, []);
-    timeSlotTeams.get(key).push(a);
+    for (const tid of [a.team1_id, a.team2_id]) {
+      if (tid == null) continue;
+      if (!teamAssignments.has(tid)) teamAssignments.set(tid, []);
+      teamAssignments.get(tid).push(a);
+    }
   }
-  for (const [key, group] of timeSlotTeams) {
-    const teamsInSlot = new Map();
-    for (const a of group) {
-      for (const tid of [a.team1_id, a.team2_id]) {
-        if (tid == null) continue; // skip null teams
-        if (teamsInSlot.has(tid)) {
+  for (const [tid, tAssigns] of teamAssignments) {
+    for (let i = 0; i < tAssigns.length; i++) {
+      for (let j = i + 1; j < tAssigns.length; j++) {
+        const a = tAssigns[i];
+        const b = tAssigns[j];
+        if (a.scheduled_date !== b.scheduled_date) continue;
+        if (a.court_id === b.court_id) continue; // same court conflicts are R1
+        const startA = parseTime(a.scheduled_time);
+        const endA = startA + (a.estimated_duration_minutes || 45);
+        const startB = parseTime(b.scheduled_time);
+        const endB = startB + (b.estimated_duration_minutes || 45);
+        if (startA < endB && startB < endA) {
           violations.push({
             rule: 'R2',
-            description: `Team ${tid} playing in two courts at ${key.replace('|', ' ')}`,
-            details: { match1: teamsInSlot.get(tid), match2: a.match_number, team: tid },
+            description: `Team ${tid} has overlapping matches on ${a.scheduled_date}: ${a.scheduled_time}-${minutesToTime(endA)} (${a.court_name}) vs ${b.scheduled_time}-${minutesToTime(endB)} (${b.court_name})`,
+            details: { match1: a.match_number, match2: b.match_number, team: tid },
           });
-        } else {
-          teamsInSlot.set(tid, a.match_number);
         }
       }
     }

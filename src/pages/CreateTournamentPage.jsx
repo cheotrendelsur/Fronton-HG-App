@@ -4,20 +4,15 @@ import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabaseClient'
 import Layout from '../components/Layout'
 import ScoringSystemSelector from '../components/ScoringSystem/ScoringSystemSelector'
+import TournamentCalendar from '../components/TournamentCalendar'
+import CourtScheduleEditor, { allWeekdaysConfigured, hasScheduleErrors } from '../components/CourtScheduleEditor'
+import CategorySelector from '../components/CategorySelector'
 
 const DEFAULT_COURT = {
   name: '',
-  available_from: '08:00',
-  available_to: '22:00',
-  has_break: false,
-  break_start: '14:00',
-  break_end: '16:00',
+  schedules: {},
 }
 
-const DEFAULT_CATEGORY = {
-  name: '',
-  max_couples: 16,
-}
 
 function normalizeScoringConfig(config) {
   if (!config) return null
@@ -124,60 +119,8 @@ function Toggle({ checked, onChange }) {
   )
 }
 
-function CategoryCard({ category, index, onChange, onRemove, canRemove }) {
-  function update(field, value) {
-    onChange(index, { ...category, [field]: value })
-  }
 
-  return (
-    <div className="rounded-xl p-4 space-y-4"
-         style={{ background: '#F9FAFB', border: '1px solid #E0E2E6' }}>
-      <div className="flex items-center justify-between">
-        <span className="text-xs font-semibold uppercase tracking-widest" style={{ color: '#6B7280' }}>
-          Categoría {index + 1}
-        </span>
-        {canRemove && (
-          <button
-            type="button"
-            onClick={() => onRemove(index)}
-            className="w-7 h-7 rounded-lg flex items-center justify-center hover:text-red-500 transition-all duration-200"
-            style={{ background: '#F3F4F6', color: '#6B7280' }}
-          >
-            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={1.8}
-              className="w-3.5 h-3.5" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M2 4h12M5 4V2.5A.5.5 0 015.5 2h5a.5.5 0 01.5.5V4M6 7v5M10 7v5M3 4l.8 9.5a.5.5 0 00.5.5h7.4a.5.5 0 00.5-.5L13 4"/>
-            </svg>
-          </button>
-        )}
-      </div>
-
-      <div>
-        <FieldLabel>Nombre de la categoría</FieldLabel>
-        <Input
-          type="text"
-          placeholder="Ej. 3.ª Categoría"
-          value={category.name}
-          onChange={e => update('name', e.target.value)}
-          required
-        />
-      </div>
-
-      <div>
-        <FieldLabel>Límite de parejas</FieldLabel>
-        <Input
-          type="number"
-          min={2}
-          max={128}
-          value={category.max_couples}
-          onChange={e => update('max_couples', e.target.value)}
-          required
-        />
-      </div>
-    </div>
-  )
-}
-
-function CourtCard({ court, index, onChange, onRemove, canRemove }) {
+function CourtCard({ court, index, onChange, onRemove, canRemove, selectedDays }) {
   function update(field, value) {
     onChange(index, { ...court, [field]: value })
   }
@@ -215,41 +158,11 @@ function CourtCard({ court, index, onChange, onRemove, canRemove }) {
         />
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
-        <div>
-          <FieldLabel>Apertura</FieldLabel>
-          <Input type="time" value={court.available_from}
-            onChange={e => update('available_from', e.target.value)} required />
-        </div>
-        <div>
-          <FieldLabel>Cierre</FieldLabel>
-          <Input type="time" value={court.available_to}
-            onChange={e => update('available_to', e.target.value)} required />
-        </div>
-      </div>
-
-      <div className="flex items-center justify-between py-1">
-        <div>
-          <p className="text-sm font-medium" style={{ color: '#1F2937' }}>Hay descanso</p>
-          <p className="text-xs mt-0.5" style={{ color: '#6B7280' }}>Bloque de tiempo sin partidos</p>
-        </div>
-        <Toggle checked={court.has_break} onChange={v => update('has_break', v)} />
-      </div>
-
-      {court.has_break && (
-        <div className="grid grid-cols-2 gap-3 pt-1" style={{ borderTop: '1px solid #E8EAEE' }}>
-          <div>
-            <FieldLabel>Inicio descanso</FieldLabel>
-            <Input type="time" value={court.break_start}
-              onChange={e => update('break_start', e.target.value)} />
-          </div>
-          <div>
-            <FieldLabel>Fin descanso</FieldLabel>
-            <Input type="time" value={court.break_end}
-              onChange={e => update('break_end', e.target.value)} />
-          </div>
-        </div>
-      )}
+      <CourtScheduleEditor
+        selectedDays={selectedDays}
+        schedules={court.schedules || {}}
+        onChange={schedules => update('schedules', schedules)}
+      />
     </div>
   )
 }
@@ -269,10 +182,9 @@ export default function CreateTournamentPage() {
   const [location,       setLocation]       = useState('')
   const [inscriptionFee, setInscriptionFee] = useState('')
   const [sportId,        setSportId]        = useState('')
-  const [startDate,      setStartDate]      = useState('')
-  const [endDate,        setEndDate]        = useState('')
+  const [selectedDays,   setSelectedDays]   = useState([])
   const [scoringConfig,  setScoringConfig]  = useState(null)
-  const [categories,     setCategories]     = useState([{ ...DEFAULT_CATEGORY }])
+  const [categories,     setCategories]     = useState([])
   const [courts,         setCourts]         = useState([{ ...DEFAULT_COURT }])
 
   const loadSports = useCallback(async () => {
@@ -300,18 +212,6 @@ export default function CreateTournamentPage() {
     loadSports()
   }, [profile, navigate, loadSports])
 
-  function addCategory() {
-    setCategories(prev => [...prev, { ...DEFAULT_CATEGORY }])
-  }
-
-  function updateCategory(index, updated) {
-    setCategories(prev => prev.map((c, i) => i === index ? updated : c))
-  }
-
-  function removeCategory(index) {
-    setCategories(prev => prev.filter((_, i) => i !== index))
-  }
-
   function addCourt() {
     setCourts(prev => [...prev, { ...DEFAULT_COURT }])
   }
@@ -329,6 +229,10 @@ export default function CreateTournamentPage() {
     setError('')
     setSubmitting(true)
     try {
+      const sortedDays = [...selectedDays].sort()
+      const startDate = sortedDays[0]
+      const endDate   = sortedDays[sortedDays.length - 1]
+
       const tournamentPayload = {
         organizer_id:    profile.id,
         name:            name.trim(),
@@ -336,8 +240,8 @@ export default function CreateTournamentPage() {
         location:        location.trim(),
         inscription_fee: Number(inscriptionFee),
         sport_id:        sportId,
-        start_date:      startDate || null,
-        end_date:        endDate   || null,
+        start_date:      startDate,
+        end_date:        endDate,
         scoring_config:  normalizeScoringConfig(scoringConfig),
         status: 'inscription',
       }
@@ -350,17 +254,54 @@ export default function CreateTournamentPage() {
 
       if (tErr) throw tErr
 
-      const courtsPayload = courts.map(c => ({
-        tournament_id:  tournament.id,
-        name:           c.name.trim(),
-        available_from: c.available_from,
-        available_to:   c.available_to,
-        break_start:    c.has_break ? c.break_start : null,
-        break_end:      c.has_break ? c.break_end   : null,
+      // Insert tournament_days
+      const daysPayload = sortedDays.map((d, i) => ({
+        tournament_id: tournament.id,
+        day_date:      d,
+        day_order:     i + 1,
       }))
+      const { error: daysErr } = await supabase.from('tournament_days').insert(daysPayload)
+      if (daysErr) throw daysErr
 
-      const { error: cErr } = await supabase.from('courts').insert(courtsPayload)
+      // Build courts payload with fallback from first configured schedule
+      const courtsPayload = courts.map(c => {
+        const scheduleKeys = Object.keys(c.schedules || {})
+        const firstSched = scheduleKeys.length > 0 ? c.schedules[scheduleKeys[0]] : null
+        return {
+          tournament_id:  tournament.id,
+          name:           c.name.trim(),
+          available_from: firstSched?.available_from || '08:00',
+          available_to:   firstSched?.available_to   || '22:00',
+          break_start:    firstSched?.has_break ? firstSched.break_start : null,
+          break_end:      firstSched?.has_break ? firstSched.break_end   : null,
+        }
+      })
+
+      const { data: insertedCourts, error: cErr } = await supabase
+        .from('courts')
+        .insert(courtsPayload)
+        .select('id')
       if (cErr) throw cErr
+
+      // Insert court_schedules for each court
+      const schedulesPayload = []
+      insertedCourts.forEach((dbCourt, idx) => {
+        const courtData = courts[idx]
+        for (const [dow, sched] of Object.entries(courtData.schedules || {})) {
+          schedulesPayload.push({
+            court_id:       dbCourt.id,
+            day_of_week:    Number(dow),
+            available_from: sched.available_from,
+            available_to:   sched.available_to,
+            break_start:    sched.has_break ? sched.break_start : null,
+            break_end:      sched.has_break ? sched.break_end   : null,
+          })
+        }
+      })
+      if (schedulesPayload.length > 0) {
+        const { error: csErr } = await supabase.from('court_schedules').insert(schedulesPayload)
+        if (csErr) throw csErr
+      }
 
       const categoriesPayload = categories.map(cat => ({
         tournament_id: tournament.id,
@@ -407,10 +348,9 @@ export default function CreateTournamentPage() {
               setDescription('')
               setLocation('')
               setInscriptionFee('')
-              setStartDate('')
-              setEndDate('')
+              setSelectedDays([])
               setScoringConfig(null)
-              setCategories([{ ...DEFAULT_CATEGORY }])
+              setCategories([])
               setCourts([{ ...DEFAULT_COURT }])
               setError('')
             }}
@@ -503,52 +443,21 @@ export default function CreateTournamentPage() {
               )}
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <FieldLabel>Fecha inicio</FieldLabel>
-                <Input type="date" value={startDate}
-                  onChange={e => setStartDate(e.target.value)} />
-              </div>
-              <div>
-                <FieldLabel>Fecha fin</FieldLabel>
-                <Input type="date" value={endDate}
-                  onChange={e => setEndDate(e.target.value)} />
-              </div>
-            </div>
+            <TournamentCalendar
+              selectedDays={selectedDays}
+              onChange={setSelectedDays}
+            />
           </SectionCard>
 
           <SectionCard title="Formato de puntuación">
             <ScoringSystemSelector value={scoringConfig} onChange={setScoringConfig} />
           </SectionCard>
 
-          <SectionCard title="Categorías y Cupos">
-            <div className="space-y-3">
-              {categories.map((category, i) => (
-                <CategoryCard
-                  key={i}
-                  category={category}
-                  index={i}
-                  onChange={updateCategory}
-                  onRemove={removeCategory}
-                  canRemove={categories.length > 1}
-                />
-              ))}
-            </div>
-
-            <button
-              type="button"
-              onClick={addCategory}
-              className="w-full py-3 rounded-xl border border-dashed text-sm font-medium
-                transition-all duration-200 flex items-center justify-center gap-2"
-              style={{ borderColor: '#E0E2E6', color: '#6B7280' }}
-            >
-              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={2}
-                className="w-4 h-4" strokeLinecap="round">
-                <circle cx="8" cy="8" r="6"/>
-                <path d="M8 5v6M5 8h6"/>
-              </svg>
-              Agregar categoría
-            </button>
+          <SectionCard title="Categorias y Cupos">
+            <CategorySelector
+              categories={categories}
+              onChange={setCategories}
+            />
           </SectionCard>
 
           <SectionCard title="Canchas y horarios">
@@ -561,6 +470,7 @@ export default function CreateTournamentPage() {
                   onChange={updateCourt}
                   onRemove={removeCourt}
                   canRemove={courts.length > 1}
+                  selectedDays={selectedDays}
                 />
               ))}
             </div>
@@ -581,13 +491,6 @@ export default function CreateTournamentPage() {
             </button>
           </SectionCard>
 
-          {startDate && endDate && startDate > endDate && (
-            <div className="rounded-xl px-4 py-3"
-                 style={{ background: '#FEF2F2', border: '1px solid #FECACA' }}>
-              <p className="text-red-500 text-xs leading-relaxed">La fecha de inicio debe ser anterior a la fecha de fin.</p>
-            </div>
-          )}
-
           {error && (
             <div className="rounded-xl px-4 py-3"
                  style={{ background: '#FEF2F2', border: '1px solid #FECACA' }}>
@@ -603,12 +506,12 @@ export default function CreateTournamentPage() {
               || !location.trim()
               || !(Number(inscriptionFee) > 0)
               || !sportId
-              || !startDate
-              || !endDate
-              || (startDate > endDate)
+              || selectedDays.length === 0
               || !scoringConfig
-              || categories.some(c => !c.name.trim())
+              || categories.length === 0
               || courts.some(c => !c.name.trim())
+              || courts.some(c => !allWeekdaysConfigured(selectedDays, c.schedules))
+              || courts.some(c => hasScheduleErrors(c.schedules || {}))
             }
             className="w-full text-white font-semibold py-4 rounded-xl
               transition-all duration-200 text-sm tracking-wide
