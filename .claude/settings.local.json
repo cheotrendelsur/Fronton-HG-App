@@ -32,7 +32,11 @@
       "Bash(node test-swap.mjs)",
       "Bash(node test-e2e-phase5.mjs)",
       "Bash(xargs grep:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(grep -E \"\\\\.\\(jsx|js\\)$\")",
+      "Bash(grep:*)"
     ]
   }
 }
