@@ -74,7 +74,8 @@ export default function PointsScoringForm({ value, onChange }) {
       </div>
 
       <div>
-        <label className={LABEL}>Regla de cierre</label>
+        <label className="block text-[10px] font-semibold uppercase tracking-widest mb-1.5"
+               style={{ color: '#6B7280' }}>Regla de cierre</label>
         <ClosingRuleSwitch value={closingRule} onChange={setClosingRule} />
       </div>
     </div>
