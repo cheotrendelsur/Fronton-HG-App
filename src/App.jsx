@@ -10,6 +10,7 @@ import CreateTournamentPage from './pages/CreateTournamentPage'
 import OrganizerHubPage     from './pages/OrganizerHubPage'
 import ResultsInputPage     from './pages/ResultsInputPage'
 import AdminPanelPage       from './pages/AdminPanelPage'
+import ProfilePage          from './pages/ProfilePage'
 import TournamentsPage          from './pages/TournamentsPage'
 import ActiveTournamentPage     from './pages/ActiveTournamentPage'
 import TournamentManagePage     from './pages/TournamentManagePage'
@@ -92,7 +93,7 @@ function AppRoutes() {
       }/>
 
       <Route path="/profile" element={
-        <ProtectedRoute><PlaceholderPage title="Perfil" /></ProtectedRoute>
+        <ProtectedRoute><ProfilePage /></ProtectedRoute>
       }/>
 
       <Route path="/tournament/:id/active" element={
