@@ -2,9 +2,10 @@ import { useState, useCallback, useRef } from 'react'
 import usePlayerContext from '../../hooks/usePlayerContext'
 import TournamentSearch from '../../components/Player/TournamentSearch'
 import TournamentDirectory from '../../components/Player/TournamentDirectory'
+import InscriptionFlowModal from '../../components/Player/inscription/InscriptionFlowModal'
 
 export default function PlayerTournaments() {
-  const { playerRegistrations, refetch } = usePlayerContext()
+  const { playerId, playerRegistrations, refetch } = usePlayerContext()
   const [filters, setFilters] = useState({
     text: '',
     statuses: [],
@@ -13,6 +14,7 @@ export default function PlayerTournaments() {
   })
   const [pullState, setPullState] = useState('idle')
   const [refreshKey, setRefreshKey] = useState(0)
+  const [selectedTournament, setSelectedTournament] = useState(null)
   const startYRef = useRef(0)
   const mainRef = useRef(null)
 
@@ -68,7 +70,18 @@ export default function PlayerTournaments() {
         key={refreshKey}
         filters={filters}
         playerRegistrationIds={playerRegistrationIds}
+        onInscribe={(tournament) => setSelectedTournament(tournament)}
       />
+
+      {/* Inscription modal */}
+      {selectedTournament && (
+        <InscriptionFlowModal
+          tournament={selectedTournament}
+          playerId={playerId}
+          onClose={() => setSelectedTournament(null)}
+          onSuccess={() => { refetch(); setRefreshKey(k => k + 1) }}
+        />
+      )}
     </div>
   )
 }

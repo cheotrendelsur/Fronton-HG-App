@@ -27,7 +27,7 @@ const GRADIENTS = [
   'linear-gradient(135deg, #2A5A8C 0%, #1B3A5C 100%)',
 ]
 
-export default function TournamentDirectory({ filters, playerRegistrationIds }) {
+export default function TournamentDirectory({ filters, playerRegistrationIds, onInscribe }) {
   const [tournaments, setTournaments] = useState([])
   const [loading, setLoading] = useState(true)
   const [visibleCount, setVisibleCount] = useState(10)
@@ -234,6 +234,24 @@ export default function TournamentDirectory({ filters, playerRegistrationIds }) 
                   {catCount} {catCount === 1 ? 'categoria' : 'categorias'}
                 </span>
               </div>
+
+              {/* Inscription button */}
+              {t.status === 'inscription' && !isInscribed && onInscribe && (
+                <button
+                  onClick={(e) => { e.stopPropagation(); onInscribe(t) }}
+                  aria-label="Solicitar inscripcion"
+                  style={{
+                    marginTop: '10px', width: '100%',
+                    background: '#6BB3D9', color: '#FFFFFF',
+                    border: 'none', borderRadius: '10px', padding: '10px',
+                    fontSize: '13px', fontWeight: 600, cursor: 'pointer',
+                    boxShadow: '0 0 12px rgba(107,179,217,0.15)',
+                    transition: 'all 200ms',
+                  }}
+                >
+                  Solicitar Inscripcion
+                </button>
+              )}
             </div>
           </button>
         )
