@@ -172,7 +172,7 @@ export default function AuthPage() {
       {/* Footer */}
       <div className="pb-12 text-center">
         <p className="text-ink-muted text-xs">
-          Frontón · Pádel · Tenis
+          Frontón
         </p>
       </div>
     </div>
