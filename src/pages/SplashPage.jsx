@@ -112,7 +112,7 @@ export default function SplashPage({ onDone }) {
           className={phase === 'exit' ? 'splash-sub-exit' : 'splash-sub-enter'}
           style={{
             color: '#6B7280',
-            fontSize: '13px',
+            fontSize: '18px',
             fontStyle: 'italic',
             fontFamily: "'DM Sans', system-ui, sans-serif",
             margin: 0,
@@ -126,7 +126,7 @@ export default function SplashPage({ onDone }) {
           className={phase === 'exit' ? 'splash-sub-exit' : 'splash-sub-enter'}
           style={{
             color: '#4B5563',
-            fontSize: '10px',
+            fontSize: '14px',
             fontFamily: "'DM Sans', system-ui, sans-serif",
             margin: 0,
             animationDelay: phase === 'exit' ? '0s' : '0.7s',

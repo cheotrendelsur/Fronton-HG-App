@@ -241,11 +241,7 @@ export default function PlayerProfile() {
 
   async function handleSignOut() {
     setSigningOut(true)
-    if (USE_MOCK) {
-      setToast({ message: 'Cerrando sesión...', type: 'info' })
-      setTimeout(() => navigate('/', { replace: true }), 1000)
-      return
-    }
+    setToast({ message: 'Cerrando sesión...', type: 'info' })
     try {
       const { supabase } = await import('../../lib/supabaseClient')
       await supabase.auth.signOut()
