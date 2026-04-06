@@ -1,26 +1,40 @@
 import { useState, useRef } from 'react'
-import { supabase } from '../../lib/supabaseClient'
+import { mockCurrentPlayer } from '../../mockData'
+
+const USE_MOCK = true // Cambiar a false cuando se conecte Supabase
 
 export default function ProfileHeader({ profile, onAvatarUpdated }) {
   const [uploading, setUploading] = useState(false)
   const [previewUrl, setPreviewUrl] = useState(null)
+  const [toast, setToast] = useState(null)
   const fileRef = useRef(null)
 
   const avatarUrl = previewUrl || profile?.avatar_url
   const username = profile?.username || 'Jugador'
   const email = profile?.email || ''
+  const status = profile?.status || mockCurrentPlayer.status
   const initial = username.charAt(0).toUpperCase()
 
+  function handleCameraClick() {
+    if (USE_MOCK) {
+      setToast('Funcionalidad próximamente')
+      setTimeout(() => setToast(null), 2500)
+      return
+    }
+    fileRef.current?.click()
+  }
+
   async function handleFileChange(e) {
+    if (USE_MOCK) return
     const file = e.target.files?.[0]
     if (!file || !profile?.id) return
 
-    // Preview immediately
     const localUrl = URL.createObjectURL(file)
     setPreviewUrl(localUrl)
 
     setUploading(true)
     try {
+      const { supabase } = await import('../../lib/supabaseClient')
       const ext = file.name.split('.').pop()
       const filePath = `${profile.id}/avatar.${ext}`
 
@@ -61,7 +75,27 @@ export default function ProfileHeader({ profile, onAvatarUpdated }) {
       padding: '32px 16px 24px',
       background: 'linear-gradient(180deg, #E8F4FA 0%, #F2F3F5 100%)',
       borderRadius: '0 0 24px 24px',
+      position: 'relative',
     }}>
+      {/* Toast */}
+      {toast && (
+        <div className="profile-toast-enter" style={{
+          position: 'absolute',
+          top: '8px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          background: '#EFF6FF',
+          border: '1px solid #BFDBFE',
+          borderRadius: '10px',
+          padding: '6px 16px',
+          zIndex: 10,
+        }}>
+          <span style={{ color: '#3B82F6', fontSize: '12px', fontWeight: 500, fontFamily: 'DM Sans, sans-serif' }}>
+            {toast}
+          </span>
+        </div>
+      )}
+
       {/* Avatar */}
       <div style={{ position: 'relative', marginBottom: '16px' }}>
         <div style={{
@@ -96,7 +130,7 @@ export default function ProfileHeader({ profile, onAvatarUpdated }) {
 
         {/* Camera button */}
         <button
-          onClick={() => fileRef.current?.click()}
+          onClick={handleCameraClick}
           disabled={uploading}
           aria-label="Cambiar avatar"
           style={{
@@ -128,16 +162,18 @@ export default function ProfileHeader({ profile, onAvatarUpdated }) {
           )}
         </button>
 
-        <input
-          ref={fileRef}
-          type="file"
-          accept="image/*"
-          onChange={handleFileChange}
-          style={{ display: 'none' }}
-        />
+        {!USE_MOCK && (
+          <input
+            ref={fileRef}
+            type="file"
+            accept="image/*"
+            onChange={handleFileChange}
+            style={{ display: 'none' }}
+          />
+        )}
       </div>
 
-      {/* Name + email */}
+      {/* Name + email + badge */}
       <p style={{
         color: '#1F2937',
         fontSize: '20px',
@@ -153,9 +189,24 @@ export default function ProfileHeader({ profile, onAvatarUpdated }) {
         fontSize: '13px',
         fontWeight: 400,
         fontFamily: 'DM Sans, sans-serif',
+        marginBottom: '8px',
       }}>
         {email}
       </p>
+
+      {/* Status badge */}
+      <span style={{
+        fontSize: '10px',
+        fontWeight: 600,
+        background: '#F0FDF4',
+        color: '#16A34A',
+        border: '1px solid #BBF7D0',
+        borderRadius: '6px',
+        padding: '3px 10px',
+        textTransform: 'capitalize',
+      }}>
+        {status === 'active' ? 'Activo' : status}
+      </span>
     </div>
   )
 }

@@ -68,7 +68,9 @@ export default function OnboardingPage() {
     setBusy(true)
     try {
       await completeOnboarding(username.trim().toLowerCase(), selectedRole)
-      navigate('/dashboard', { replace: true })
+      // TASK-12: Redirigir jugadores al portal nuevo
+      const dest = selectedRole === 'player' ? '/player' : '/dashboard'
+      navigate(dest, { replace: true })
     } catch (err) {
       setError(
         err.message?.includes('duplicate') || err.message?.includes('unique')

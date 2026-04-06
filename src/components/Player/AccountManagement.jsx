@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react'
-import { supabase } from '../../lib/supabaseClient'
+import { mockCurrentPlayer } from '../../mockData'
+
+const USE_MOCK = true // Cambiar a false cuando se conecte Supabase
 
 function Toast({ message, type, onClose }) {
   useEffect(() => {
@@ -7,9 +9,9 @@ function Toast({ message, type, onClose }) {
     return () => clearTimeout(t)
   }, [onClose])
 
-  const bg = type === 'success' ? '#F0FDF4' : '#FEF2F2'
-  const border = type === 'success' ? '#BBF7D0' : '#FECACA'
-  const color = type === 'success' ? '#16A34A' : '#EF4444'
+  const bg = type === 'success' ? '#F0FDF4' : type === 'info' ? '#EFF6FF' : '#FEF2F2'
+  const border = type === 'success' ? '#BBF7D0' : type === 'info' ? '#BFDBFE' : '#FECACA'
+  const color = type === 'success' ? '#16A34A' : type === 'info' ? '#3B82F6' : '#EF4444'
 
   return (
     <div className="profile-toast-enter" style={{
@@ -48,10 +50,15 @@ export default function AccountManagement({ profile, onProfileUpdated }) {
   const [pwdErrors, setPwdErrors] = useState({})
   const [pwdSaving, setPwdSaving] = useState(false)
 
-  const hasChanges = username !== (profile?.username || '') || email !== (profile?.email || '')
+  const initialUsername = USE_MOCK ? mockCurrentPlayer.username : (profile?.username || '')
+  const initialEmail = USE_MOCK ? mockCurrentPlayer.email : (profile?.email || '')
+  const hasChanges = username !== initialUsername || email !== initialEmail
 
   useEffect(() => {
-    if (profile) {
+    if (USE_MOCK) {
+      setUsername(mockCurrentPlayer.username)
+      setEmail(mockCurrentPlayer.email)
+    } else if (profile) {
       setUsername(profile.username || '')
       setEmail(profile.email || '')
     }
@@ -74,8 +81,20 @@ export default function AccountManagement({ profile, onProfileUpdated }) {
     if (Object.keys(errs).length) return
 
     setSaving(true)
+
+    if (USE_MOCK) {
+      // Simulated save
+      setTimeout(() => {
+        setSaving(false)
+        setToast({ message: 'Cambios guardados', type: 'success' })
+        onProfileUpdated?.({ ...profile, username: username.trim(), email: email.trim() })
+      }, 1000)
+      return
+    }
+
+    // Real Supabase logic preserved
     try {
-      // Check username uniqueness if changed
+      const { supabase } = await import('../../lib/supabaseClient')
       if (username !== profile?.username) {
         const { data: existing } = await supabase
           .from('profiles')
@@ -90,7 +109,6 @@ export default function AccountManagement({ profile, onProfileUpdated }) {
         }
       }
 
-      // Update profile
       const { error: profileErr } = await supabase
         .from('profiles')
         .update({ username: username.trim(), email: email.trim() })
@@ -98,7 +116,6 @@ export default function AccountManagement({ profile, onProfileUpdated }) {
 
       if (profileErr) throw profileErr
 
-      // Update auth email if changed
       if (email.trim() !== profile?.email) {
         const { error: authErr } = await supabase.auth.updateUser({ email: email.trim() })
         if (authErr) throw authErr
@@ -116,6 +133,7 @@ export default function AccountManagement({ profile, onProfileUpdated }) {
 
   function validatePasswords() {
     const errs = {}
+    if (!passwords.current) errs.current = 'Ingresa tu contraseña actual'
     if (!passwords.newPwd) errs.newPwd = 'Ingresa la nueva contraseña'
     if (passwords.newPwd.length > 0 && passwords.newPwd.length < 6) errs.newPwd = 'Mínimo 6 caracteres'
     if (passwords.newPwd !== passwords.confirm) errs.confirm = 'Las contraseñas no coinciden'
@@ -128,7 +146,20 @@ export default function AccountManagement({ profile, onProfileUpdated }) {
     if (Object.keys(errs).length) return
 
     setPwdSaving(true)
+
+    if (USE_MOCK) {
+      setTimeout(() => {
+        setPwdSaving(false)
+        setToast({ message: 'Funcionalidad próximamente', type: 'info' })
+        setShowPasswordForm(false)
+        setPasswords({ current: '', newPwd: '', confirm: '' })
+        setPwdErrors({})
+      }, 800)
+      return
+    }
+
     try {
+      const { supabase } = await import('../../lib/supabaseClient')
       const { error } = await supabase.auth.updateUser({ password: passwords.newPwd })
       if (error) throw error
       setToast({ message: 'Contraseña actualizada correctamente', type: 'success' })
@@ -154,6 +185,7 @@ export default function AccountManagement({ profile, onProfileUpdated }) {
     fontFamily: 'DM Sans, sans-serif',
     outline: 'none',
     transition: 'border-color 200ms',
+    boxSizing: 'border-box',
   })
 
   const labelStyle = {
@@ -308,6 +340,22 @@ export default function AccountManagement({ profile, onProfileUpdated }) {
             gap: '16px',
             animation: 'playerPageEnter 200ms ease-out both',
           }}>
+            {/* Current password */}
+            <div>
+              <label style={labelStyle}>Contraseña actual</label>
+              <input
+                type="password"
+                value={passwords.current}
+                onChange={e => { setPasswords(p => ({ ...p, current: e.target.value })); setPwdErrors(p => ({ ...p, current: undefined })) }}
+                placeholder="Tu contraseña actual"
+                style={inputStyle(pwdErrors.current)}
+                onFocus={e => e.target.style.borderColor = '#6BB3D9'}
+                onBlur={e => e.target.style.borderColor = pwdErrors.current ? '#EF4444' : '#E0E2E6'}
+              />
+              {pwdErrors.current && <p style={errorStyle}>{pwdErrors.current}</p>}
+            </div>
+
+            {/* New password */}
             <div>
               <label style={labelStyle}>Nueva contraseña</label>
               <input
@@ -322,6 +370,7 @@ export default function AccountManagement({ profile, onProfileUpdated }) {
               {pwdErrors.newPwd && <p style={errorStyle}>{pwdErrors.newPwd}</p>}
             </div>
 
+            {/* Confirm password */}
             <div>
               <label style={labelStyle}>Confirmar contraseña</label>
               <input

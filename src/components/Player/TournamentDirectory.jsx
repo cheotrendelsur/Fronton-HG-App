@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { supabase } from '../../lib/supabaseClient'
+import { mockTournaments, mockPlayerRegistrations } from '../../mockData'
+
+const USE_MOCK = true // Cambiar a false cuando se conecte Supabase
 
 const STATUS_BADGES = {
   inscription: { label: 'Inscripcion', bg: '#F0FDF4', color: '#16A34A', border: '#BBF7D0' },
@@ -34,8 +36,63 @@ export default function TournamentDirectory({ filters, playerRegistrationIds, on
   const navigate = useNavigate()
 
   useEffect(() => {
+    if (USE_MOCK) {
+      // Filter mock tournaments
+      let filtered = [...mockTournaments]
+
+      // Text filter
+      if (filters.text) {
+        const q = filters.text.toLowerCase()
+        filtered = filtered.filter(t => t.name.toLowerCase().includes(q))
+      }
+
+      // Status filter
+      if (filters.statuses?.length) {
+        filtered = filtered.filter(t => filters.statuses.includes(t.status))
+      }
+
+      // Date filters
+      if (filters.dateFrom) {
+        filtered = filtered.filter(t => t.startDate >= filters.dateFrom)
+      }
+      if (filters.dateTo) {
+        filtered = filtered.filter(t => t.endDate <= filters.dateTo)
+      }
+
+      // Sort: inscription first, then active, then finished
+      const order = { inscription: 0, active: 1, finished: 2 }
+      filtered.sort((a, b) => (order[a.status] ?? 9) - (order[b.status] ?? 9))
+
+      // Adapt mock shape to match what the cards expect
+      const adapted = filtered.map(t => ({
+        id: t.id,
+        name: t.name,
+        status: t.status,
+        start_date: t.startDate,
+        end_date: t.endDate,
+        location: t.location,
+        inscription_fee: t.inscriptionFee,
+        description: t.description,
+        cover_image_url: t.coverImageUrl,
+        categories: t.categories,
+        courts: t.courts,
+        // Mock inscribed check
+        _mockInscribed: mockPlayerRegistrations.some(r => r.tournamentId === t.id),
+        // Extra mock fields for detail page
+        prizeDescription: t.prizeDescription,
+        rulesSummary: t.rulesSummary,
+      }))
+
+      setTournaments(adapted)
+      setLoading(false)
+      setVisibleCount(10)
+      return
+    }
+
+    // Real Supabase logic preserved below
     async function fetch() {
       setLoading(true)
+      const { supabase } = await import('../../lib/supabaseClient')
       let query = supabase
         .from('tournaments')
         .select(`
@@ -47,28 +104,14 @@ export default function TournamentDirectory({ filters, playerRegistrationIds, on
         .in('status', ['inscription', 'active', 'finished'])
         .order('created_at', { ascending: false })
 
-      // Text filter
-      if (filters.text) {
-        query = query.ilike('name', `%${filters.text}%`)
-      }
-
-      // Status filter
-      if (filters.statuses?.length) {
-        query = query.in('status', filters.statuses)
-      }
-
-      // Date filters
-      if (filters.dateFrom) {
-        query = query.gte('start_date', filters.dateFrom)
-      }
-      if (filters.dateTo) {
-        query = query.lte('end_date', filters.dateTo)
-      }
+      if (filters.text) query = query.ilike('name', `%${filters.text}%`)
+      if (filters.statuses?.length) query = query.in('status', filters.statuses)
+      if (filters.dateFrom) query = query.gte('start_date', filters.dateFrom)
+      if (filters.dateTo) query = query.lte('end_date', filters.dateTo)
 
       const { data, error } = await query.limit(50)
 
       if (!error && data) {
-        // Sort: inscription first, then active, then finished
         const order = { inscription: 0, active: 1, finished: 2, draft: 3 }
         data.sort((a, b) => (order[a.status] ?? 9) - (order[b.status] ?? 9))
         setTournaments(data)
@@ -124,31 +167,36 @@ export default function TournamentDirectory({ filters, playerRegistrationIds, on
   const visible = tournaments.slice(0, visibleCount)
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', padding: '12px 0' }}>
+    <div style={{
+      display: 'grid',
+      gridTemplateColumns: 'repeat(1, 1fr)',
+      gap: '12px',
+      padding: '12px 0',
+    }}
+    className="tournament-grid"
+    >
       {visible.map((t, i) => {
         const badge = STATUS_BADGES[t.status] ?? STATUS_BADGES.draft
         const catCount = t.categories?.length ?? 0
-        const isInscribed = t.tournament_registrations?.some(
-          r => r.status === 'approved' && playerRegistrationIds?.includes(r.id)
-        )
+        const isInscribed = USE_MOCK
+          ? t._mockInscribed
+          : t.tournament_registrations?.some(
+              r => r.status === 'approved' && playerRegistrationIds?.includes(r.id)
+            )
         const gradient = GRADIENTS[i % GRADIENTS.length]
 
         return (
           <button
             key={t.id}
             onClick={() => navigate(`/player/torneos/${t.id}`)}
-            className="player-stagger-enter"
+            className="player-stagger-enter player-card-press"
             style={{
               background: '#FFFFFF', border: '1px solid #E8EAEE',
               borderRadius: '16px', overflow: 'hidden',
               boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
               cursor: 'pointer', textAlign: 'left', width: '100%',
-              transition: 'transform 150ms',
               animationDelay: `${i * 60}ms`,
             }}
-            onPointerDown={e => e.currentTarget.style.transform = 'scale(0.98)'}
-            onPointerUp={e => e.currentTarget.style.transform = 'scale(1)'}
-            onPointerLeave={e => e.currentTarget.style.transform = 'scale(1)'}
           >
             {/* Cover */}
             <div style={{
@@ -266,6 +314,7 @@ export default function TournamentDirectory({ filters, playerRegistrationIds, on
             border: 'none', borderRadius: '12px', padding: '12px',
             fontSize: '13px', fontWeight: 500, cursor: 'pointer',
             width: '100%', textAlign: 'center',
+            gridColumn: '1 / -1',
           }}
         >
           Cargar mas ({tournaments.length - visibleCount} restantes)

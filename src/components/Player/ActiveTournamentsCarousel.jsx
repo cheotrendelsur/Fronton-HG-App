@@ -1,5 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { supabase } from '../../lib/supabaseClient'
+import { mockTournaments, mockPlayerRegistrations } from '../../mockData'
+
+const USE_MOCK = true // Cambiar a false cuando se conecte Supabase
 
 function formatDateShort(dateStr) {
   if (!dateStr) return ''
@@ -21,6 +23,34 @@ export default function ActiveTournamentsCarousel({ playerRegistrations, loading
   const scrollRef = useRef(null)
 
   useEffect(() => {
+    if (USE_MOCK) {
+      // Build active tournaments from mock data
+      // Find tournament IDs where the player has registrations
+      const regTournamentIds = [...new Set(mockPlayerRegistrations.map(r => r.tournamentId))]
+      const activeTournaments = mockTournaments
+        .filter(t => t.status === 'active' && regTournamentIds.includes(t.id))
+        .map(t => {
+          const playerRegs = mockPlayerRegistrations.filter(r => r.tournamentId === t.id)
+          const categories = playerRegs.map(r => r.categoryName)
+          return {
+            id: t.id,
+            name: t.name,
+            status: t.status,
+            start_date: t.startDate,
+            end_date: t.endDate,
+            categories,
+            totalMatches: t.progress.total,
+            completedMatches: t.progress.completed,
+            progress: t.progress.percentage,
+          }
+        })
+
+      setTournaments(activeTournaments)
+      setLoading(false)
+      return
+    }
+
+    // Real Supabase logic preserved below
     if (!playerRegistrations?.length) {
       setTournaments([])
       setLoading(false)
@@ -29,6 +59,7 @@ export default function ActiveTournamentsCarousel({ playerRegistrations, loading
 
     async function fetch() {
       setLoading(true)
+      const { supabase } = await import('../../lib/supabaseClient')
 
       // Group registrations by tournament
       const byTournament = {}
@@ -113,14 +144,14 @@ export default function ActiveTournamentsCarousel({ playerRegistrations, loading
           msOverflowStyle: 'none',
         }}
       >
-        {tournaments.map((t, i) => {
+        {tournaments.map((t) => {
           const badge = STATUS_BADGES[t.status] ?? STATUS_BADGES.active
           return (
             <div
               key={t.id}
               className="player-card-press"
               style={{
-                flex: '0 0 85%',
+                flex: tournaments.length === 1 ? '0 0 100%' : '0 0 85%',
                 scrollSnapAlign: 'center',
                 background: '#FFFFFF',
                 border: '1px solid #E8EAEE',
@@ -128,7 +159,6 @@ export default function ActiveTournamentsCarousel({ playerRegistrations, loading
                 borderRadius: '16px',
                 padding: '16px',
                 boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
-                ...(tournaments.length === 1 ? { flex: '0 0 100%' } : {}),
               }}
             >
               {/* Tournament name + badge */}

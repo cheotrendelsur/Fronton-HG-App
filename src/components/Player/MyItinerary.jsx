@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react'
-import { supabase } from '../../lib/supabaseClient'
+import { mockScheduledMatches } from '../../mockData'
+
+const USE_MOCK = true // Cambiar a false cuando se conecte Supabase
 
 const PHASE_LABELS = {
   group_phase: 'Grupos',
@@ -30,6 +32,28 @@ export default function MyItinerary({ tournamentId, categoryId, registrationIds 
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    if (USE_MOCK) {
+      // Filter mock matches by tournament and category
+      const filtered = mockScheduledMatches.filter(m =>
+        m.tournamentId === tournamentId &&
+        m.categoryId === categoryId &&
+        m.status === 'scheduled'
+      ).map(m => ({
+        id: m.id,
+        phase: m.phase,
+        status: m.status,
+        scheduled_date: m.scheduledDate,
+        scheduled_time: m.scheduledTime,
+        team1Name: m.team1Name,
+        team2Name: m.team2Name,
+        courtName: m.courtName,
+      }))
+      setMatches(filtered)
+      setLoading(false)
+      return
+    }
+
+    // Real Supabase logic preserved below
     if (!tournamentId || !categoryId || !registrationIds?.length) {
       setMatches([])
       setLoading(false)
@@ -38,6 +62,7 @@ export default function MyItinerary({ tournamentId, categoryId, registrationIds 
 
     async function fetch() {
       setLoading(true)
+      const { supabase } = await import('../../lib/supabaseClient')
       const { data, error } = await supabase
         .from('tournament_matches')
         .select(`
@@ -54,7 +79,13 @@ export default function MyItinerary({ tournamentId, categoryId, registrationIds 
         .order('scheduled_date', { ascending: true })
         .order('scheduled_time', { ascending: true })
 
-      setMatches(!error ? (data ?? []) : [])
+      const result = (!error ? (data ?? []) : []).map(m => ({
+        ...m,
+        team1Name: m.team1?.team_name ?? null,
+        team2Name: m.team2?.team_name ?? null,
+        courtName: m.courts?.name ?? null,
+      }))
+      setMatches(result)
       setLoading(false)
     }
 
@@ -104,8 +135,8 @@ export default function MyItinerary({ tournamentId, categoryId, registrationIds 
       {matches.map((m, i) => {
         const phaseLabel = PHASE_LABELS[m.phase] ?? m.phase
         const statusStyle = STATUS_STYLES[m.status] ?? STATUS_STYLES.pending
-        const team1 = m.team1?.team_name ?? 'Por definir'
-        const team2 = m.team2?.team_name ?? 'Por definir'
+        const team1 = m.team1Name ?? 'Por definir'
+        const team2 = m.team2Name ?? 'Por definir'
 
         return (
           <div
@@ -113,7 +144,7 @@ export default function MyItinerary({ tournamentId, categoryId, registrationIds 
             className="player-stagger-enter"
             style={{
               position: 'relative', marginBottom: '12px',
-              animationDelay: `${i * 80}ms`,
+              animationDelay: `${i * 60}ms`,
             }}
           >
             {/* Timeline dot */}
@@ -165,8 +196,8 @@ export default function MyItinerary({ tournamentId, categoryId, registrationIds 
                     {formatTime(m.scheduled_time)}
                   </span>
                 )}
-                {m.courts?.name && (
-                  <span>{m.courts.name}</span>
+                {m.courtName && (
+                  <span>{m.courtName}</span>
                 )}
               </div>
             </div>

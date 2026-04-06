@@ -75,7 +75,7 @@ function AppRoutes() {
           !session
             ? <Navigate to="/auth" replace />
             : isOnboardingComplete
-              ? <Navigate to="/dashboard" replace />
+              ? <Navigate to={homeForRole} replace />
               : <OnboardingPage />
         }
       />

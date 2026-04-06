@@ -1,5 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
-import { supabase } from '../../lib/supabaseClient'
+import { mockBracket } from '../../mockData'
+
+const USE_MOCK = true // Cambiar a false cuando se conecte Supabase
 
 const ROUND_NAMES = {
   round_of_32: '16avos',
@@ -27,6 +29,37 @@ export default function BracketView({ tournamentId, categoryId, registrationIds,
   const containerRef = useRef(null)
 
   useEffect(() => {
+    if (USE_MOCK) {
+      // Get bracket for this category
+      const bracket = mockBracket[categoryId]
+      if (!bracket?.phases?.length) {
+        setRounds([])
+        setLoading(false)
+        return
+      }
+
+      const mockRounds = bracket.phases.map((phase, ri) => ({
+        roundNumber: ri + 1,
+        phaseName: phase.name,
+        slots: phase.matches.map(m => ({
+          id: m.id,
+          team1Name: m.team1,
+          team2Name: m.team2,
+          score: m.score1 && m.score2 ? `${m.score1}-${m.score2}` : '',
+          isCompleted: m.winner != null,
+          matchWinnerId: m.winner,
+          team1_id: null,
+          team2_id: null,
+          status: m.status,
+        })),
+      }))
+
+      setRounds(mockRounds)
+      setLoading(false)
+      return
+    }
+
+    // Real Supabase logic preserved below
     if (!tournamentId || !categoryId) {
       setRounds([])
       setLoading(false)
@@ -35,8 +68,8 @@ export default function BracketView({ tournamentId, categoryId, registrationIds,
 
     async function fetch() {
       setLoading(true)
+      const { supabase } = await import('../../lib/supabaseClient')
 
-      // Fetch bracket slots
       const { data: brackets } = await supabase
         .from('tournament_bracket')
         .select(`
@@ -56,7 +89,6 @@ export default function BracketView({ tournamentId, categoryId, registrationIds,
         return
       }
 
-      // Fetch match results for completed bracket matches
       const matchIds = brackets.filter(b => b.match_id).map(b => b.match_id)
       let matchResults = {}
       if (matchIds.length) {
@@ -64,13 +96,11 @@ export default function BracketView({ tournamentId, categoryId, registrationIds,
           .from('tournament_matches')
           .select('id, score_team1, score_team2, winner_id, status')
           .in('id', matchIds)
-
         if (matches) {
           for (const m of matches) matchResults[m.id] = m
         }
       }
 
-      // Group by round
       const roundMap = {}
       for (const b of brackets) {
         if (!roundMap[b.round_number]) roundMap[b.round_number] = []
@@ -88,7 +118,6 @@ export default function BracketView({ tournamentId, categoryId, registrationIds,
       const roundList = Object.entries(roundMap)
         .sort(([a], [b]) => Number(a) - Number(b))
         .map(([roundNum, slots]) => {
-          // Determine round phase name
           const firstSlotPhase = slots[0]?.phase
           const teamsInRound = slots.length * 2
           const phaseName = ROUND_NAMES[ROUND_SIZE_TO_PHASE[teamsInRound]] ??
@@ -99,7 +128,6 @@ export default function BracketView({ tournamentId, categoryId, registrationIds,
       setRounds(roundList)
       setLoading(false)
 
-      // Auto-scroll to player's position
       if (!showAll && registrationIds?.length && containerRef.current) {
         setTimeout(() => {
           const el = containerRef.current?.querySelector('[data-player-match]')
@@ -182,11 +210,10 @@ export default function BracketView({ tournamentId, categoryId, registrationIds,
 
                 {/* Slots */}
                 {round.slots.map((slot) => {
-                  const playerInMatch = !showAll && (
+                  const playerInMatch = !showAll && !USE_MOCK && (
                     playerRegSet.has(slot.team1_id) || playerRegSet.has(slot.team2_id)
                   )
-                  const t1IsWinner = slot.matchWinnerId && slot.matchWinnerId === slot.team1_id
-                  const t2IsWinner = slot.matchWinnerId && slot.matchWinnerId === slot.team2_id
+                  const isPending = slot.status === 'pending'
 
                   return (
                     <div
@@ -196,9 +223,9 @@ export default function BracketView({ tournamentId, categoryId, registrationIds,
                         width: '148px',
                         border: playerInMatch
                           ? '2px solid #6BB3D9'
-                          : slot.isCompleted
-                            ? '1px solid #E0E2E6'
-                            : '1px dashed #D1D5DB',
+                          : isPending
+                            ? '1px dashed #D1D5DB'
+                            : '1px solid #E0E2E6',
                         borderRadius: '10px',
                         overflow: 'hidden',
                         background: playerInMatch ? 'rgba(107,179,217,0.06)' : '#FFFFFF',
@@ -208,17 +235,19 @@ export default function BracketView({ tournamentId, categoryId, registrationIds,
                       {/* Team 1 */}
                       <TeamRow
                         name={slot.team1Name}
-                        isWinner={t1IsWinner}
-                        isPlayer={!showAll && playerRegSet.has(slot.team1_id)}
-                        score={slot.score && slot.isCompleted ? slot.score.split('-')[0] : null}
+                        isWinner={false}
+                        isPlayer={false}
+                        score={null}
+                        isPending={isPending}
                       />
                       <div style={{ height: '1px', background: '#F3F4F6' }} />
                       {/* Team 2 */}
                       <TeamRow
                         name={slot.team2Name}
-                        isWinner={t2IsWinner}
-                        isPlayer={!showAll && playerRegSet.has(slot.team2_id)}
-                        score={slot.score && slot.isCompleted ? slot.score.split('-')[1] : null}
+                        isWinner={false}
+                        isPlayer={false}
+                        score={null}
+                        isPending={isPending}
                       />
                     </div>
                   )
@@ -232,7 +261,7 @@ export default function BracketView({ tournamentId, categoryId, registrationIds,
   )
 }
 
-function TeamRow({ name, isWinner, isPlayer, score }) {
+function TeamRow({ name, isWinner, isPlayer, score, isPending }) {
   return (
     <div style={{
       display: 'flex', alignItems: 'center', justifyContent: 'space-between',
@@ -245,6 +274,7 @@ function TeamRow({ name, isWinner, isPlayer, score }) {
         color: name ? (isPlayer ? '#1B3A5C' : '#1F2937') : '#9CA3AF',
         overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
         maxWidth: '100px', fontFamily: 'DM Sans, sans-serif',
+        fontStyle: isPending && !name ? 'italic' : 'normal',
       }}>
         {name ?? 'Por definir'}
       </span>

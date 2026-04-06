@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react'
-import { supabase } from '../../lib/supabaseClient'
+import { mockPlayerPreferences } from '../../mockData'
+
+const USE_MOCK = true // Cambiar a false cuando se conecte Supabase
 
 function ToggleSwitch({ checked, onChange, disabled }) {
   return (
@@ -80,16 +82,30 @@ export default function PlayerPreferences({ playerId }) {
     notify_general: true,
   })
   const [loading, setLoading] = useState(true)
-  const [saving, setSaving] = useState(false)
+  const [toast, setToast] = useState(null)
 
   useEffect(() => {
+    if (USE_MOCK) {
+      setPrefs({
+        theme: mockPlayerPreferences.theme,
+        notify_schedule_changes: mockPlayerPreferences.notifyScheduleChanges,
+        notify_setbacks: mockPlayerPreferences.notifySetbacks,
+        notify_results: mockPlayerPreferences.notifyResults,
+        notify_general: mockPlayerPreferences.notifyGeneral,
+      })
+      setLoading(false)
+      return
+    }
+
     if (!playerId) return
     loadPreferences()
   }, [playerId])
 
   async function loadPreferences() {
+    if (USE_MOCK) return
     setLoading(true)
     try {
+      const { supabase } = await import('../../lib/supabaseClient')
       const { data, error } = await supabase
         .from('player_preferences')
         .select('*')
@@ -106,14 +122,6 @@ export default function PlayerPreferences({ playerId }) {
           notify_results: data.notify_results ?? true,
           notify_general: data.notify_general ?? true,
         })
-      } else {
-        // Create default preferences
-        const { error: insertErr } = await supabase
-          .from('player_preferences')
-          .insert({ player_id: playerId })
-        if (insertErr && !insertErr.message?.includes('duplicate')) {
-          console.error('Failed to create default preferences:', insertErr)
-        }
       }
     } catch (err) {
       console.error('Load preferences error:', err)
@@ -122,29 +130,34 @@ export default function PlayerPreferences({ playerId }) {
     }
   }
 
-  async function updatePref(key, value) {
+  function updatePref(key, value) {
     const prev = prefs[key]
     setPrefs(p => ({ ...p, [key]: value }))
-    setSaving(true)
 
-    try {
-      const { error } = await supabase
-        .from('player_preferences')
-        .update({ [key]: value, updated_at: new Date().toISOString() })
-        .eq('player_id', playerId)
-
-      if (error) throw error
-
-      // Apply theme
+    if (USE_MOCK) {
       if (key === 'theme') {
-        document.documentElement.setAttribute('data-theme', value)
+        setToast('Tema oscuro próximamente')
+        setTimeout(() => setToast(null), 2500)
+        // Revert after showing toast since we're not implementing dark mode
+        setTimeout(() => setPrefs(p => ({ ...p, theme: prev })), 300)
       }
-    } catch (err) {
-      console.error('Update preference error:', err)
-      setPrefs(p => ({ ...p, [key]: prev }))
-    } finally {
-      setSaving(false)
+      return
     }
+
+    // Real Supabase update
+    ;(async () => {
+      try {
+        const { supabase } = await import('../../lib/supabaseClient')
+        const { error } = await supabase
+          .from('player_preferences')
+          .update({ [key]: value, updated_at: new Date().toISOString() })
+          .eq('player_id', playerId)
+        if (error) throw error
+      } catch (err) {
+        console.error('Update preference error:', err)
+        setPrefs(p => ({ ...p, [key]: prev }))
+      }
+    })()
   }
 
   if (loading) {
@@ -163,7 +176,28 @@ export default function PlayerPreferences({ playerId }) {
   ]
 
   return (
-    <div style={{ padding: '0 16px' }}>
+    <div style={{ padding: '0 16px', position: 'relative' }}>
+      {/* Toast */}
+      {toast && (
+        <div className="profile-toast-enter" style={{
+          position: 'fixed',
+          top: '72px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          zIndex: 100,
+          background: '#EFF6FF',
+          border: '1px solid #BFDBFE',
+          borderRadius: '12px',
+          padding: '10px 20px',
+          boxShadow: '0 4px 12px rgba(0,0,0,0.10)',
+          maxWidth: '90vw',
+        }}>
+          <span style={{ color: '#3B82F6', fontSize: '13px', fontWeight: 500, fontFamily: 'DM Sans, sans-serif' }}>
+            {toast}
+          </span>
+        </div>
+      )}
+
       {/* Theme toggle */}
       <div style={{
         background: '#FFFFFF',
@@ -193,7 +227,6 @@ export default function PlayerPreferences({ playerId }) {
             description="Cambia el tema visual de la aplicación"
             checked={prefs.theme === 'dark'}
             onChange={v => updatePref('theme', v ? 'dark' : 'light')}
-            disabled={saving}
             isLast
           />
         </div>
@@ -229,7 +262,6 @@ export default function PlayerPreferences({ playerId }) {
               description={n.description}
               checked={prefs[n.key]}
               onChange={v => updatePref(n.key, v)}
-              disabled={saving}
               isLast={i === notifications.length - 1}
             />
           ))}

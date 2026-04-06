@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
-import { supabase } from '../../lib/supabaseClient'
-import { markNotificationRead } from '../../lib/notificationPersistence'
+import { mockNotifications } from '../../mockData'
+
+const USE_MOCK = true // Cambiar a false cuando se conecte Supabase
 
 function formatRelativeTime(createdAt) {
   const now = Date.now()
@@ -79,6 +80,22 @@ export default function QuickAlerts({ playerId, onUnreadCountChange }) {
   const [dismissing, setDismissing] = useState(new Set())
 
   useEffect(() => {
+    if (USE_MOCK) {
+      // Use mock data — filter unread notifications
+      const unread = mockNotifications.filter(n => !n.read).map(n => ({
+        id: n.id,
+        type: n.type,
+        message: n.message,
+        created_at: n.createdAt,
+        read: n.read,
+      }))
+      setAlerts(unread)
+      onUnreadCountChange?.(unread.length)
+      setLoading(false)
+      return
+    }
+
+    // Real Supabase logic preserved below
     if (!playerId) {
       setAlerts([])
       setLoading(false)
@@ -87,6 +104,7 @@ export default function QuickAlerts({ playerId, onUnreadCountChange }) {
 
     async function fetch() {
       setLoading(true)
+      const { supabase } = await import('../../lib/supabaseClient')
       const { data, error } = await supabase
         .from('notifications')
         .select('*')
@@ -110,7 +128,11 @@ export default function QuickAlerts({ playerId, onUnreadCountChange }) {
 
     // Wait for slide-out animation
     setTimeout(async () => {
-      await markNotificationRead(supabase, alert.id)
+      if (!USE_MOCK) {
+        const { supabase } = await import('../../lib/supabaseClient')
+        const { markNotificationRead } = await import('../../lib/notificationPersistence')
+        await markNotificationRead(supabase, alert.id)
+      }
       setAlerts(prev => {
         const next = prev.filter(a => a.id !== alert.id)
         onUnreadCountChange?.(next.length)

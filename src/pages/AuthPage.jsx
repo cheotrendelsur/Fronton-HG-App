@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext'
 import lobo from '../assets/lobo.png'
 
 export default function AuthPage() {
-  const { signIn, signUp, session, isOnboardingComplete } = useAuth()
+  const { signIn, signUp, session, profile, isOnboardingComplete } = useAuth()
   const navigate = useNavigate()
 
   const [mode, setMode]         = useState('login')
@@ -14,7 +14,10 @@ export default function AuthPage() {
   const [busy, setBusy]         = useState(false)
 
   if (session) {
-    navigate(isOnboardingComplete ? '/dashboard' : '/onboarding', { replace: true })
+    const home = isOnboardingComplete
+      ? (profile?.role === 'player' ? '/player' : '/dashboard')
+      : '/onboarding'
+    navigate(home, { replace: true })
     return null
   }
 

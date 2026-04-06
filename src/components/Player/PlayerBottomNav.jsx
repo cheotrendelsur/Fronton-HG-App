@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
-import { supabase } from '../../lib/supabaseClient'
-import { getUnreadCount } from '../../lib/notificationPersistence'
+import { mockNotifications } from '../../mockData'
+
+const USE_MOCK = true // Cambiar a false cuando se conecte Supabase
 
 const icons = {
   home: (active) => (
@@ -51,9 +52,19 @@ export default function PlayerBottomNav() {
   const [unreadCount, setUnreadCount] = useState(0)
 
   useEffect(() => {
+    if (USE_MOCK) {
+      // Count unread mock notifications
+      const unread = mockNotifications.filter(n => !n.read).length
+      setUnreadCount(unread)
+      return
+    }
+
+    // Real Supabase logic preserved below
     if (!profile?.id) return
     let timer = null
     async function fetchCount() {
+      const { supabase } = await import('../../lib/supabaseClient')
+      const { getUnreadCount } = await import('../../lib/notificationPersistence')
       const result = await getUnreadCount(supabase, profile.id)
       if (result.success) setUnreadCount(result.count)
     }

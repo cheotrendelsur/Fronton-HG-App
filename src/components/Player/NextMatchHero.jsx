@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react'
-import { supabase } from '../../lib/supabaseClient'
+import { mockScheduledMatches } from '../../mockData'
+
+const USE_MOCK = true // Cambiar a false cuando se conecte Supabase
 
 function formatDateES(dateStr) {
   if (!dateStr) return ''
@@ -19,15 +21,24 @@ function getCountdown(dateStr, timeStr) {
   const now = new Date()
   const target = new Date(`${dateStr}T${timeStr}`)
   const diff = target - now
-  if (diff <= 0) return null
+
+  if (diff <= 0) return { text: 'Partido en curso', urgent: true }
 
   const totalMin = Math.floor(diff / 60000)
-  if (totalMin > 48 * 60) return null // only show within 48h
-
-  const hours = Math.floor(totalMin / 60)
-  const mins = totalMin % 60
   const urgent = totalMin < 60
 
+  const days = Math.floor(totalMin / (60 * 24))
+  const hours = Math.floor((totalMin % (60 * 24)) / 60)
+  const mins = totalMin % 60
+
+  // Check if today
+  const today = new Date()
+  const targetDate = new Date(dateStr + 'T00:00:00')
+  if (today.toDateString() === targetDate.toDateString()) {
+    return { text: `Hoy a las ${formatTime(timeStr)}`, urgent }
+  }
+
+  if (days > 0) return { text: `En ${days}d ${hours}h ${mins}m`, urgent }
   if (hours > 0) return { text: `En ${hours}h ${mins}m`, urgent }
   return { text: `En ${mins}m`, urgent }
 }
@@ -38,6 +49,15 @@ export default function NextMatchHero({ registrationIds, loading: parentLoading 
   const [countdown, setCountdown] = useState(null)
 
   useEffect(() => {
+    if (USE_MOCK) {
+      // Use first scheduled mock match
+      const m = mockScheduledMatches[0] ?? null
+      setMatch(m)
+      setLoading(false)
+      return
+    }
+
+    // Real Supabase logic preserved below
     if (!registrationIds?.length) {
       setLoading(false)
       setMatch(null)
@@ -46,9 +66,9 @@ export default function NextMatchHero({ registrationIds, loading: parentLoading 
 
     async function fetch() {
       setLoading(true)
+      const { supabase } = await import('../../lib/supabaseClient')
       const today = new Date().toISOString().split('T')[0]
 
-      // Get next scheduled match for any of the player's registrations
       const { data, error } = await supabase
         .from('tournament_matches')
         .select(`
@@ -81,14 +101,16 @@ export default function NextMatchHero({ registrationIds, loading: parentLoading 
 
   // Live countdown
   useEffect(() => {
-    if (!match?.scheduled_date || !match?.scheduled_time) return
+    const dateStr = USE_MOCK ? match?.scheduledDate : match?.scheduled_date
+    const timeStr = USE_MOCK ? match?.scheduledTime : match?.scheduled_time
+    if (!dateStr || !timeStr) return
     function tick() {
-      setCountdown(getCountdown(match.scheduled_date, match.scheduled_time))
+      setCountdown(getCountdown(dateStr, timeStr))
     }
     tick()
     const id = setInterval(tick, 60000)
     return () => clearInterval(id)
-  }, [match?.scheduled_date, match?.scheduled_time])
+  }, [match])
 
   if (parentLoading || loading) return <NextMatchSkeleton />
 
@@ -115,8 +137,15 @@ export default function NextMatchHero({ registrationIds, loading: parentLoading 
     )
   }
 
-  const team1Name = match.team1?.team_name ?? 'Por definir'
-  const team2Name = match.team2?.team_name ?? 'Por definir'
+  // Adapt field names based on mock vs real
+  const tournamentName = USE_MOCK ? match.tournamentName : match.tournaments?.name
+  const categoryName = USE_MOCK ? match.categoryName : match.categories?.name
+  const team1Name = USE_MOCK ? match.team1Name : (match.team1?.team_name ?? 'Por definir')
+  const team2Name = USE_MOCK ? match.team2Name : (match.team2?.team_name ?? 'Por definir')
+  const courtName = USE_MOCK ? match.courtName : match.courts?.name
+  const scheduledDate = USE_MOCK ? match.scheduledDate : match.scheduled_date
+  const scheduledTime = USE_MOCK ? match.scheduledTime : match.scheduled_time
+  const isPlayerTeam1 = USE_MOCK ? match.isPlayerTeam1 : registrationIds?.includes(match.team1_id)
 
   return (
     <div
@@ -141,15 +170,15 @@ export default function NextMatchHero({ registrationIds, loading: parentLoading 
       {/* Tournament + category */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
         <span style={{ fontSize: '13px', fontWeight: 500, opacity: 0.9 }}>
-          {match.tournaments?.name}
+          {tournamentName}
         </span>
-        {match.categories?.name && (
+        {categoryName && (
           <span style={{
             fontSize: '10px', fontWeight: 600,
             background: 'rgba(255,255,255,0.2)', borderRadius: '6px',
             padding: '2px 8px',
           }}>
-            {match.categories.name}
+            {categoryName}
           </span>
         )}
       </div>
@@ -159,7 +188,10 @@ export default function NextMatchHero({ registrationIds, loading: parentLoading 
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         gap: '12px', margin: '8px 0 16px',
       }}>
-        <span style={{ fontSize: '15px', fontWeight: 600, textAlign: 'right', flex: 1 }}>
+        <span style={{
+          fontSize: '15px', fontWeight: isPlayerTeam1 ? 700 : 500,
+          textAlign: 'right', flex: 1,
+        }}>
           {team1Name}
         </span>
         <span style={{
@@ -168,7 +200,10 @@ export default function NextMatchHero({ registrationIds, loading: parentLoading 
         }}>
           VS
         </span>
-        <span style={{ fontSize: '15px', fontWeight: 600, textAlign: 'left', flex: 1 }}>
+        <span style={{
+          fontSize: '15px', fontWeight: !isPlayerTeam1 ? 700 : 500,
+          textAlign: 'left', flex: 1,
+        }}>
           {team2Name}
         </span>
       </div>
@@ -184,20 +219,20 @@ export default function NextMatchHero({ registrationIds, loading: parentLoading 
             <rect x="3" y="4" width="18" height="18" rx="2"/>
             <path d="M16 2v4M8 2v4M3 10h18"/>
           </svg>
-          <span>{formatDateES(match.scheduled_date)}</span>
+          <span>{formatDateES(scheduledDate)}</span>
           <span style={{ fontFamily: 'DM Mono, monospace', fontWeight: 500 }}>
-            {formatTime(match.scheduled_time)}
+            {formatTime(scheduledTime)}
           </span>
         </div>
 
-        {match.courts?.name && (
+        {courtName && (
           <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}
               strokeLinecap="round" strokeLinejoin="round">
               <rect x="2" y="3" width="20" height="18" rx="2"/>
               <path d="M12 3v18M2 12h20"/>
             </svg>
-            <span>{match.courts.name}</span>
+            <span>{courtName}</span>
           </div>
         )}
       </div>

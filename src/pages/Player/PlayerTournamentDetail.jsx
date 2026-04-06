@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { supabase } from '../../lib/supabaseClient'
+import { mockTournaments, mockPlayerRegistrations } from '../../mockData'
 import usePlayerContext from '../../hooks/usePlayerContext'
 import InscriptionFlowModal from '../../components/Player/inscription/InscriptionFlowModal'
+
+const USE_MOCK = true // Cambiar a false cuando se conecte Supabase
 
 const STATUS_BADGES = {
   inscription: { label: 'Inscripcion abierta', bg: '#F0FDF4', color: '#16A34A', border: '#BBF7D0' },
@@ -53,7 +55,7 @@ function SectionCard({ title, children }) {
 export default function PlayerTournamentDetail() {
   const { tournamentId } = useParams()
   const navigate = useNavigate()
-  const { playerId, playerProfile, playerRegistrations, refetch } = usePlayerContext()
+  const { playerId, playerRegistrations, refetch } = usePlayerContext()
 
   const [tournament, setTournament] = useState(null)
   const [days, setDays] = useState([])
@@ -62,8 +64,46 @@ export default function PlayerTournamentDetail() {
   const [showInscription, setShowInscription] = useState(false)
 
   useEffect(() => {
+    if (USE_MOCK) {
+      // Find tournament in mock data
+      const found = mockTournaments.find(t => t.id === tournamentId)
+      if (found) {
+        // Adapt mock shape
+        setTournament({
+          id: found.id,
+          name: found.name,
+          status: found.status,
+          start_date: found.startDate,
+          end_date: found.endDate,
+          location: found.location,
+          inscription_fee: found.inscriptionFee,
+          description: found.description,
+          cover_image_url: found.coverImageUrl,
+          prize_description: found.prizeDescription,
+          rules_summary: found.rulesSummary,
+          categories: found.categories.map(c => ({
+            id: c.id,
+            name: c.name,
+            max_couples: c.maxCouples,
+          })),
+          courts: found.courts,
+        })
+        // Build cat counts from mock enrolledCount
+        const counts = {}
+        for (const cat of found.categories) {
+          counts[cat.id] = cat.enrolledCount
+        }
+        setCatCounts(counts)
+        setDays(found.days ? found.days.map(d => ({ day_date: d })) : [])
+      }
+      setLoading(false)
+      return
+    }
+
+    // Real Supabase logic preserved below
     async function load() {
       setLoading(true)
+      const { supabase } = await import('../../lib/supabaseClient')
 
       const { data, error } = await supabase
         .from('tournaments')
@@ -79,7 +119,6 @@ export default function PlayerTournamentDetail() {
 
       if (!error && data) setTournament(data)
 
-      // Fetch tournament_days
       const { data: daysData } = await supabase
         .from('tournament_days')
         .select('day_date')
@@ -88,7 +127,6 @@ export default function PlayerTournamentDetail() {
 
       setDays(daysData ?? [])
 
-      // Fetch approved count per category
       if (data?.categories) {
         const counts = {}
         for (const cat of data.categories) {
@@ -110,9 +148,9 @@ export default function PlayerTournamentDetail() {
   }, [tournamentId])
 
   // Player's registrations for this tournament
-  const myRegs = playerRegistrations.filter(
-    r => r.tournament_id === tournamentId
-  )
+  const myRegs = USE_MOCK
+    ? mockPlayerRegistrations.filter(r => r.tournamentId === tournamentId)
+    : playerRegistrations.filter(r => r.tournament_id === tournamentId)
 
   if (loading) {
     return (
@@ -149,11 +187,16 @@ export default function PlayerTournamentDetail() {
   const allCatsFull = categories.length > 0 && categories.every(cat =>
     cat.max_couples > 0 && (catCounts[cat.id] ?? 0) >= cat.max_couples
   )
-  const canInscribe = tournament.status === 'inscription' && !allCatsFull
+  const allCatsInscribed = USE_MOCK
+    ? categories.length > 0 && categories.every(cat =>
+        myRegs.some(r => r.categoryId === cat.id)
+      )
+    : false
+  const canInscribe = tournament.status === 'inscription' && !allCatsFull && !allCatsInscribed
 
   return (
     <div className="player-detail-enter" style={{ maxWidth: '480px', margin: '0 auto' }}>
-      {/* Cover image with parallax-like overlap */}
+      {/* Cover image */}
       <div style={{
         height: '160px', width: '100%', position: 'relative',
         background: tournament.cover_image_url
@@ -219,9 +262,9 @@ export default function PlayerTournamentDetail() {
               Estas inscrito
             </span>
             {myRegs.map(r => (
-              <div key={r.id} style={{ marginTop: '6px', fontSize: '13px', color: '#1F2937' }}>
-                <span style={{ fontWeight: 500 }}>{r.categories?.name}</span>
-                <span style={{ color: '#6B7280' }}> — {r.team_name}</span>
+              <div key={USE_MOCK ? r.id : r.id} style={{ marginTop: '6px', fontSize: '13px', color: '#1F2937' }}>
+                <span style={{ fontWeight: 500 }}>{USE_MOCK ? r.categoryName : r.categories?.name}</span>
+                <span style={{ color: '#6B7280' }}> — {USE_MOCK ? r.teamName : r.team_name}</span>
               </div>
             ))}
           </div>
@@ -283,22 +326,38 @@ export default function PlayerTournamentDetail() {
         {/* Categories */}
         <SectionCard title="Categorias">
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            {categories.map(cat => (
-              <div key={cat.id} style={{
-                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                background: '#F9FAFB', borderRadius: '10px', padding: '10px 14px',
-                border: '1px solid #E8EAEE',
-              }}>
-                <span style={{ fontSize: '13px', fontWeight: 500, color: '#1F2937' }}>{cat.name}</span>
-                <span style={{
-                  fontSize: '11px',
-                  color: (catCounts[cat.id] ?? 0) >= cat.max_couples ? '#EF4444' : '#9CA3AF',
-                  fontFamily: 'DM Mono, monospace',
+            {categories.map(cat => {
+              const count = catCounts[cat.id] ?? 0
+              const isFull = cat.max_couples > 0 && count >= cat.max_couples
+              return (
+                <div key={cat.id} style={{
+                  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                  background: '#F9FAFB', borderRadius: '10px', padding: '10px 14px',
+                  border: '1px solid #E8EAEE',
                 }}>
-                  {catCounts[cat.id] ?? 0} / {cat.max_couples} plazas
-                </span>
-              </div>
-            ))}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span style={{ fontSize: '13px', fontWeight: 500, color: '#1F2937' }}>{cat.name}</span>
+                    {isFull && (
+                      <span style={{
+                        fontSize: '9px', fontWeight: 600,
+                        background: '#FEF2F2', color: '#EF4444',
+                        border: '1px solid #FECACA',
+                        borderRadius: '4px', padding: '1px 6px',
+                      }}>
+                        Completa
+                      </span>
+                    )}
+                  </div>
+                  <span style={{
+                    fontSize: '11px',
+                    color: isFull ? '#EF4444' : '#9CA3AF',
+                    fontFamily: 'DM Mono, monospace',
+                  }}>
+                    {count}/{cat.max_couples} parejas
+                  </span>
+                </div>
+              )
+            })}
           </div>
         </SectionCard>
 
@@ -338,7 +397,7 @@ export default function PlayerTournamentDetail() {
         )}
 
         {/* Spacer for sticky button */}
-        {canInscribe && <div style={{ height: '72px' }} />}
+        {(canInscribe || allCatsInscribed) && <div style={{ height: '72px' }} />}
       </div>
 
       {/* Sticky inscription button */}
@@ -354,7 +413,7 @@ export default function PlayerTournamentDetail() {
             <button
               onClick={() => setShowInscription(true)}
               aria-label="Inscribirme en este torneo"
-              className="player-btn-ripple"
+              className="player-card-press"
               style={{
                 width: '100%', background: '#6BB3D9', color: '#FFFFFF',
                 border: 'none', borderRadius: '14px', padding: '14px',
@@ -362,23 +421,44 @@ export default function PlayerTournamentDetail() {
                 boxShadow: '0 4px 16px rgba(107,179,217,0.3)',
                 transition: 'all 200ms',
               }}
-              onPointerDown={e => e.currentTarget.style.transform = 'scale(0.97)'}
-              onPointerUp={e => e.currentTarget.style.transform = 'scale(1)'}
-              onPointerLeave={e => e.currentTarget.style.transform = 'scale(1)'}
             >
-              Solicitar Inscripcion
+              Inscribirme
             </button>
           </div>
         </div>
       )}
 
-      {/* Inscription modal — new partnership flow */}
+      {/* Disabled button if already inscribed in all categories */}
+      {allCatsInscribed && !canInscribe && tournament.status === 'inscription' && (
+        <div style={{
+          position: 'fixed', bottom: '80px', left: 0, right: 0,
+          padding: '12px 16px',
+          paddingBottom: 'env(safe-area-inset-bottom, 12px)',
+          background: 'linear-gradient(transparent, #F2F3F5 30%)',
+          zIndex: 30,
+        }}>
+          <div style={{ maxWidth: '480px', margin: '0 auto' }}>
+            <button
+              disabled
+              style={{
+                width: '100%', background: '#E5E7EB', color: '#9CA3AF',
+                border: 'none', borderRadius: '14px', padding: '14px',
+                fontSize: '15px', fontWeight: 600, cursor: 'not-allowed',
+              }}
+            >
+              Ya estas inscrito
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Inscription modal */}
       {showInscription && tournament && (
         <InscriptionFlowModal
           tournament={tournament}
-          playerId={playerId}
+          playerId={USE_MOCK ? 'mock-player-001' : playerId}
           onClose={() => setShowInscription(false)}
-          onSuccess={() => refetch()}
+          onSuccess={() => { if (!USE_MOCK) refetch() }}
         />
       )}
     </div>

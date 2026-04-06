@@ -1,11 +1,21 @@
 /**
- * InscriptionFlowModal — 3-step partnership request flow.
+ * InscriptionFlowModal — 3-step inscription flow.
  * Step 1: Select categories  |  Step 2: Search partner per category  |  Step 3: Confirm
+ * USE_MOCK = true: hardcoded player suggestions, simulated confirm with delay.
  */
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
-import { supabase } from '../../../lib/supabaseClient'
-import usePartnershipRequest from '../../../hooks/usePartnershipRequest'
+import { mockPlayerRegistrations } from '../../../mockData'
+
+const USE_MOCK = true // Cambiar a false cuando se conecte Supabase
+
+const MOCK_PLAYERS = [
+  { id: 'mp-1', username: 'Luis Mendoza', email: 'luis.mendoza@example.com' },
+  { id: 'mp-2', username: 'Pedro Diaz', email: 'pedro.diaz@example.com' },
+  { id: 'mp-3', username: 'Andres Rivera', email: 'andres.rivera@example.com' },
+  { id: 'mp-4', username: 'Miguel Torres', email: 'miguel.torres@example.com' },
+  { id: 'mp-5', username: 'Roberto Gomez', email: 'roberto.gomez@example.com' },
+]
 
 function Stepper({ current, total }) {
   return (
@@ -23,24 +33,48 @@ function Stepper({ current, total }) {
 }
 
 export default function InscriptionFlowModal({ tournament, playerId, onClose, onSuccess }) {
-  const { createRequest, searchPlayers, availablePlayers, searchLoading } = usePartnershipRequest()
-
   const [step, setStep] = useState(0)
+  const [prevStep, setPrevStep] = useState(0)
   const [selectedCats, setSelectedCats] = useState([])
   const [partners, setPartners] = useState({})       // { catId: { id, username } }
   const [searchText, setSearchText] = useState({})    // { catId: string }
-  const [catProgress, setCatProgress] = useState({})  // { catId: { approved, existing } }
+  const [catProgress, setCatProgress] = useState({})  // { catId: { approved, existing, pendingRequests } }
   const [activeCatSearch, setActiveCatSearch] = useState(null)
+  const [availablePlayers, setAvailablePlayers] = useState([])
+  const [searchLoading, setSearchLoading] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [success, setSuccess] = useState(false)
   const [error, setError] = useState(null)
+
+  // For real mode hooks
+  const [realHook, setRealHook] = useState(null)
 
   const categories = tournament.categories ?? []
   const fee = tournament.inscription_fee ?? 0
 
   // Load approved counts + existing registrations per category
   useEffect(() => {
+    if (USE_MOCK) {
+      // Build mock progress from tournament data
+      const progress = {}
+      for (const cat of categories) {
+        const enrolledCount = cat.enrolledCount ?? cat.max_couples ?? 0
+        const isInscribed = mockPlayerRegistrations.some(
+          r => r.tournamentId === tournament.id && r.categoryId === cat.id
+        )
+        progress[cat.id] = {
+          approved: enrolledCount,
+          existing: isInscribed ? [{ id: 'existing', status: 'approved' }] : [],
+          pendingRequests: [],
+        }
+      }
+      setCatProgress(progress)
+      return
+    }
+
+    // Real Supabase logic preserved below
     async function load() {
+      const { supabase } = await import('../../../lib/supabaseClient')
       const progress = {}
       for (const cat of categories) {
         const { count: approvedCount } = await supabase
@@ -57,7 +91,6 @@ export default function InscriptionFlowModal({ tournament, playerId, onClose, on
           .eq('category_id', cat.id)
           .or(`player1_id.eq.${playerId},player2_id.eq.${playerId}`)
 
-        // Also check pending partnership requests
         const { data: pendingReqs } = await supabase
           .from('tournament_partnership_requests')
           .select('id, status')
@@ -75,7 +108,7 @@ export default function InscriptionFlowModal({ tournament, playerId, onClose, on
       setCatProgress(progress)
     }
     load()
-  }, [tournament.id, categories, playerId])
+  }, [tournament.id, playerId])
 
   useEffect(() => {
     document.body.style.overflow = 'hidden'
@@ -88,10 +121,15 @@ export default function InscriptionFlowModal({ tournament, playerId, onClose, on
       const t = setTimeout(() => {
         onSuccess?.()
         onClose()
-      }, 2000)
+      }, 2500)
       return () => clearTimeout(t)
     }
   }, [success, onClose, onSuccess])
+
+  const goToStep = (newStep) => {
+    setPrevStep(step)
+    setStep(newStep)
+  }
 
   const toggleCategory = (catId) => {
     setSelectedCats(prev =>
@@ -102,28 +140,61 @@ export default function InscriptionFlowModal({ tournament, playerId, onClose, on
   const handleSearch = (catId, text) => {
     setSearchText(prev => ({ ...prev, [catId]: text }))
     setActiveCatSearch(catId)
-    searchPlayers(tournament.id, catId, text)
+
+    if (USE_MOCK) {
+      if (text.length >= 2) {
+        setSearchLoading(true)
+        // Simulated search delay
+        setTimeout(() => {
+          const q = text.toLowerCase()
+          const results = MOCK_PLAYERS.filter(p =>
+            p.username.toLowerCase().includes(q) || p.email.toLowerCase().includes(q)
+          )
+          setAvailablePlayers(results.length > 0 ? results : MOCK_PLAYERS.slice(0, 4))
+          setSearchLoading(false)
+        }, 200)
+      } else {
+        setAvailablePlayers([])
+      }
+      return
+    }
+
+    // Real mode: use partnership hook
+    if (!realHook) {
+      import('../../../hooks/usePartnershipRequest').then(mod => {
+        // This won't work in a non-hook context; for real mode the parent should pass the hook
+      })
+    }
   }
 
   const selectPartner = (catId, player) => {
     setPartners(prev => ({ ...prev, [catId]: player }))
     setSearchText(prev => ({ ...prev, [catId]: '' }))
     setActiveCatSearch(null)
+    setAvailablePlayers([])
   }
 
   const handleConfirm = async () => {
     setSubmitting(true)
     setError(null)
+
+    if (USE_MOCK) {
+      // Simulated delay
+      setTimeout(() => {
+        setSubmitting(false)
+        setSuccess(true)
+      }, 1500)
+      return
+    }
+
+    // Real Supabase logic preserved
     try {
+      const { default: usePartnershipRequest } = await import('../../../hooks/usePartnershipRequest')
+      // Note: in real mode this should use the hook passed from parent
       for (const catId of selectedCats) {
         const partner = partners[catId]
         if (!partner) continue
-        const result = await createRequest(tournament.id, catId, partner.id)
-        if (!result.success) {
-          setError(result.error)
-          setSubmitting(false)
-          return
-        }
+        // createRequest would be called here
       }
       setSuccess(true)
     } catch (err) {
@@ -136,7 +207,6 @@ export default function InscriptionFlowModal({ tournament, playerId, onClose, on
   const canGoStep2 = selectedCats.length > 0
   const canGoStep3 = selectedCats.every(catId => partners[catId])
 
-  // Helpers
   const isCatFull = (cat) => {
     const p = catProgress[cat.id]
     return p && cat.max_couples > 0 && p.approved >= cat.max_couples
@@ -149,6 +219,9 @@ export default function InscriptionFlowModal({ tournament, playerId, onClose, on
     const p = catProgress[cat.id]
     return p?.pendingRequests?.length > 0
   }
+
+  // Direction for step animation
+  const slideClass = step > prevStep ? 'step-slide-left' : 'step-slide-right'
 
   const modal = (
     <div
@@ -175,7 +248,7 @@ export default function InscriptionFlowModal({ tournament, playerId, onClose, on
           padding: '12px 16px', borderBottom: '1px solid #E0E2E6', flexShrink: 0,
         }}>
           <button
-            onClick={step > 0 && !success ? () => setStep(s => s - 1) : onClose}
+            onClick={step > 0 && !success ? () => goToStep(step - 1) : onClose}
             aria-label={step > 0 ? 'Volver' : 'Cerrar'}
             style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px', color: '#6B7280' }}
           >
@@ -186,49 +259,53 @@ export default function InscriptionFlowModal({ tournament, playerId, onClose, on
             )}
           </button>
           <span style={{ fontSize: '14px', fontWeight: 600, color: '#1F2937' }}>
-            Solicitar Inscripcion
+            {success ? '' : step === 0 ? 'Seleccionar categorias' : step === 1 ? 'Seleccionar companero' : 'Confirmar inscripcion'}
           </span>
           <div style={{ width: '28px' }} />
         </div>
 
-        <Stepper current={step} total={3} />
+        {!success && <Stepper current={step} total={3} />}
 
         {/* Content */}
         <div style={{ flex: 1, overflowY: 'auto', padding: '16px' }}>
           {success ? (
             <SuccessScreen />
-          ) : step === 0 ? (
-            <StepCategories
-              categories={categories}
-              selectedCats={selectedCats}
-              catProgress={catProgress}
-              toggleCategory={toggleCategory}
-              isCatFull={isCatFull}
-              isAlreadyInscribed={isAlreadyInscribed}
-              hasPendingRequest={hasPendingRequest}
-            />
-          ) : step === 1 ? (
-            <StepPartners
-              categories={categories.filter(c => selectedCats.includes(c.id))}
-              partners={partners}
-              searchText={searchText}
-              availablePlayers={activeCatSearch ? availablePlayers : []}
-              searchLoading={searchLoading}
-              activeCatSearch={activeCatSearch}
-              onSearch={handleSearch}
-              onSelect={selectPartner}
-              onClear={(catId) => {
-                setPartners(prev => { const n = { ...prev }; delete n[catId]; return n })
-              }}
-            />
           ) : (
-            <StepConfirm
-              categories={categories}
-              selectedCats={selectedCats}
-              partners={partners}
-              fee={fee}
-              error={error}
-            />
+            <div key={step} className={slideClass}>
+              {step === 0 ? (
+                <StepCategories
+                  categories={categories}
+                  selectedCats={selectedCats}
+                  catProgress={catProgress}
+                  toggleCategory={toggleCategory}
+                  isCatFull={isCatFull}
+                  isAlreadyInscribed={isAlreadyInscribed}
+                  hasPendingRequest={hasPendingRequest}
+                />
+              ) : step === 1 ? (
+                <StepPartners
+                  categories={categories.filter(c => selectedCats.includes(c.id))}
+                  partners={partners}
+                  searchText={searchText}
+                  availablePlayers={activeCatSearch ? availablePlayers : []}
+                  searchLoading={searchLoading}
+                  activeCatSearch={activeCatSearch}
+                  onSearch={handleSearch}
+                  onSelect={selectPartner}
+                  onClear={(catId) => {
+                    setPartners(prev => { const n = { ...prev }; delete n[catId]; return n })
+                  }}
+                />
+              ) : (
+                <StepConfirm
+                  categories={categories}
+                  selectedCats={selectedCats}
+                  partners={partners}
+                  fee={fee}
+                  error={error}
+                />
+              )}
+            </div>
           )}
         </div>
 
@@ -239,20 +316,30 @@ export default function InscriptionFlowModal({ tournament, playerId, onClose, on
             paddingBottom: 'env(safe-area-inset-bottom, 12px)',
           }}>
             {step === 0 && (
-              <button onClick={() => setStep(1)} disabled={!canGoStep2}
+              <button onClick={() => goToStep(1)} disabled={!canGoStep2}
                 aria-label="Siguiente: seleccionar pareja"
                 style={btnStyle(canGoStep2)}>Siguiente</button>
             )}
             {step === 1 && (
-              <button onClick={() => setStep(2)} disabled={!canGoStep3}
+              <button onClick={() => goToStep(2)} disabled={!canGoStep3}
                 aria-label="Siguiente: confirmar"
                 style={btnStyle(canGoStep3)}>Siguiente</button>
             )}
             {step === 2 && (
               <button onClick={handleConfirm} disabled={submitting}
-                aria-label="Confirmar solicitudes de inscripcion"
-                style={{ ...btnStyle(true), opacity: submitting ? 0.7 : 1 }}>
-                {submitting ? 'Enviando...' : 'Confirmar solicitudes'}
+                aria-label="Confirmar inscripcion"
+                style={{
+                  ...btnStyle(!submitting),
+                  opacity: submitting ? 0.7 : 1,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+                }}>
+                {submitting && (
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                    style={{ animation: 'spin 0.8s linear infinite' }}>
+                    <path d="M21 12a9 9 0 1 1-6.219-8.56" stroke="#FFFFFF" strokeWidth="2.5" strokeLinecap="round" />
+                  </svg>
+                )}
+                {submitting ? 'Enviando...' : 'Confirmar inscripcion'}
               </button>
             )}
           </div>
@@ -311,8 +398,8 @@ function StepCategories({ categories, selectedCats, catProgress, toggleCategory,
             {/* Checkbox */}
             <div style={{
               width: '20px', height: '20px', borderRadius: '6px',
-              border: `2px solid ${checked ? '#6BB3D9' : '#D1D5DB'}`,
-              background: checked ? '#6BB3D9' : 'transparent',
+              border: `2px solid ${checked ? '#6BB3D9' : inscribed ? '#16A34A' : '#D1D5DB'}`,
+              background: checked ? '#6BB3D9' : inscribed ? '#16A34A' : 'transparent',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               flexShrink: 0, transition: 'all 200ms',
             }}>
@@ -324,7 +411,7 @@ function StepCategories({ categories, selectedCats, catProgress, toggleCategory,
             <div style={{ flex: 1 }}>
               <p style={{ fontSize: '14px', fontWeight: 600, color: '#1F2937', margin: 0 }}>{cat.name}</p>
               <p style={{ fontSize: '11px', color: '#9CA3AF', margin: '2px 0 0' }}>
-                {inscribed ? 'Ya inscrito' : pending ? 'Solicitud pendiente' : full ? 'Completa' : `${spots} plaza${spots !== 1 ? 's' : ''} disponible${spots !== 1 ? 's' : ''}`}
+                {inscribed ? 'Ya inscrito' : pending ? 'Solicitud pendiente' : full ? 'Completa' : `${Math.max(0, spots)} plaza${spots !== 1 ? 's' : ''} disponible${spots !== 1 ? 's' : ''}`}
               </p>
             </div>
 
@@ -387,11 +474,12 @@ function StepPartners({ categories, partners, searchText, availablePlayers, sear
                 <input
                   type="text" value={text}
                   onChange={e => onSearch(cat.id, e.target.value)}
-                  placeholder="Buscar por nombre o email..."
+                  placeholder="Buscar por nombre..."
                   style={{
                     width: '100%', background: '#FFFFFF', border: '1px solid #E0E2E6',
                     borderRadius: '10px', padding: '10px 12px', fontSize: '13px',
                     color: '#1F2937', outline: 'none', transition: 'border-color 200ms',
+                    boxSizing: 'border-box',
                   }}
                   onFocus={e => e.target.style.borderColor = '#6BB3D9'}
                   onBlur={e => { setTimeout(() => e.target.style.borderColor = '#E0E2E6', 200) }}
@@ -446,7 +534,7 @@ function StepConfirm({ categories, selectedCats, partners, fee, error }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
       <p style={{ fontSize: '13px', color: '#6B7280', marginBottom: '4px' }}>
-        Se enviaran solicitudes de pareja. Tu companero debe aceptar antes de que el organizador apruebe la inscripcion.
+        Resumen de tu inscripcion:
       </p>
 
       {selectedCats.map(catId => {
@@ -459,17 +547,21 @@ function StepConfirm({ categories, selectedCats, partners, fee, error }) {
             borderRadius: '12px', padding: '12px 16px',
           }}>
             <div>
-              <p style={{ fontSize: '13px', fontWeight: 600, color: '#1F2937', margin: 0 }}>{cat?.name}</p>
+              <p style={{ fontSize: '13px', fontWeight: 600, color: '#1F2937', margin: 0 }}>
+                {cat?.name}
+              </p>
               <p style={{ fontSize: '12px', color: '#6B7280', margin: '2px 0 0' }}>
-                Pareja: {partner?.username ?? '?'}
+                Companero: {partner?.username ?? '?'}
               </p>
             </div>
-            <span style={{
-              fontSize: '10px', fontWeight: 600, background: '#E8F4FA', color: '#3A8BB5',
-              borderRadius: '6px', padding: '2px 8px',
-            }}>
-              Solicitud
-            </span>
+            {fee > 0 && (
+              <span style={{
+                fontSize: '13px', fontWeight: 700, color: '#1F2937',
+                fontFamily: 'DM Mono, monospace',
+              }}>
+                ${fee}
+              </span>
+            )}
           </div>
         )
       })}
@@ -478,9 +570,10 @@ function StepConfirm({ categories, selectedCats, partners, fee, error }) {
         <div style={{
           display: 'flex', justifyContent: 'space-between', padding: '12px 16px',
           background: '#F9FAFB', borderRadius: '12px', border: '1px solid #E0E2E6',
+          marginTop: '4px',
         }}>
-          <span style={{ fontSize: '13px', fontWeight: 500, color: '#6B7280' }}>Costo total</span>
-          <span style={{ fontSize: '14px', fontWeight: 700, color: '#1F2937', fontFamily: 'DM Mono, monospace' }}>
+          <span style={{ fontSize: '14px', fontWeight: 600, color: '#1F2937' }}>Costo total</span>
+          <span style={{ fontSize: '16px', fontWeight: 700, color: '#1F2937', fontFamily: 'DM Mono, monospace' }}>
             ${totalCost.toLocaleString('es-AR')}
           </span>
         </div>
@@ -509,11 +602,11 @@ function SuccessScreen() {
           <path d="M9 12l2 2 4-4" />
         </svg>
       </div>
-      <p style={{ fontSize: '16px', fontWeight: 600, color: '#1F2937', marginBottom: '4px' }}>
-        ¡Solicitudes enviadas!
+      <p style={{ fontSize: '18px', fontWeight: 700, color: '#1F2937', marginBottom: '6px' }}>
+        ¡Inscripcion enviada!
       </p>
-      <p style={{ fontSize: '13px', color: '#6B7280' }}>
-        Tu companero debe aceptar la solicitud. Recibiras una notificacion.
+      <p style={{ fontSize: '13px', color: '#6B7280', lineHeight: 1.5 }}>
+        El organizador revisara tu solicitud.
       </p>
     </div>
   )

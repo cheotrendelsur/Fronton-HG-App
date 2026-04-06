@@ -1,3 +1,4 @@
+import { Navigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import Layout from '../components/Layout'
 
@@ -74,6 +75,11 @@ export default function DashboardPage() {
   const isOrganizer = profile?.role === 'organizer'
   const hour = new Date().getHours()
   const greeting = hour < 12 ? 'Buenos días' : hour < 20 ? 'Buenas tardes' : 'Buenas noches'
+
+  // TASK-12: Redirigir jugadores al portal nuevo con mock data
+  if (profile?.role === 'player') {
+    return <Navigate to="/player" replace />
+  }
 
   return (
     <Layout>

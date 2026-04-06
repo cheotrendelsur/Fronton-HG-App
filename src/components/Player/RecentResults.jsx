@@ -1,18 +1,7 @@
 import { useState, useEffect } from 'react'
-import { supabase } from '../../lib/supabaseClient'
+import { mockCompletedMatches } from '../../mockData'
 
-function formatScoreSummary(scoreTeam1, scoreTeam2, scoringType) {
-  if (!scoreTeam1 || !scoreTeam2) return ''
-
-  if (scoringType === 'points') {
-    return `${scoreTeam1.points ?? 0} - ${scoreTeam2.points ?? 0}`
-  }
-
-  // sets_normal or sets_suma — show sets won
-  const s1 = scoreTeam1.sets_won ?? 0
-  const s2 = scoreTeam2.sets_won ?? 0
-  return `${s1} - ${s2}`
-}
+const USE_MOCK = true // Cambiar a false cuando se conecte Supabase
 
 function formatDateShort(dateStr) {
   if (!dateStr) return ''
@@ -21,11 +10,42 @@ function formatDateShort(dateStr) {
   return `${d.getDate()} ${months[d.getMonth()]}`
 }
 
+function formatScoreSummary(scoreTeam1, scoreTeam2, scoringType) {
+  if (!scoreTeam1 || !scoreTeam2) return ''
+
+  if (scoringType === 'points') {
+    return `${scoreTeam1.points ?? 0} - ${scoreTeam2.points ?? 0}`
+  }
+
+  const s1 = scoreTeam1.sets_won ?? 0
+  const s2 = scoreTeam2.sets_won ?? 0
+  return `${s1} - ${s2}`
+}
+
 export default function RecentResults({ registrationIds, loading: parentLoading }) {
   const [results, setResults] = useState([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    if (USE_MOCK) {
+      // Use mock completed matches (already sorted by date desc in mock)
+      const mockResults = mockCompletedMatches.slice(0, 3).map(m => ({
+        id: m.id,
+        team1Name: m.team1Name,
+        team2Name: m.team2Name,
+        score: `${m.scoreTeam1}`,
+        score2: `${m.scoreTeam2}`,
+        isWin: m.isPlayerWinner,
+        categoryName: m.categoryName,
+        date: m.completedDate,
+        isMock: true,
+      }))
+      setResults(mockResults)
+      setLoading(false)
+      return
+    }
+
+    // Real Supabase logic preserved below
     if (!registrationIds?.length) {
       setResults([])
       setLoading(false)
@@ -34,6 +54,7 @@ export default function RecentResults({ registrationIds, loading: parentLoading 
 
     async function fetch() {
       setLoading(true)
+      const { supabase } = await import('../../lib/supabaseClient')
 
       const { data, error } = await supabase
         .from('tournament_matches')
@@ -52,11 +73,19 @@ export default function RecentResults({ registrationIds, loading: parentLoading 
 
       if (!error && data) {
         setResults(data.map(m => {
-          const playerIsTeam1 = registrationIds.includes(m.team1_id)
-          const playerRegId = playerIsTeam1 ? m.team1_id : m.team2_id
+          const playerRegId = registrationIds.includes(m.team1_id) ? m.team1_id : m.team2_id
           const isWin = m.winner_id === playerRegId
           const scoringType = m.tournaments?.scoring_config?.type ?? 'sets_normal'
-          return { ...m, isWin, scoringType }
+          return {
+            ...m,
+            team1Name: m.team1?.team_name ?? '?',
+            team2Name: m.team2?.team_name ?? '?',
+            score: formatScoreSummary(m.score_team1, m.score_team2, scoringType),
+            isWin,
+            categoryName: m.categories?.name,
+            date: m.scheduled_date,
+            isMock: false,
+          }
         }))
       } else {
         setResults([])
@@ -105,71 +134,66 @@ export default function RecentResults({ registrationIds, loading: parentLoading 
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-      {results.map((m, i) => {
-        const team1Name = m.team1?.team_name ?? '?'
-        const team2Name = m.team2?.team_name ?? '?'
-        const score = formatScoreSummary(m.score_team1, m.score_team2, m.scoringType)
-
-        return (
-          <div
-            key={m.id}
-            className="player-stagger-enter player-card-press"
-            style={{
-              background: '#FFFFFF',
-              border: '1px solid #E8EAEE',
-              borderLeft: `3px solid ${m.isWin ? '#22C55E' : '#EF4444'}`,
-              borderRadius: '12px',
-              padding: '12px 16px',
-              boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
-              animationDelay: `${i * 80}ms`,
-            }}
-          >
-            {/* Score line */}
-            <div style={{
-              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-              marginBottom: '4px',
-            }}>
-              <div style={{ fontSize: '13px', color: '#1F2937', fontWeight: 500, flex: 1 }}>
-                <span>{team1Name}</span>
-                <span style={{
-                  fontFamily: 'DM Mono, monospace', fontWeight: 600,
-                  margin: '0 8px', color: '#4B5563',
-                }}>
-                  {score}
-                </span>
-                <span>{team2Name}</span>
-              </div>
-
-              {/* Win/Loss badge */}
+      {results.map((m, i) => (
+        <div
+          key={m.id}
+          className="player-stagger-enter player-card-press"
+          style={{
+            background: '#FFFFFF',
+            border: '1px solid #E8EAEE',
+            borderLeft: `3px solid ${m.isWin ? '#22C55E' : '#EF4444'}`,
+            borderRadius: '12px',
+            padding: '12px 16px',
+            boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+            animationDelay: `${i * 80}ms`,
+          }}
+        >
+          {/* Score line */}
+          <div style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            marginBottom: '4px',
+          }}>
+            <div style={{ fontSize: '13px', color: '#1F2937', fontWeight: 500, flex: 1 }}>
+              <span>{m.team1Name}</span>
               <span style={{
-                fontSize: '10px', fontWeight: 600,
-                background: m.isWin ? '#F0FDF4' : '#FEF2F2',
-                color: m.isWin ? '#16A34A' : '#EF4444',
-                border: `1px solid ${m.isWin ? '#BBF7D0' : '#FECACA'}`,
-                borderRadius: '6px', padding: '2px 8px',
+                fontFamily: 'DM Mono, monospace', fontWeight: 600,
+                margin: '0 8px', color: '#4B5563',
               }}>
-                {m.isWin ? 'Victoria' : 'Derrota'}
+                {m.isMock ? m.score : m.score}
               </span>
+              <span>{m.team2Name}</span>
             </div>
 
-            {/* Category + date */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              {m.categories?.name && (
-                <span style={{
-                  fontSize: '10px', fontWeight: 500,
-                  background: '#E8F4FA', color: '#3A8BB5',
-                  borderRadius: '4px', padding: '1px 6px',
-                }}>
-                  {m.categories.name}
-                </span>
-              )}
-              <span style={{ fontSize: '11px', color: '#9CA3AF' }}>
-                {formatDateShort(m.scheduled_date)}
-              </span>
-            </div>
+            {/* Win/Loss badge */}
+            <span style={{
+              fontSize: '10px', fontWeight: 600,
+              background: m.isWin ? '#F0FDF4' : '#FEF2F2',
+              color: m.isWin ? '#16A34A' : '#EF4444',
+              border: `1px solid ${m.isWin ? '#BBF7D0' : '#FECACA'}`,
+              borderRadius: '6px', padding: '2px 8px',
+              flexShrink: 0,
+            }}>
+              {m.isWin ? 'Victoria' : 'Derrota'}
+            </span>
           </div>
-        )
-      })}
+
+          {/* Category + date */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            {m.categoryName && (
+              <span style={{
+                fontSize: '10px', fontWeight: 500,
+                background: '#E8F4FA', color: '#3A8BB5',
+                borderRadius: '4px', padding: '1px 6px',
+              }}>
+                {m.categoryName}
+              </span>
+            )}
+            <span style={{ fontSize: '11px', color: '#9CA3AF' }}>
+              {formatDateShort(m.date)}
+            </span>
+          </div>
+        </div>
+      ))}
     </div>
   )
 }

@@ -1,5 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { supabase } from '../../lib/supabaseClient'
+import { mockGroupClassifications, mockPlayerRegistrations } from '../../mockData'
+
+const USE_MOCK = true // Cambiar a false cuando se conecte Supabase
 
 export default function LiveGroupTable({ registrationIds, playerRegistrations, loading: parentLoading }) {
   const [groups, setGroups] = useState([])
@@ -8,6 +10,36 @@ export default function LiveGroupTable({ registrationIds, playerRegistrations, l
   const scrollRef = useRef(null)
 
   useEffect(() => {
+    if (USE_MOCK) {
+      // Build group tables from mock classifications
+      const groupTables = Object.entries(mockGroupClassifications).map(([catId, data]) => {
+        const reg = mockPlayerRegistrations.find(r => r.categoryId === catId)
+        return {
+          groupId: catId,
+          letter: data.groupName.replace('Grupo ', ''),
+          tournamentName: reg?.tournamentName ?? 'Torneo',
+          categoryName: reg?.categoryName ?? catId,
+          members: data.standings.map(s => ({
+            id: `${catId}-${s.position}`,
+            teamName: s.teamName,
+            matches_played: s.played,
+            matches_won: s.won,
+            matches_lost: s.lost,
+            sets_won: s.setsWon,
+            sets_lost: s.setsLost,
+            gameDiff: s.gamesDiff,
+            pts: s.points,
+            isCurrentPlayer: s.isCurrentPlayer,
+          })),
+        }
+      })
+
+      setGroups(groupTables)
+      setLoading(false)
+      return
+    }
+
+    // Real Supabase logic preserved below
     if (!registrationIds?.length || !playerRegistrations?.length) {
       setGroups([])
       setLoading(false)
@@ -16,8 +48,8 @@ export default function LiveGroupTable({ registrationIds, playerRegistrations, l
 
     async function fetch() {
       setLoading(true)
+      const { supabase } = await import('../../lib/supabaseClient')
 
-      // Find groups the player belongs to
       const { data: memberRows, error: memberErr } = await supabase
         .from('tournament_group_members')
         .select(`
@@ -37,7 +69,6 @@ export default function LiveGroupTable({ registrationIds, playerRegistrations, l
         return
       }
 
-      // Filter to active groups only
       const activeGroupIds = []
       const groupMeta = {}
       for (const row of memberRows) {
@@ -59,7 +90,6 @@ export default function LiveGroupTable({ registrationIds, playerRegistrations, l
         return
       }
 
-      // Check if all group_phase matches are completed for each group
       for (const gId of [...activeGroupIds]) {
         const { count: pendingCount } = await supabase
           .from('tournament_matches')
@@ -69,7 +99,6 @@ export default function LiveGroupTable({ registrationIds, playerRegistrations, l
           .neq('status', 'completed')
 
         if (pendingCount === 0) {
-          // All matches completed — group phase done, remove from display
           const idx = activeGroupIds.indexOf(gId)
           if (idx >= 0) activeGroupIds.splice(idx, 1)
           delete groupMeta[gId]
@@ -82,7 +111,6 @@ export default function LiveGroupTable({ registrationIds, playerRegistrations, l
         return
       }
 
-      // Fetch all members for each active group
       const { data: allMembers, error: allErr } = await supabase
         .from('tournament_group_members')
         .select(`
@@ -100,7 +128,6 @@ export default function LiveGroupTable({ registrationIds, playerRegistrations, l
         return
       }
 
-      // Build group tables
       const groupTables = activeGroupIds.map(gId => {
         const meta = groupMeta[gId]
         const members = allMembers
@@ -109,13 +136,15 @@ export default function LiveGroupTable({ registrationIds, playerRegistrations, l
             ...m,
             teamName: m.tournament_registrations?.team_name ?? '?',
             setDiff: m.sets_won - m.sets_lost,
-            gameDiff: m.games_won - m.games_lost,
-            pts: m.matches_won * 3, // Standard 3 points per win
+            gameDiff: `${m.games_won - m.games_lost >= 0 ? '+' : ''}${m.games_won - m.games_lost}`,
+            pts: m.matches_won * 3,
+            isCurrentPlayer: registrationIds.includes(m.registration_id),
           }))
           .sort((a, b) => {
             if (b.pts !== a.pts) return b.pts - a.pts
-            if (b.setDiff !== a.setDiff) return b.setDiff - a.setDiff
-            if (b.gameDiff !== a.gameDiff) return b.gameDiff - a.gameDiff
+            const aDiff = a.sets_won - a.sets_lost
+            const bDiff = b.sets_won - b.sets_lost
+            if (bDiff !== aDiff) return bDiff - aDiff
             return b.sets_won - a.sets_won
           })
 
@@ -185,7 +214,7 @@ export default function LiveGroupTable({ registrationIds, playerRegistrations, l
           msOverflowStyle: 'none',
         }}
       >
-        {groups.map((g, gi) => (
+        {groups.map((g) => (
           <div
             key={g.groupId}
             style={{
@@ -227,7 +256,7 @@ export default function LiveGroupTable({ registrationIds, playerRegistrations, l
               }}>
                 <thead>
                   <tr style={{ borderBottom: '1px solid #E8EAEE' }}>
-                    {['#', 'Equipo', 'PJ', 'PG', 'PP', 'Sets', 'Games', 'Pts'].map(h => (
+                    {['#', 'Equipo', 'PJ', 'PG', 'PP', 'Sets', 'Dif. Games', 'Pts'].map(h => (
                       <th key={h} style={{
                         padding: '8px 6px', textAlign: h === 'Equipo' ? 'left' : 'center',
                         fontSize: '10px', fontWeight: 600, color: '#6B7280',
@@ -242,7 +271,7 @@ export default function LiveGroupTable({ registrationIds, playerRegistrations, l
                 </thead>
                 <tbody>
                   {g.members.map((m, mi) => {
-                    const isPlayer = registrationIds.includes(m.registration_id)
+                    const isPlayer = m.isCurrentPlayer
                     return (
                       <tr key={m.id} style={{
                         background: isPlayer ? '#E8F4FA' : mi % 2 === 0 ? '#FFFFFF' : '#F9FAFB',
@@ -274,7 +303,7 @@ export default function LiveGroupTable({ registrationIds, playerRegistrations, l
                           {m.sets_won}-{m.sets_lost}
                         </td>
                         <td style={{ padding: '8px 6px', textAlign: 'center', color: '#4B5563' }}>
-                          {m.games_won}-{m.games_lost}
+                          {m.gameDiff}
                         </td>
                         <td style={{
                           padding: '8px 6px', textAlign: 'center',

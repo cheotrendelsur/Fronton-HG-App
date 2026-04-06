@@ -1,11 +1,32 @@
-import { useState, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { supabase } from '../../lib/supabaseClient'
+import { mockCurrentPlayer } from '../../mockData'
 import usePlayerContext from '../../hooks/usePlayerContext'
 import ProfileHeader from '../../components/Player/ProfileHeader'
 import PlayerStats from '../../components/Player/PlayerStats'
 import AccountManagement from '../../components/Player/AccountManagement'
 import PlayerPreferences from '../../components/Player/PlayerPreferences'
+
+const USE_MOCK = true // Cambiar a false cuando se conecte Supabase
+
+function ProfileSkeleton() {
+  return (
+    <div style={{ paddingBottom: '32px' }}>
+      {/* Header gradient skeleton */}
+      <div className="shimmer" style={{ height: '200px', borderRadius: '0 0 24px 24px', marginBottom: '24px' }} />
+      <div style={{ padding: '0 16px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+        {/* Stats grid skeleton */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+          {[0,1,2,3].map(i => <div key={i} className="shimmer" style={{ height: '80px', borderRadius: '16px' }} />)}
+        </div>
+        {/* Account card skeleton */}
+        <div className="shimmer" style={{ height: '200px', borderRadius: '16px' }} />
+        {/* Preferences skeleton */}
+        <div className="shimmer" style={{ height: '160px', borderRadius: '16px' }} />
+      </div>
+    </div>
+  )
+}
 
 function SectionTitle({ children }) {
   return (
@@ -145,20 +166,72 @@ function TermsModal({ onClose }) {
   )
 }
 
+function Toast({ message, type, onClose }) {
+  const bg = type === 'success' ? '#F0FDF4' : type === 'info' ? '#EFF6FF' : '#FEF2F2'
+  const border = type === 'success' ? '#BBF7D0' : type === 'info' ? '#BFDBFE' : '#FECACA'
+  const color = type === 'success' ? '#16A34A' : type === 'info' ? '#3B82F6' : '#EF4444'
+
+  useEffect(() => {
+    const t = setTimeout(onClose, 3000)
+    return () => clearTimeout(t)
+  }, [onClose])
+
+  return (
+    <div className="profile-toast-enter" style={{
+      position: 'fixed',
+      top: '72px',
+      left: '50%',
+      transform: 'translateX(-50%)',
+      zIndex: 100,
+      background: bg,
+      border: `1px solid ${border}`,
+      borderRadius: '12px',
+      padding: '10px 20px',
+      boxShadow: '0 4px 12px rgba(0,0,0,0.10)',
+      maxWidth: '90vw',
+    }}>
+      <span style={{ color, fontSize: '13px', fontWeight: 500, fontFamily: 'DM Sans, sans-serif' }}>
+        {message}
+      </span>
+    </div>
+  )
+}
+
 export default function PlayerProfile() {
   const navigate = useNavigate()
   const { playerId, playerProfile, playerRegistrations, loading, refetch } = usePlayerContext()
   const [profile, setProfile] = useState(null)
   const [signingOut, setSigningOut] = useState(false)
   const [showTerms, setShowTerms] = useState(false)
+  const [toast, setToast] = useState(null)
   const [pullState, setPullState] = useState('idle')
+  const [mockLoading, setMockLoading] = useState(USE_MOCK)
   const startYRef = useRef(0)
   const mainRef = useRef(null)
 
-  // Use playerProfile as initial, allow local updates
-  const currentProfile = profile || playerProfile
+  useEffect(() => {
+    if (USE_MOCK) {
+      const t = setTimeout(() => setMockLoading(false), 500)
+      return () => clearTimeout(t)
+    }
+  }, [])
+
+  // Mock profile adapted
+  const mockProfile = USE_MOCK ? {
+    id: mockCurrentPlayer.id,
+    username: mockCurrentPlayer.username,
+    email: mockCurrentPlayer.email,
+    avatar_url: mockCurrentPlayer.avatarUrl,
+    status: mockCurrentPlayer.status,
+  } : null
+
+  const currentProfile = USE_MOCK ? (profile || mockProfile) : (profile || playerProfile)
 
   function handleAvatarUpdated(url) {
+    if (USE_MOCK) {
+      setToast({ message: 'Funcionalidad próximamente', type: 'info' })
+      return
+    }
     setProfile(p => ({ ...(p || playerProfile), avatar_url: url }))
   }
 
@@ -168,7 +241,13 @@ export default function PlayerProfile() {
 
   async function handleSignOut() {
     setSigningOut(true)
+    if (USE_MOCK) {
+      setToast({ message: 'Cerrando sesión...', type: 'info' })
+      setTimeout(() => navigate('/', { replace: true }), 1000)
+      return
+    }
     try {
+      const { supabase } = await import('../../lib/supabaseClient')
       await supabase.auth.signOut()
       navigate('/auth', { replace: true })
     } catch (err) {
@@ -178,17 +257,20 @@ export default function PlayerProfile() {
   }
 
   const handleRefresh = useCallback(async () => {
+    if (USE_MOCK) return
     setPullState('refreshing')
     await refetch()
     setTimeout(() => setPullState('idle'), 400)
   }, [refetch])
 
   const onTouchStart = useCallback(e => {
+    if (USE_MOCK) return
     if (mainRef.current?.scrollTop > 0) return
     startYRef.current = e.touches[0].clientY
   }, [])
 
   const onTouchMove = useCallback(e => {
+    if (USE_MOCK) return
     if (pullState === 'refreshing') return
     if (mainRef.current?.scrollTop > 0) return
     const deltaY = e.touches[0].clientY - startYRef.current
@@ -196,19 +278,13 @@ export default function PlayerProfile() {
   }, [pullState])
 
   const onTouchEnd = useCallback(() => {
+    if (USE_MOCK) return
     if (pullState === 'pulling') handleRefresh()
     else setPullState('idle')
   }, [pullState, handleRefresh])
 
-  if (loading && !currentProfile) {
-    return (
-      <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-        <div className="shimmer" style={{ height: '180px', borderRadius: '0 0 24px 24px' }} />
-        <div className="shimmer" style={{ height: '120px', borderRadius: '16px' }} />
-        <div className="shimmer" style={{ height: '200px', borderRadius: '16px' }} />
-        <div className="shimmer" style={{ height: '160px', borderRadius: '16px' }} />
-      </div>
-    )
+  if (mockLoading || (!USE_MOCK && loading && !currentProfile)) {
+    return <ProfileSkeleton />
   }
 
   return (
@@ -219,8 +295,11 @@ export default function PlayerProfile() {
       onTouchEnd={onTouchEnd}
       style={{ paddingBottom: '32px' }}
     >
+      {/* Toast */}
+      {toast && <Toast {...toast} onClose={() => setToast(null)} />}
+
       {/* Pull to refresh indicator */}
-      {pullState !== 'idle' && (
+      {!USE_MOCK && pullState !== 'idle' && (
         <div style={{
           display: 'flex',
           justifyContent: 'center',
@@ -245,8 +324,8 @@ export default function PlayerProfile() {
         <div>
           <SectionTitle>Estadísticas</SectionTitle>
           <PlayerStats
-            playerId={playerId}
-            registrations={playerRegistrations}
+            playerId={USE_MOCK ? 'mock-player-001' : playerId}
+            registrations={USE_MOCK ? null : playerRegistrations}
           />
         </div>
 
@@ -262,7 +341,7 @@ export default function PlayerProfile() {
         {/* 4. Preferences */}
         <div>
           <SectionTitle>Preferencias</SectionTitle>
-          <PlayerPreferences playerId={playerId} />
+          <PlayerPreferences playerId={USE_MOCK ? 'mock-player-001' : playerId} />
         </div>
 
         {/* 5. Separator + Actions */}
@@ -280,8 +359,9 @@ export default function PlayerProfile() {
             onClick={handleSignOut}
             disabled={signingOut}
             aria-label="Cerrar sesión"
+            className="player-card-press"
             style={{
-              width: 'calc(100% - 0px)',
+              width: '100%',
               background: 'transparent',
               border: '1px solid #EF4444',
               borderRadius: '12px',

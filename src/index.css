@@ -137,6 +137,29 @@
   animation: slideInRight 250ms ease-out both;
 }
 
+/* Tournament grid responsive */
+@media (min-width: 768px) {
+  .tournament-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}
+
+/* Inscription step slide transitions */
+@keyframes slideStepLeft {
+  from { opacity: 0; transform: translateX(40px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes slideStepRight {
+  from { opacity: 0; transform: translateX(-40px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+.step-slide-left {
+  animation: slideStepLeft 250ms ease-out both;
+}
+.step-slide-right {
+  animation: slideStepRight 250ms ease-out both;
+}
+
 /* Focus visible for accessibility */
 *:focus-visible {
   outline: 2px solid #6BB3D9;
@@ -146,6 +169,13 @@
 
 /* Hide bottom nav in landscape tablet */
 @media (min-width: 768px) and (orientation: landscape) {
+  .player-bottom-nav-hide-landscape {
+    display: none !important;
+  }
+}
+
+/* Hide bottom nav on desktop */
+@media (min-width: 1024px) {
   .player-bottom-nav-hide-landscape {
     display: none !important;
   }

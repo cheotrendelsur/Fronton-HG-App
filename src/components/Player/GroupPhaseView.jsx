@@ -1,11 +1,55 @@
 import { useState, useEffect } from 'react'
-import { supabase } from '../../lib/supabaseClient'
+import { mockGroupClassifications, mockPlayerRegistrations } from '../../mockData'
+
+const USE_MOCK = true // Cambiar a false cuando se conecte Supabase
 
 export default function GroupPhaseView({ tournamentId, categoryId, registrationIds, showAll }) {
   const [groups, setGroups] = useState([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    if (USE_MOCK) {
+      // Find mock classification for this category
+      const classif = mockGroupClassifications[categoryId]
+      if (!classif) {
+        setGroups([])
+        setLoading(false)
+        return
+      }
+
+      // Determine player's group from registrations
+      const playerReg = mockPlayerRegistrations.find(r => r.categoryId === categoryId)
+      const playerGroupId = playerReg?.groupId
+
+      // Build group data
+      const groupData = {
+        groupId: categoryId,
+        letter: classif.groupName.replace('Grupo ', ''),
+        qualifyCount: 2,
+        members: classif.standings.map((s, idx) => ({
+          id: `${categoryId}-${idx}`,
+          registration_id: s.isCurrentPlayer ? (playerReg?.id ?? null) : null,
+          teamName: s.teamName,
+          matches_played: s.played,
+          matches_won: s.won,
+          matches_lost: s.lost,
+          sets_won: s.setsWon,
+          sets_lost: s.setsLost,
+          games_won: 0,
+          games_lost: 0,
+          setDiff: s.setsWon - s.setsLost,
+          gameDiff: typeof s.gamesDiff === 'string' ? parseInt(s.gamesDiff) || 0 : (s.gamesDiff ?? 0),
+          pts: s.points,
+          isCurrentPlayer: s.isCurrentPlayer,
+        })),
+      }
+
+      setGroups([groupData])
+      setLoading(false)
+      return
+    }
+
+    // Real Supabase logic preserved below
     if (!tournamentId || !categoryId) {
       setGroups([])
       setLoading(false)
@@ -14,8 +58,8 @@ export default function GroupPhaseView({ tournamentId, categoryId, registrationI
 
     async function fetch() {
       setLoading(true)
+      const { supabase } = await import('../../lib/supabaseClient')
 
-      // Find groups for this category
       const { data: groupRows } = await supabase
         .from('tournament_groups')
         .select('id, group_letter, group_number')
@@ -29,7 +73,6 @@ export default function GroupPhaseView({ tournamentId, categoryId, registrationI
         return
       }
 
-      // If not showAll, only get the player's group
       let targetGroupIds = groupRows.map(g => g.id)
       if (!showAll && registrationIds?.length) {
         const { data: playerMember } = await supabase
@@ -44,7 +87,6 @@ export default function GroupPhaseView({ tournamentId, categoryId, registrationI
         }
       }
 
-      // Fetch all members for target groups
       const { data: allMembers } = await supabase
         .from('tournament_group_members')
         .select(`
@@ -56,21 +98,16 @@ export default function GroupPhaseView({ tournamentId, categoryId, registrationI
         `)
         .in('group_id', targetGroupIds)
 
-      // Get config to know how many qualify
       const { data: configRow } = await supabase
         .from('tournament_config')
         .select('config')
         .eq('tournament_id', tournamentId)
         .maybeSingle()
 
-      let qualifyCount = 2 // default
+      let qualifyCount = 2
       if (configRow?.config) {
-        const catConfig = Object.values(configRow.config).find(
-          c => c.categoryId === categoryId
-        )
-        if (catConfig?.teamsPerGroupQualify) {
-          qualifyCount = catConfig.teamsPerGroupQualify
-        }
+        const catConfig = Object.values(configRow.config).find(c => c.categoryId === categoryId)
+        if (catConfig?.teamsPerGroupQualify) qualifyCount = catConfig.teamsPerGroupQualify
       }
 
       const result = targetGroupIds.map(gId => {
@@ -91,12 +128,7 @@ export default function GroupPhaseView({ tournamentId, categoryId, registrationI
             return b.sets_won - a.sets_won
           })
 
-        return {
-          groupId: gId,
-          letter: meta?.group_letter ?? '?',
-          members,
-          qualifyCount,
-        }
+        return { groupId: gId, letter: meta?.group_letter ?? '?', members, qualifyCount }
       })
 
       setGroups(result)
@@ -142,10 +174,7 @@ function GroupTable({ group, registrationIds }) {
     { key: 'pp', label: 'PP', align: 'center' },
     { key: 'sg', label: 'SG', align: 'center' },
     { key: 'sp', label: 'SP', align: 'center' },
-    { key: 'ds', label: 'DS', align: 'center' },
-    { key: 'gg', label: 'GG', align: 'center' },
-    { key: 'gp', label: 'GP', align: 'center' },
-    { key: 'dg', label: 'DG', align: 'center' },
+    { key: 'dg', label: 'Dif. Games', align: 'center' },
     { key: 'pts', label: 'Pts', align: 'center' },
   ]
 
@@ -164,7 +193,7 @@ function GroupTable({ group, registrationIds }) {
 
       <div style={{ overflowX: 'auto' }}>
         <table style={{
-          width: '100%', minWidth: '540px', fontSize: '12px',
+          width: '100%', minWidth: '480px', fontSize: '12px',
           borderCollapse: 'collapse', fontFamily: 'DM Mono, monospace',
         }}>
           <thead>
@@ -184,14 +213,21 @@ function GroupTable({ group, registrationIds }) {
           </thead>
           <tbody>
             {group.members.map((m, mi) => {
-              const isPlayer = registrationIds?.includes(m.registration_id)
+              const isPlayer = USE_MOCK
+                ? m.isCurrentPlayer
+                : registrationIds?.includes(m.registration_id)
               const qualifies = mi < group.qualifyCount
               return (
-                <tr key={m.id} style={{
-                  background: isPlayer ? 'rgba(107,179,217,0.10)' : mi % 2 === 0 ? '#FFFFFF' : '#F9FAFB',
-                  borderBottom: '1px solid #F3F4F6',
-                  borderLeft: qualifies ? '3px solid #22C55E' : '3px solid transparent',
-                }}>
+                <tr
+                  key={m.id}
+                  className="player-stagger-enter"
+                  style={{
+                    background: isPlayer ? 'rgba(107,179,217,0.10)' : mi % 2 === 0 ? '#FFFFFF' : '#F9FAFB',
+                    borderBottom: '1px solid #F3F4F6',
+                    borderLeft: qualifies ? '3px solid #22C55E' : '3px solid transparent',
+                    animationDelay: `${mi * 50}ms`,
+                  }}
+                >
                   <td style={{ padding: '8px 5px', textAlign: 'center', fontWeight: 600, color: '#6B7280' }}>
                     {mi + 1}
                   </td>
@@ -210,11 +246,6 @@ function GroupTable({ group, registrationIds }) {
                   <td style={{ padding: '8px 5px', textAlign: 'center', color: '#EF4444', fontWeight: 500 }}>{m.matches_lost}</td>
                   <td style={{ padding: '8px 5px', textAlign: 'center', color: '#4B5563' }}>{m.sets_won}</td>
                   <td style={{ padding: '8px 5px', textAlign: 'center', color: '#4B5563' }}>{m.sets_lost}</td>
-                  <td style={{ padding: '8px 5px', textAlign: 'center', fontWeight: 600, color: m.setDiff > 0 ? '#16A34A' : m.setDiff < 0 ? '#EF4444' : '#4B5563' }}>
-                    {m.setDiff > 0 ? '+' : ''}{m.setDiff}
-                  </td>
-                  <td style={{ padding: '8px 5px', textAlign: 'center', color: '#4B5563' }}>{m.games_won}</td>
-                  <td style={{ padding: '8px 5px', textAlign: 'center', color: '#4B5563' }}>{m.games_lost}</td>
                   <td style={{ padding: '8px 5px', textAlign: 'center', fontWeight: 600, color: m.gameDiff > 0 ? '#16A34A' : m.gameDiff < 0 ? '#EF4444' : '#4B5563' }}>
                     {m.gameDiff > 0 ? '+' : ''}{m.gameDiff}
                   </td>

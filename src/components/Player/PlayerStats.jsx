@@ -1,9 +1,15 @@
 import { useState, useEffect, useRef } from 'react'
-import { supabase } from '../../lib/supabaseClient'
+import { mockPlayerStats } from '../../mockData'
 
-function CounterUp({ value, duration = 400 }) {
+const USE_MOCK = true // Cambiar a false cuando se conecte Supabase
+
+const MOCK_CATEGORIES = [
+  { id: 'cat-masc-3', name: 'Masculina Tercera' },
+  { id: 'cat-masc-4', name: 'Masculina Cuarta' },
+]
+
+function CounterUp({ value, duration = 600 }) {
   const [display, setDisplay] = useState(0)
-  const ref = useRef(null)
   const animated = useRef(false)
 
   useEffect(() => {
@@ -16,15 +22,14 @@ function CounterUp({ value, duration = 400 }) {
     function tick(now) {
       const elapsed = now - start
       const progress = Math.min(elapsed / duration, 1)
-      // ease-out cubic
       const eased = 1 - Math.pow(1 - progress, 3)
-      setDisplay(Math.round(eased * value))
+      setDisplay(Math.round(eased * value * 10) / 10)
       if (progress < 1) requestAnimationFrame(tick)
     }
     requestAnimationFrame(tick)
   }, [value, duration])
 
-  return <span>{display}</span>
+  return <span>{Number.isInteger(display) ? display : display.toFixed(1)}</span>
 }
 
 export default function PlayerStats({ playerId, registrations }) {
@@ -34,16 +39,19 @@ export default function PlayerStats({ playerId, registrations }) {
   const [selectedCategory, setSelectedCategory] = useState('all')
 
   useEffect(() => {
+    if (USE_MOCK) {
+      setCategories(MOCK_CATEGORIES)
+      updateMockStats('all')
+      setLoading(false)
+      return
+    }
+
     if (!playerId || !registrations?.length) {
       setLoading(false)
       return
     }
-    fetchStats()
-  }, [playerId, registrations, selectedCategory])
 
-  // Derive unique categories from registrations
-  useEffect(() => {
-    if (!registrations?.length) return
+    // Derive unique categories from registrations
     const cats = []
     const seen = new Set()
     for (const r of registrations) {
@@ -55,11 +63,46 @@ export default function PlayerStats({ playerId, registrations }) {
       }
     }
     setCategories(cats)
-  }, [registrations])
+    fetchStats()
+  }, [playerId, registrations])
+
+  // React to category changes
+  useEffect(() => {
+    if (USE_MOCK) {
+      updateMockStats(selectedCategory)
+      return
+    }
+    if (playerId && registrations?.length) fetchStats()
+  }, [selectedCategory])
+
+  function updateMockStats(catId) {
+    if (catId === 'all') {
+      setStats({
+        played: mockPlayerStats.totalMatches,
+        won: mockPlayerStats.matchesWon,
+        lost: mockPlayerStats.matchesLost,
+        winRate: mockPlayerStats.winRate,
+      })
+    } else {
+      const catStats = mockPlayerStats.byCategory[catId]
+      if (catStats) {
+        setStats({
+          played: catStats.played,
+          won: catStats.won,
+          lost: catStats.lost,
+          winRate: catStats.winRate,
+        })
+      } else {
+        setStats({ played: 0, won: 0, lost: 0, winRate: 0 })
+      }
+    }
+  }
 
   async function fetchStats() {
+    if (USE_MOCK) return
     setLoading(true)
     try {
+      const { supabase } = await import('../../lib/supabaseClient')
       const regIds = registrations
         .filter(r => selectedCategory === 'all' || (r.category_id || r.categories?.id) === selectedCategory)
         .map(r => r.id)
@@ -70,16 +113,14 @@ export default function PlayerStats({ playerId, registrations }) {
         return
       }
 
-      // Fetch completed matches where player participated
       const { data: matches, error } = await supabase
         .from('tournament_matches')
-        .select('id, winner_id, team1_id, team2_id, score_team1, score_team2')
+        .select('id, winner_id, team1_id, team2_id')
         .eq('status', 'completed')
         .or(regIds.map(id => `team1_id.eq.${id}`).concat(regIds.map(id => `team2_id.eq.${id}`)).join(','))
 
       if (error) throw error
 
-      // Filter matches that actually involve our registrations
       const playerMatches = (matches || []).filter(m =>
         regIds.includes(m.team1_id) || regIds.includes(m.team2_id)
       )
@@ -99,7 +140,7 @@ export default function PlayerStats({ playerId, registrations }) {
   }
 
   function getWinRateColor(rate) {
-    if (rate >= 60) return '#16A34A'
+    if (rate >= 60) return '#6BB3D9'
     if (rate >= 40) return '#F59E0B'
     return '#EF4444'
   }
@@ -114,7 +155,7 @@ export default function PlayerStats({ playerId, registrations }) {
   return (
     <div style={{ padding: '0 16px' }}>
       {/* Category filter */}
-      {categories.length > 1 && (
+      {categories.length > 0 && (
         <div style={{ marginBottom: '12px' }}>
           <select
             value={selectedCategory}
@@ -168,7 +209,7 @@ export default function PlayerStats({ playerId, registrations }) {
         }}>
           {statCards.map((card, i) => (
             <div
-              key={card.label}
+              key={`${card.label}-${selectedCategory}`}
               className="player-stagger-enter"
               style={{
                 animationDelay: `${i * 60}ms`,
@@ -191,7 +232,7 @@ export default function PlayerStats({ playerId, registrations }) {
                 fontVariantNumeric: 'tabular-nums',
                 lineHeight: 1.1,
               }}>
-                <CounterUp value={card.value} />
+                <CounterUp key={`${card.label}-${selectedCategory}-${card.value}`} value={card.value} />
                 {card.suffix || ''}
               </span>
               <span style={{
